@@ -1,0 +1,40 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql_server
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Admin!1234"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_server
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  sqlite:
+    image: alpine
+    container_name: sqlite_server
+    command: sh /setup-sqlite.sh
+    volumes:
+      - ./sqlite:/data
+      - ./northwind/db/sqlite:/data/northwind
+      - ./scripts/setup-sqlite.sh:/setup-sqlite.sh
+    working_dir: /data
+
+volumes:
+  mssql_data:
+  postgres_data:
+  sqlite_data:
