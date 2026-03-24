@@ -9,7 +9,9 @@ services:
       - "1433:1433"
     volumes:
       - mssql_data:/var/opt/mssql
-    restart: unless-stopped
+      - ./northwind/sql/mssql:/data/sql
+      - ./scripts/setup-mssql.sh:/data/setup-mssql.sh
+    entrypoint: /bin/bash /data/setup-mssql.sh
 
   postgres:
     image: postgres:16
@@ -22,19 +24,19 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./northwind/sql/postgres/pg_north_ddl_data.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
   sqlite:
     image: alpine
     container_name: sqlite_server
-    command: sh /setup-sqlite.sh
+    command: sh -c "sh /data/setup-sqlite.sh && tail -f /dev/null"
     volumes:
-      - ./sqlite:/data
-      - ./northwind/db/sqlite:/data/northwind
-      - ./scripts/setup-sqlite.sh:/setup-sqlite.sh
+      - ./northwind/db/sqlite:/data/db
+      - ./northwind/sql/sqlite:/data/sql
+      - ./scripts/setup-sqlite.sh:/data/setup-sqlite.sh
     working_dir: /data
 
 volumes:
   mssql_data:
   postgres_data:
-  sqlite_data:
