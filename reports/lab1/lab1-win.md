@@ -97,6 +97,10 @@ Jaka jest są podobieństwa, jakie różnice pomiędzy grupowaniem danych a dzia
 
 ---
 
+```{=typst}
+#pagebreak()
+```
+
 > Wyniki:
 
 ```sql
@@ -135,9 +139,13 @@ from products p
 where productid < 10;
 
 => 9 wierszy, do każdego doklejona jest globalna średnia (bo mamy podzapytanie, w którym nie obowiązuje filtr productid < 10) równa ~28.834
+```
 
-===
+```{=typst}
+#pagebreak()
+```
 
+```sql
 select p.productid, p.ProductName, p.unitprice,
        avg(unitprice) over () as avgprice
 from products p
@@ -211,15 +219,15 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 W SSMS włącz dwie opcje: Include Actual Execution Plan oraz Include Live Query Statistics
 
-![w:700](media/ssms.png)
-
 W DataGrip użyj opcji Explain Plan/Explain Analyze
 
 ![w:700](media/datagrip-explain.png)
 
-![w:700](media/datagrip-diagram.png)
-
 ---
+
+```{=typst}
+#pagebreak()
+```
 
 > Wyniki:
 
@@ -241,6 +249,10 @@ from products p;
 **SQLite:**
 ![alt text](media/exercise3-subquery-sqlite.png)
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 --join
 select p.productid, p.productname, p.unitprice, sub.avgprice
@@ -259,6 +271,10 @@ cross join (
 
 **SQLite:**
 ![alt text](media/exercise3-join-sqlite.png)
+
+```{=typst}
+#pagebreak()
+```
 
 ```sql
 --window function
@@ -290,7 +306,11 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 ---
 
-> Wyniki: W MSSQL plan wykonania jest dostosowany przez optymalizator i podmieniony na najbardziej optymalny (`totalTime` bliskie 0). W przypadku Postgresql i SQLite plan wykonania jest zgodny z napisanym zapytaniem.
+```{=typst}
+#pagebreak()
+```
+
+> Wyniki: W MSSQL plan wykonania jest dostosowany przez optymalizator i podmieniony na najbardziej optymalny (`totalTime` 0.0). W przypadku Postgresql i SQLite plan wykonania jest zgodny z napisanym zapytaniem.
 
 ```sql
 --subquery
@@ -313,6 +333,10 @@ order by p1.ProductID;
 **SQLite:**
 ![alt text](media/exercise4-subquery-sqlite.png)
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 --join
 with t as (
@@ -333,6 +357,10 @@ order by p.ProductID;
 
 **SQLite:**
 ![alt text](media/exercise4-join-sqlite.png)
+
+```{=typst}
+#pagebreak()
+```
 
 ```sql
 --window function
@@ -413,6 +441,10 @@ set value = unitprice * quantity
 where 1=1;
 ```
 
+```{=typst}
+#pagebreak()
+```
+
 Skrypt dla Postgresql
 
 ```sql
@@ -461,6 +493,10 @@ Wykonaj polecenia: `select count(*) from product_history`, potwierdzające wykon
 
 ---
 
+```{=typst}
+#pagebreak()
+```
+
 > Wyniki:
 
 ```sql
@@ -479,15 +515,18 @@ select count(*) from product_history;
 
 ![alt text](media/exercise5-count-sqlite.png)
 
+```{=typst}
+#pagebreak()
+```
+
 # Zadanie 6
 
 Baza: Northwind, tabela product_history
 
 Napisz polecenie, które zwraca: id pozycji, id produktu, nazwę produktu, id_kategorii, cenę produktu, średnią cenę produktów w kategorii do której należy dany produkt. Wyświetl tylko pozycje (produkty) których cena jest większa niż średnia cena.
 
-W przypadku długiego czasu wykonania ogranicz zbiór wynikowy do kilkuset/kilku tysięcy wierszy
+W przypadku długiego czasu wykonania ogranicz zbiór wynikowy do kilkuset/kilku tysięcy wierszy pomocna może być konstrukcja `with`
 
-pomocna może być konstrukcja `with`
 
 ```sql
 with t as (
@@ -507,6 +546,10 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 > Wyniki: Z podzapytaniem tylko MSSQL poradził sobie w skończonym czasie (457ms, 45ms dla ograniczonego zbioru), prawdopodobnie przez paralelizm. Postgresql i SQLite wypadly znacznie gorzej ~1 minuta na ograniczonym zbiorze, a dla pełnego zbioru zapytanie nie zostało ukończone w rozsądnym czasie. Przy joinie wyniki wyniosły odpowiednio MSSQL 458ms, Postgresql 1s, SQLite 1s. Przy funkcji okna MSSQL znów był najszybszy ~500ms, Postgresql 1.6s, SQLite 2s.
 
 > DataGrip wskazał, że w przypadku MSSQL warto dodać indeks na kolumnie `categoryid` w tabeli `product_history`.
+
+```{=typst}
+#pagebreak()
+```
 
 ```sql
 --subquery
@@ -554,6 +597,10 @@ order by t.productid;
 **SQLite:**
 ![alt text](media/exercise6-subquery-sqlite.png)
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 --join
 with t as (
@@ -576,6 +623,10 @@ order by p.productid;
 
 **SQLite:**
 ![alt text](media/exercise6-join-sqlite.png)
+
+```{=typst}
+#pagebreak()
+```
 
 ```sql
 --window function

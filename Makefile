@@ -1,5 +1,6 @@
 COMPOSE = docker-compose
 SERVICES = mssql postgres sqlite
+PDF_DOCKER_IMAGE=pandoc/extra:latest
 
 .PHONY: help up down restart clean status logs-mssql logs-pg
 
@@ -39,3 +40,6 @@ mssql-transaction:
 
 sqlite-transaction:
 	cat $(FILE) | docker exec -i sqlite_server sqlite3 /data/db/northwind.db
+
+pdf:
+	@./scripts/convert-md-to-pdf.sh $(FILE)
