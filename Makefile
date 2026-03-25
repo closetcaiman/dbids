@@ -6,13 +6,14 @@ SERVICES = mssql postgres sqlite
 help:
 	@echo "Database in data science"
 	@echo "--------------------------"
-	@echo "make up             - Start all database services"
-	@echo "make down           - Stop all services"
-	@echo "make restart        - Restart all services"
-	@echo "make clean          - FULL RESET: Deletes containers and ALL database volumes"
-	@echo "make status         - Show running containers"
-	@echo "make mssql-shell    - Open SQLCMD inside MS SQL container"
-	@echo "make pg-shell       - Open PSQL inside Postgres container"
+	@echo "make up                 - Start all database services"
+	@echo "make down               - Stop all services"
+	@echo "make restart            - Restart all services"
+	@echo "make clean              - FULL RESET: Deletes containers and ALL database volumes"
+	@echo "make status             - Show running containers"
+	@echo "make pg-transaction     - Execute SQL file in Postgres (FILE=path/to/file.sql)"
+	@echo "make mssql-transaction  - Execute SQL file in MS SQL (FILE=path/to/file.sql)"
+	@echo "make sqlite-transaction - Execute SQL file in SQLite (FILE=path/to/file.sql)"
 
 up:
 	$(COMPOSE) up -d
