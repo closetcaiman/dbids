@@ -211,13 +211,13 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 W SSMS włącz dwie opcje: Include Actual Execution Plan oraz Include Live Query Statistics
 
-![w:700](media/window-1.png)
+![w:700](media/ssms.png)
 
 W DataGrip użyj opcji Explain Plan/Explain Analyze
 
-![w:700](media/window-2.png)
+![w:700](media/datagrip-explain.png)
 
-![w:700](media/window-3.png)
+![w:700](media/datagrip-diagram.png)
 
 ---
 
@@ -233,13 +233,13 @@ from products p;
 ```
 
 **Postgres:**
-![alt text](media/image.png)
+![alt text](media/exercise3-subquery-postgres.png)
 
 **MSSQL:**
-![alt text](media/image-3.png)
+![alt text](media/exercise3-subquery-mssql.png)
 
 **SQLite:**
-![alt text](media/image-6.png)
+![alt text](media/exercise3-subquery-sqlite.png)
 
 ```sql
 --join
@@ -252,13 +252,13 @@ cross join (
 ```
 
 **Postgres:**
-![alt text](media/image-1.png)
+![alt text](media/exercise3-join-postgres.png)
 
 **MSSQL:**
-![alt text](media/image-4.png)
+![alt text](media/exercise3-join-mssql.png)
 
 **SQLite:**
-![alt text](media/image-7.png)
+![alt text](media/exercise3-join-sqlite.png)
 
 ```sql
 --window function
@@ -268,13 +268,13 @@ from products p;
 ```
 
 **Postgres:**
-![alt text](media/image-2.png)
+![alt text](media/exercise3-wf-postgres.png)
 
 **MSSQL:**
-![alt text](media/image-5.png)
+![alt text](media/exercise3-wf-mssql.png)
 
 **SQLite:**
-![alt text](media/image-8.png)
+![alt text](media/exercise3-wf-sqlite.png)
 
 ---
 
