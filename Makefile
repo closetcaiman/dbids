@@ -30,11 +30,11 @@ clean:
 status:
 	$(COMPOSE) ps
 
-mssql-shell:
-	docker exec -it mssql_server /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!1234" -C
+pg-transaction:
+	cat $(FILE) | docker exec -i postgres_server psql -U admin -d postgres
 
-pg-shell:
-	docker exec -it postgres_server psql -U admin -d northwind
+mssql-transaction:
+	cat $(FILE) | docker exec -i mssql_server /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!1234" -C
 
-logs-mssql:
-	docker logs -f mssql_server
+sqlite-transaction:
+	cat $(FILE) | docker exec -i sqlite_server sqlite3 /data/db/northwind.db

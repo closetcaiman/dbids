@@ -459,8 +459,19 @@ Wykonaj polecenia: `select count(*) from product_history`, potwierdzające wykon
 > Wyniki:
 
 ```sql
---  ...
+select count(*) from product_history;
 ```
+**Postgres:**
+
+![alt text](media/exercise5-count-postgres.png)
+
+**MSSQL:**
+
+![alt text](media/exercise5-count-mssql.png)
+
+**SQLite:**
+
+![alt text](media/exercise5-count-sqlite.png)
 
 # Zadanie 6
 
