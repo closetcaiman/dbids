@@ -1,2 +1,5 @@
 # Database files
 /northwind/db
+
+# DataGrip files
+.idea/
