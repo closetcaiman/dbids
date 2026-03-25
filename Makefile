@@ -1,6 +1,5 @@
 COMPOSE = docker-compose
 SERVICES = mssql postgres sqlite
-PDF_DOCKER_IMAGE=pandoc/extra:latest
 
 .PHONY: help up down restart clean status logs-mssql logs-pg
 
@@ -15,6 +14,8 @@ help:
 	@echo "make pg-transaction     - Execute SQL file in Postgres (FILE=path/to/file.sql)"
 	@echo "make mssql-transaction  - Execute SQL file in MS SQL (FILE=path/to/file.sql)"
 	@echo "make sqlite-transaction - Execute SQL file in SQLite (FILE=path/to/file.sql)"
+	@echo "make pdf                - Convert Markdown file to PDF (FILE=path/to/file.md)"
+	@echo "make pack               - Create a tar.gz archive of the project (DIR=path/to/directory)"
 
 up:
 	$(COMPOSE) up -d
