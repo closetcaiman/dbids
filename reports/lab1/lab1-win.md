@@ -498,11 +498,75 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 ---
 
-> Wyniki:
+> Wyniki: Z podzapytaniem tylko MSSQL poradził sobie w skończonym czasie (457ms, 45ms dla ograniczonego zbioru), prawdopodobnie przez paralelizm. Postgresql i SQLite wypadly znacznie gorzej ~1 minuta na ograniczonym zbiorze, a dla pełnego zbioru zapytanie nie zostało ukończone w rozsądnym czasie. Przy joinie wyniki wyniosły odpowiednio MSSQL 458ms, Postgresql 1s, SQLite 1s. Przy funkcji okna MSSQL znów był najszybszy ~500ms, Postgresql 1.6s, SQLite 2s.
+
+> DataGrip wskazał, że w przypadku MSSQL warto dodać indeks na kolumnie `categoryid` w tabeli `product_history`.
 
 ```sql
---  ...
+--subquery
+select p1.productid, p1.productname, p1.unitprice from product_history p1
+where p1.unitprice > (select avg(p2.unitprice) from product_history p2 where p1.categoryid = p2.categoryid )
+order by p1.productid;
 ```
+
+**MSSQL:**
+![alt text](media/exercise6-subquery-mssql.png)
+
+```sql
+-- subquery (reduced)
+with t as (
+select p1.id, p1.productid, p1.productname, p1.unitprice from product_history p1
+where p1.unitprice > (select avg(p2.unitprice) from product_history p2 where p1.categoryid = p2.categoryid )
+)
+select * from t
+where t.id between 1000 and 1500
+order by t.productid
+```
+**Postgres:**
+![alt text](media/exercise6-subquery-postgres.png)
+
+**SQLite:**
+![alt text](media/exercise6-subquery-sqlite.png)
+
+```sql
+--join
+with t as (
+	select categoryid, avg(unitprice) as avgprice from product_history
+	group by categoryid
+)
+select p.productid, p.productname, p.unitprice, t.AvgPrice from product_history p
+join t on p.categoryid = t.categoryid
+where p.unitprice > t.AvgPrice
+order by p.productid;
+```
+
+**Postgres:**
+![alt text](media/exercise6-join-postgres.png)
+
+**MSSQL:**
+![alt text](media/exercise6-join-mssql.png)
+
+**SQLite:**
+![alt text](media/exercise6-join-sqlite.png)
+
+```sql
+--window function
+with t as (
+	select p.productid, p.productname, p.unitprice, avg(p.unitprice) over(partition by p.categoryid) as avgprice from product_history p
+)
+select productid, productname, unitprice, avgprice from t
+where unitprice > avgprice
+order by productid;
+```
+
+**Postgres:**
+![alt text](media/exercise6-wf-postgres.png)
+
+**MSSQL:**
+![alt text](media/exercise6-wf-mssql.png)
+
+**SQLite:**
+![alt text](media/exercise6-wf-sqlite.png)
 
 ---
 
