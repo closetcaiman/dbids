@@ -290,11 +290,63 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 ---
 
-> Wyniki:
+> Wyniki: W MSSQL plan wykonania jest dostosowany przez optymalizator i podmieniony na najbardziej optymalny (`totalTime` 0.0). W przypadku Postgresql i SQLite plan wykonania jest zgodny z napisanym zapytaniem.
 
 ```sql
---  ...
+--subquery
+select p1.ProductID, p1.ProductName, p1.UnitPrice from Products p1
+where p1.UnitPrice > (select avg(p2.UnitPrice) from Products p2 where p1.CategoryID = p2.CategoryID)
+order by p1.ProductID
 ```
+
+**Postgres:**
+![alt text](media/exercise4-subquery-postgres.png)
+
+**MSSQL:**
+![alt text](media/exercise4-subquery-mssql.png)
+
+**SQLite:**
+![alt text](media/exercise4-subquery-sqlite.png)
+
+```sql
+--join
+with t as (
+	select CategoryID, avg(UnitPrice) as AvgPrice from Products
+	group by CategoryID
+)
+select p.ProductID, p.ProductName, p.UnitPrice, t.AvgPrice from Products p
+join t on p.CategoryID = t.CategoryID
+where p.UnitPrice > t.AvgPrice
+order by p.ProductID;
+```
+
+**Postgres:**
+![alt text](media/exercise4-join-postgres.png)
+
+**MSSQL:**
+![alt text](media/exercise4-join-mssql.png)
+
+**SQLite:**
+![alt text](media/exercise4-join-sqlite.png)
+
+```sql
+--window function
+with t as (
+	select p.ProductID, p.ProductName, p.UnitPrice, avg(p.UnitPrice) over(partition by p.CategoryID) as AvgPrice from Products p
+)
+select ProductID, ProductName, UnitPrice, AvgPrice from t
+where UnitPrice > AvgPrice
+order by ProductID;
+```
+
+**Postgres:**
+![alt text](media/exercise4-wf-postgres.png)
+
+**MSSQL:**
+![alt text](media/exercise4-wf-mssql.png)
+
+**SQLite:**
+![alt text](media/exercise4-wf-sqlite.png)
 
 ---
 
