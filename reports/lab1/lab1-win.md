@@ -547,10 +547,6 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 > DataGrip wskazał, że w przypadku MSSQL warto dodać indeks na kolumnie `categoryid` w tabeli `product_history`.
 
-```{=typst}
-#pagebreak()
-```
-
 ```sql
 --subquery
 select p1.id, p1.productid, p1.productname, p1.categoryid, p1.unitprice, (

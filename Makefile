@@ -43,3 +43,10 @@ sqlite-transaction:
 
 pdf:
 	@./scripts/convert-md-to-pdf.sh $(FILE)
+
+pack:
+	@mkdir -p archives
+	@tar -czf archives/$(notdir $(DIR)).tar.gz \
+		--exclude='.git' \
+		-C $(shell dirname $(DIR)) $(notdir $(DIR))
+	@echo "Packed $(DIR) into archives/$(notdir $(DIR)).tar.gz"
