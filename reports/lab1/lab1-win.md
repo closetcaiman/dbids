@@ -290,13 +290,18 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 ---
 
-> Wyniki: W MSSQL plan wykonania jest dostosowany przez optymalizator i podmieniony na najbardziej optymalny (`totalTime` 0.0). W przypadku Postgresql i SQLite plan wykonania jest zgodny z napisanym zapytaniem.
+> Wyniki: W MSSQL plan wykonania jest dostosowany przez optymalizator i podmieniony na najbardziej optymalny (`totalTime` bliskie 0). W przypadku Postgresql i SQLite plan wykonania jest zgodny z napisanym zapytaniem.
 
 ```sql
 --subquery
-select p1.ProductID, p1.ProductName, p1.UnitPrice from Products p1
-where p1.UnitPrice > (select avg(p2.UnitPrice) from Products p2 where p1.CategoryID = p2.CategoryID)
-order by p1.ProductID
+select p1.ProductID, p1.ProductName, p1.UnitPrice, (
+    select avg(p2.unitprice)
+    from products p2
+    where p1.categoryid = p2.categoryid
+) as AvgCategoryPrice
+from Products p1
+where p1.UnitPrice > (select avg(p3.UnitPrice) from Products p3 where p1.CategoryID = p3.CategoryID)
+order by p1.ProductID;
 ```
 
 **Postgres:**
@@ -461,6 +466,7 @@ Wykonaj polecenia: `select count(*) from product_history`, potwierdzające wykon
 ```sql
 select count(*) from product_history;
 ```
+
 **Postgres:**
 
 ![alt text](media/exercise5-count-postgres.png)
@@ -504,8 +510,17 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 ```sql
 --subquery
-select p1.productid, p1.productname, p1.unitprice from product_history p1
-where p1.unitprice > (select avg(p2.unitprice) from product_history p2 where p1.categoryid = p2.categoryid )
+select p1.id, p1.productid, p1.productname, p1.categoryid, p1.unitprice, (
+    select avg(p2.unitprice)
+    from product_history p2
+    where p1.categoryid = p2.categoryid
+) as AvgCategoryPrice
+from product_history p1
+where p1.unitprice > (
+    select avg(p3.unitprice)
+    from product_history p3
+    where p1.categoryid = p3.categoryid
+)
 order by p1.productid;
 ```
 
@@ -515,13 +530,24 @@ order by p1.productid;
 ```sql
 -- subquery (reduced)
 with t as (
-select p1.id, p1.productid, p1.productname, p1.unitprice from product_history p1
-where p1.unitprice > (select avg(p2.unitprice) from product_history p2 where p1.categoryid = p2.categoryid )
+    select p1.id, p1.productid, p1.productname, p1.categoryid, p1.unitprice, (
+        select avg(p2.unitprice)
+        from product_history p2
+        where p1.categoryid = p2.categoryid
+    ) as AvgCategoryPrice
+    from product_history p1
+    where p1.unitprice > (
+        select avg(p3.unitprice)
+        from product_history p3
+        where p1.categoryid = p3.categoryid
+    )
 )
-select * from t
+select *
+from t
 where t.id between 1000 and 1500
-order by t.productid
+order by t.productid;
 ```
+
 **Postgres:**
 ![alt text](media/exercise6-subquery-postgres.png)
 
@@ -531,12 +557,14 @@ order by t.productid
 ```sql
 --join
 with t as (
-	select categoryid, avg(unitprice) as avgprice from product_history
+	select categoryid, avg(unitprice) as avgprice
+	from product_history
 	group by categoryid
 )
-select p.productid, p.productname, p.unitprice, t.AvgPrice from product_history p
+select p.id, p.productid, p.productname, p.unitprice, p.categoryid, t.avgprice
+from product_history p
 join t on p.categoryid = t.categoryid
-where p.unitprice > t.AvgPrice
+where p.unitprice > t.avgprice
 order by p.productid;
 ```
 
@@ -552,9 +580,11 @@ order by p.productid;
 ```sql
 --window function
 with t as (
-	select p.productid, p.productname, p.unitprice, avg(p.unitprice) over(partition by p.categoryid) as avgprice from product_history p
+	select p.id, p.productid, p.productname, p.unitprice, p.categoryid, avg(p.unitprice) over(partition by p.categoryid) as avgprice
+	from product_history p
 )
-select productid, productname, unitprice, avgprice from t
+select id, productid, productname, unitprice, categoryid, avgprice
+from t
 where unitprice > avgprice
 order by productid;
 ```
