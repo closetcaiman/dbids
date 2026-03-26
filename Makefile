@@ -14,6 +14,8 @@ help:
 	@echo "make pg-transaction     - Execute SQL file in Postgres (FILE=path/to/file.sql)"
 	@echo "make mssql-transaction  - Execute SQL file in MS SQL (FILE=path/to/file.sql)"
 	@echo "make sqlite-transaction - Execute SQL file in SQLite (FILE=path/to/file.sql)"
+	@echo "make pdf                - Convert Markdown file to PDF (FILE=path/to/file.md)"
+	@echo "make pack               - Create a tar.gz archive of the project (DIR=path/to/directory)"
 
 up:
 	$(COMPOSE) up -d
@@ -39,3 +41,13 @@ mssql-transaction:
 
 sqlite-transaction:
 	cat $(FILE) | docker exec -i sqlite_server sqlite3 /data/db/northwind.db
+
+pdf:
+	@./scripts/convert-md-to-pdf.sh $(FILE)
+
+pack:
+	@mkdir -p archives
+	@tar -czf archives/$(notdir $(DIR)).tar.gz \
+		--exclude='.git' \
+		-C $(shell dirname $(DIR)) $(notdir $(DIR))
+	@echo "Packed $(DIR) into archives/$(notdir $(DIR)).tar.gz"
