@@ -560,9 +560,112 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 > Wyniki:
 
+Zapytanie realizujące opisane zadanie w Postgresie:
+
 ```sql
---  ...
+-- z funkcją okna
+with t as (select od.orderid                                     as id,
+                  od.productid,
+                  date_part('month', o.orderdate)                as month,
+                  o.orderdate                                    as date,
+                  od.unitprice * od.quantity * (1 - od.discount) as total,
+                  sum(od.unitprice * od.quantity * (1 - od.discount)) over (
+                      partition by od.productid,
+                          date_part('year', o.orderdate),
+                          date_part('month', o.orderdate)
+                      order by od.productid, o.orderdate
+                      )                                          as cum_total
+           from orderdetails od
+                    join orders o on od.orderid = o.orderid)
+select t.id,
+       t.productid,
+       t.month,
+       t.date,
+       t.total,
+       t.cum_total
+from t;
+
+-- bez funkcji okna (inner-join)
+with t as (select od.orderid                                     as id,
+                  od.productid,
+                  date_part('month', o.orderdate)                as month,
+                  o.orderdate                                    as date,
+                  od.unitprice * od.quantity * (1 - od.discount) as total
+           from orderdetails od
+                    join orders o on od.orderid = o.orderid)
+select t.id,
+       t.productid,
+       t.month,
+       t.date,
+       t.total,
+       sum(t2.total) as cum_total
+from t
+         left join t t2
+                   on t2.productid = t.productid
+                       and date_part('year', t2.date) = date_part('year', t.date)
+                       and date_part('month', t2.date) = date_part('month', t.date)
+                       and (
+                          t2.date < t.date
+                              or (t2.date = t.date and t2.id <= t.id)
+                          )
+group by t.id,
+         t.productid,
+         t.month,
+         t.date,
+         t.total
+order by t.productid,
+         t.date;
 ```
+
+Rezultaty zapytania:
+
+- z funkcją okna:
+  ![alt text](image-19.png)
+
+- z `inner-joinem`:
+  ![alt text](image-18.png)
+
+Jak widać na załączonych zrzutach ekranu, wartości te są kumulowane w ramach danego miesiąca. Wyniki są identyczny w przypadku obu zapytań.
+
+Porównanie wydajności i planów zapytań - Postgres:
+
+- zapytanie z funkcją okna:
+  ![alt text](image-20.png)
+
+- zapytanie z `inner-joinem`:
+  ![alt text](image-21.png)
+
+Wnioski:
+
+- zapytanie z funkcją okna charakteryzuje się około 2 razy niższym kosztem zapytania
+- ze względu na mały rozmiar danych (tabele `orders` i `ordershistory`), zapytania są generalnie bardzo szybkie (~30ms), więc nie ma sensu porównywać bezpośrednio czasu zapytań
+
+Zapytania dla MSSQL oraz SQLite są identyczne, z dokładnością do funkcji ekstrahującej miesiąc oraz rok z daty.
+
+Porównanie wydajności i planów zapytań - MSSQL:
+
+- z funkcją okna:
+  ![alt text](image-22.png)
+
+- z `inner-join`:
+  ![alt text](image-23.png)
+
+Wnioski:
+
+- koszt całkowity dla funkcji okna jest ~3 krotnie niższy, natomiast czas wykonania jest bardzo zbliżony (ze względu na mały ilość danych)
+
+Porównanie wydajności i planów zapytań - SQLite:
+
+- z funkcją okna:
+  ![alt text](image-25.png)
+
+- z `inner-join`:
+  ![alt text](image-24.png)
+
+Wnioski:
+
+- czas wykonania zapytań jest bardzo zbliżony (~400ms) zarówno dla funkcji okna i `inner-joina`, jest to około 20-krotnie dłużej niż to samo zapytanie w Postgres i MSSQL
+- ze względu na format daty w tabelach `orders` i `orderhistory` konieczne było niewygodne castowanie daty do odpowiedniego formatu (`cast(substr(o.orderdate, 1, instr(o.orderdate, '/') - 1) as int) as month`)
 
 ---
 
