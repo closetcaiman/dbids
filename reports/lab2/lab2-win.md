@@ -108,7 +108,7 @@ Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres 
 
 Wynik zapytania z polecenia:
 
-![alt text](media/image-1.png)
+![alt text](image-1.png)
 
 Komentarz:
 
@@ -231,20 +231,20 @@ from products p
 order by p.categoryid, custom_rn.rowno_custom;
 ```
 
-![alt text](media/image-2.png)
+![alt text](image-2.png)
 
 Jak widać na załączonym zrzucie ekranu, wszystkie funkcje oraz nasze customowe odpowiedniki dają identyczne rezultaty.
 
 Ze względu na różnicę w wydajności podzapytania względem `inner-joina`, w dalszej części konspektu będziemy korzystać z metody wykorzystującej `inner-joina` (porównanie wykonane dla silnika Postgres oraz funkcji `row_number`, wydajność pozostałych funkcji ma podobną charakterystykę):
 
 - funkcja okna:
-  ![alt text](media/image-3.png)
+  ![alt text](image-3.png)
 
 - `inner-join`:
-  ![alt text](media/image-4.png)
+  ![alt text](image-4.png)
 
 - podzapytanie:
-  ![alt text](media/image-5.png)
+  ![alt text](image-5.png)
 
 # Zadanie 2
 
@@ -317,10 +317,10 @@ order by year, productid, unitprice desc;
 Rezultaty:
 
 - z funkcją okna:
-  ![alt text](media/image-10.png)
+  ![alt text](image-10.png)
 
 - z `inner-join`:
-  ![alt text](media/image-11.png)
+  ![alt text](image-11.png)
 
 Zapytania dla MSSQL oraz SQLite są generalnie identyczne, z dokładnością do wyciągania roku z daty:
 
@@ -338,10 +338,10 @@ strftime('%Y', date) as year
 Porównanie planów zapytań (Postgres):
 
 - zapytanie z `dense_rank`
-  ![alt text](media/image-7.png)
+  ![alt text](image-7.png)
 
 - zapytanie z `inner-join`
-  ![alt text](media/image-6.png)
+  ![alt text](image-6.png)
 
 Wnioski:
 
@@ -359,10 +359,10 @@ Porównanie planów zapytań - MSSQL:
 ```
 
 - zapytanie z `dense_rank`
-  ![alt text](media/image-9.png)
+  ![alt text](image-9.png)
 
 - zapytanie z `inner-join`
-  ![alt text](media/image-8.png)
+  ![alt text](image-8.png)
 
 Wnioski:
 
@@ -373,10 +373,10 @@ Wnioski:
 Porównanie wydajności i planów zapytań - SQLite:
 
 - z funkcją `dense_rank`:
-  ![alt text](media/image-13.png)
+  ![alt text](image-13.png)
 
 - z `inner-join`:
-  ![alt text](media/image-12.png)
+  ![alt text](image-12.png)
 
 Wnioski:
 
@@ -486,9 +486,22 @@ order by categoryid, unitprice desc;
 
 > Wyniki:
 
+![alt text](image-14.png)
+
+Funkcja `first_value()` zwraca pierwszą wartość w danym oknie, funkcja `last_value()` zwraca ostatnią wartość w danym oknie, przy czym zakres funkcji `last_value` jest od początku do **aktualnego wiersza** (`rows between unbounded preceding and current row`). W naszym przypadku, funkcja `first_value()` faktycznie będzie pokazywała najdroższy produkt w danej kategorii, natomiast funkcja `last_value()` będzie zawsze pokazywała produkt z danego wiersza (bo on jest najtańszy licząc od początku do aktualnego wiersza). W celu wykorzystania funkcji `last_value` do wskazywania najtańszego produktu w danej kategorii, musimy zmienić zakres tej funkcji:
+
 ```sql
---  ...
+-- wczesniej, zakres do aktualnego wiersza
+last_value(productname) over (partition by categoryid
+  order by unitprice desc) last
+
+-- poprawiona wersja, zakres całego okna
+last_value(productname) over (partition by categoryid
+  order by unitprice desc rows between unbounded preceding and unbounded following) last
 ```
+
+Rezultaty poprawionego zapytania:
+![alt text](image-15.png)
 
 ---
 
