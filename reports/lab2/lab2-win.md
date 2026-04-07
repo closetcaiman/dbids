@@ -177,12 +177,86 @@ Do analizy użyj wybranego systemu/bazy danych (wybierz MS SQLserver, Postgres l
 
 ---
 > Wyniki:
->
-> Funkcja `lead()` zwraca wartość z następnego wiersza w obrębie danego okna, a funkcja `lag()` zwraca wartość z poprzedniego wiersza w obrębie danego okna. W przypadku pierwszego wiersza funkcja lag zwróci `NULL`, a w przypadku ostatniego wiersza funkcja lead zwróci `NULL`.
+
+Początek wyniku:
+![alt-text](media/ex3-1.png)
+
+Koniec wyniku:
+![alt-text](media/ex3-2.png)
+
+Według sygnatury z [dokumentacji](https://www.postgresql.org/docs/current/functions-window.html) `PostgreSQL` funkcja `lag()` zwraca wartość z poprzedniego wiersza co do offsetu, a `lead()` zwraca wartość z następnego wiersza co do offsetu. W przpadku braku takiego wiersza zwracana jest wartość domyślna. W naszym przypadku (brak podania offsetu i wartości domyślnej) offset jest równy 1, a wartość domyślna jest równa NULL. Oznacza to, że funkcja `lag()` zwraca cenę produktu z poprzedniego dnia, a `lead()` zwraca cenę produktu z następnego dnia. W przypadku pierwszego wiersza (brak poprzedniego dnia) funkcja `lag()` zwraca NULL, a w przypadku ostatniego wiersza (brak następnego dnia) funkcja `lead()` zwraca NULL.
+
+Podejście bez funkcji okna:
+```sql
+-- podzapytanie
+select ph.productid,
+       ph.productname,
+       ph.categoryid,
+       ph.date,
+       ph.unitprice,
+       (select ph2.unitprice
+        from product_history ph2
+        where ph2.productid = ph.productid
+          and ph2.date < ph.date
+          and extract(year from date) = 2022
+        order by ph2.date desc
+        limit 1) as previousprodprice,
+       (select ph3.unitprice
+        from product_history ph3
+        where ph3.productid = ph.productid
+          and ph3.date > ph.date
+          and extract(year from date) = 2022
+        order by ph3.date
+        limit 1) as nextprodprice
+from product_history ph
+where ph.productid = 1
+  and extract(year from ph.date) = 2022
+order by ph.date;
+```
 
 ```sql
---  ...
+-- joiny
+select ph.productid,
+       ph.productname,
+       ph.categoryid,
+       ph.date,
+       ph.unitprice,
+       ph_prev.unitprice as previousprodprice,
+       ph_next.unitprice as nextprodprice
+from product_history ph
+         left join product_history ph_prev on ph.productid = ph_prev.productid
+    and ph_prev.date = (select max(date)
+                        from product_history
+                        where productid = ph.productid
+                          and date < ph.date
+                          and extract(year from date) = 2022)
+         left join product_history ph_next on ph.productid = ph_next.productid
+    and ph_next.date = (select min(date)
+                        from product_history
+                        where productid = ph.productid
+                          and date > ph.date
+                          and extract(year from date) = 2022)
+where ph.productid = 1
+  and extract(year from ph.date) = 2022
+order by ph.date;
 ```
+
+Porównanie wyników klazulą `except` w obie strony dało pusty zbiór wynikowy, co oznacza, że wyniki są takie same dla wszystkich trzech podejść.
+
+Porównanie planów wykonania dla różnych podejść:
+
+- funkcje okna:
+![alt-text](media/ex3-3.png)
+
+- podzapytanie:
+![alt-text](media/ex3-4.png)
+
+- joiny:
+![alt-text](media/ex3-5.png)
+
+Wnioski:
+- podejście z funkcjami okna jest znacznie szybsze niż podzapytanie i joiny, co widać po czasie wykonania i kosztach
+- funkcja okna wykonuje jeden skan tabeli `product_history`, natomiast podzapytanie i joiny wykonują wiele skanów tej tabeli (po jednym dla każdego wiersza), co jest przyczyną dłuższego czasu wykonania
 
 ---
 
@@ -201,7 +275,7 @@ Zbiór wynikowy powinien zawierać:
 - datę poprzedniego zamówienia danego klienta,
 - wartość poprzedniego zamówienia danego klienta.
 
-Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite)
+Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite.
 
 ---
 > Wyniki:
