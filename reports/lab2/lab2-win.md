@@ -281,8 +281,119 @@ Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres 
 > Wyniki:
 
 ```sql
---  ...
+-- PostgreSQL
+with ordersummary as (select c.companyname,
+                             o.orderid,
+                             o.orderdate,
+                             sum(od.unitprice * od.quantity * (1 - od.discount)) + o.freight as ordertotal
+                      from orders o
+                               join customers c on o.customerid = c.customerid
+                               join orderdetails od on o.orderid = od.orderid
+                      group by c.companyname, o.orderid, o.orderdate, o.freight)
+select companyname,
+       orderid,
+       orderdate,
+       ordertotal,
+       lag(orderid) over (partition by companyname order by orderdate, orderid)    as prevorderid,
+       lag(orderdate) over (partition by companyname order by orderdate, orderid)  as prevorderdate,
+       lag(ordertotal) over (partition by companyname order by orderdate, orderid) as prevordertotal
+from ordersummary
+order by companyname, orderdate;
 ```
+
+![alt-text](media/ex4-1.png)
+
+Dla każdego klienta widzimy jego zamówienia wraz z informacjami o poprzednim zamówieniu. W przypadku pierwszego zamówienia danego klienta, kolumny dotyczące poprzedniego zamówienia będą zawierały wartość `NULL`.
+
+Podejścia bez funkcji okna:
+
+```sql
+-- podzapytanie
+with ordersummary as (select c.companyname,
+                             o.customerid,
+                             o.orderid,
+                             o.orderdate,
+                             sum(od.unitprice * od.quantity * (1 - od.discount)) + o.freight as ordertotal
+                      from orders o
+                               join customers c on o.customerid = c.customerid
+                               join orderdetails od on o.orderid = od.orderid
+                      group by c.companyname, o.customerid, o.orderid, o.orderdate, o.freight)
+select t1.companyname,
+       t1.orderid,
+       t1.orderdate,
+       t1.ordertotal,
+       (select t2.orderid
+        from ordersummary t2
+        where t2.customerid = t1.customerid
+          and (t2.orderdate < t1.orderdate or (t2.orderdate = t1.orderdate and t2.orderid < t1.orderid))
+        order by t2.orderdate desc, t2.orderid desc
+        limit 1) as prevorderid,
+       (select t2.orderdate
+        from ordersummary t2
+        where t2.customerid = t1.customerid
+          and (t2.orderdate < t1.orderdate or (t2.orderdate = t1.orderdate and t2.orderid < t1.orderid))
+        order by t2.orderdate desc, t2.orderid desc
+        limit 1) as prevorderdate,
+       (select t2.ordertotal
+        from ordersummary t2
+        where t2.customerid = t1.customerid
+          and (t2.orderdate < t1.orderdate or (t2.orderdate = t1.orderdate and t2.orderid < t1.orderid))
+        order by t2.orderdate desc, t2.orderid desc
+        limit 1) as prevordertotal
+from ordersummary t1
+order by t1.companyname, t1.orderdate, t1.orderid;
+```
+
+```sql
+-- joiny
+with ordersummary as (select c.companyname,
+                             o.customerid,
+                             o.orderid,
+                             o.orderdate,
+                             sum(od.unitprice * od.quantity * (1 - od.discount)) + o.freight as ordertotal
+                      from orders o
+                               join customers c on o.customerid = c.customerid
+                               join orderdetails od on o.orderid = od.orderid
+                      group by c.companyname, o.customerid, o.orderid, o.orderdate, o.freight),
+     ordermapping as (select t1.orderid,
+                             (select t2.orderid
+                              from ordersummary t2
+                              where t2.customerid = t1.customerid
+                                and (t2.orderdate < t1.orderdate or
+                                     (t2.orderdate = t1.orderdate and t2.orderid < t1.orderid))
+                              order by t2.orderdate desc, t2.orderid desc
+                              limit 1) as previd
+                      from ordersummary t1)
+select curr.companyname,
+       curr.orderid,
+       curr.orderdate,
+       curr.ordertotal,
+       prev.orderid    as prevorderid,
+       prev.orderdate  as prevorderdate,
+       prev.ordertotal as prevordertotal
+from ordersummary curr
+         join ordermapping m on curr.orderid = m.orderid
+         left join ordersummary prev on m.previd = prev.orderid
+order by curr.companyname, curr.orderdate, curr.orderid;
+```
+
+Porównanie wyników klazulą `except` w obie strony dało pusty zbiór wynikowy, co oznacza, że wyniki są takie same dla wszystkich trzech podejść.
+
+Porównanie planów wykonania dla różnych podejść:
+
+- funkcje okna:
+![alt-text](media/ex4-2.png)
+
+- podzapytanie:
+![alt-text](media/ex4-3.png)
+
+- joiny:
+![alt-text](media/ex4-4.png)
+
+Wnioski:
+- w przypadku funkcji okna konieczne było, aby grupować dane po orderdate i orderid, aby dobrze obsłużyć kolejność zamówień, co spowodowało, że próba otrzymania tego samego wyniku bez funkcji okna okazała się trudna do napisania
+- kod z funkcjami okna jest znacznie bardziej czytelny, łatwiejszy oraz zwięzły do napisania niż kod z podzapytaniem i joinami, co jest dodatkową zaletą funkcji okna
+- czasy wykonania są bardzo małe (<1s), ale warto zwrócic uwagę na koszty, które są znacznie większe dla podejścia z podzapytaniem i joinami niż dla podejścia z funkcjami okna
 
 ---
 
