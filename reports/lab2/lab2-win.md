@@ -268,7 +268,8 @@ Napisz polecenie które wyświetla inf. o zamówieniach
 
 Zbiór wynikowy powinien zawierać:
 
-- nazwę klienta, nr zamówienia,
+- nazwę klienta, 
+- nr zamówienia,
 - datę zamówienia,
 - wartość zamówienia (wraz z opłatą za przesyłkę),
 - nr poprzedniego zamówienia danego klienta,
@@ -449,18 +450,165 @@ Zbiór wynikowy powinien zawierać:
   - datę tego zamówienia
   - wartość tego zamówienia
 - dane zamówienia klienta o najwyższej wartości w danym miesiącu
-  - nr zamówienia o najniższej wartości w danym miesiącu
+  - nr zamówienia o najwyższej wartości w danym miesiącu
   - datę tego zamówienia
   - wartość tego zamówienia
 
-Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite)
+Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite.
 
 ---
 > Wyniki:
 
 ```sql
---  ...
+-- PostgreSQL
+with ordersummary as (select o.customerid,
+                             o.orderid,
+                             o.orderdate,
+                             date_trunc('month', o.orderdate)                                as ordermonth,
+                             sum(od.unitprice * od.quantity * (1 - od.discount)) + o.freight as ordertotal
+                      from orders o
+                               join orderdetails od on o.orderid = od.orderid
+                      group by o.customerid, o.orderid, o.orderdate, o.freight)
+select customerid,
+       orderid,
+       orderdate,
+       ordertotal,
+       first_value(orderid) over (partition by customerid, ordermonth order by ordertotal asc)     as minorderid,
+       first_value(orderdate) over (partition by customerid, ordermonth order by ordertotal asc)   as minorderdate,
+       first_value(ordertotal) over (partition by customerid, ordermonth order by ordertotal asc)  as minordervalue,
+       first_value(orderid) over (partition by customerid, ordermonth order by ordertotal desc)    as maxorderid,
+       first_value(orderdate) over (partition by customerid, ordermonth order by ordertotal desc)  as maxorderdate,
+       first_value(ordertotal) over (partition by customerid, ordermonth order by ordertotal desc) as maxordervalue
+from ordersummary
+order by customerid, orderdate;
 ```
+
+![alt-text](media/ex6-1.png)
+
+Podejścia bez funkcji okna:
+
+```sql
+-- podzapytanie
+with ordersummary as (select c.companyname,
+                             o.customerid,
+                             o.orderid,
+                             o.orderdate,
+                             date_trunc('month', o.orderdate)                                as ordermonth,
+                             sum(od.unitprice * od.quantity * (1 - od.discount)) + o.freight as ordertotal
+                      from orders o
+                               join customers c on o.customerid = c.customerid
+                               join orderdetails od on o.orderid = od.orderid
+                      group by c.companyname, o.customerid, o.orderid, o.orderdate, o.freight)
+select t1.customerid,
+       t1.orderid,
+       t1.orderdate,
+       t1.ordertotal,
+       (select t2.orderid
+        from ordersummary t2
+        where t2.customerid = t1.customerid
+          and t2.ordermonth = t1.ordermonth
+        order by t2.ordertotal asc, t2.orderid asc
+        limit 1) as minorderid,
+       (select t2.orderdate
+        from ordersummary t2
+        where t2.customerid = t1.customerid
+          and t2.ordermonth = t1.ordermonth
+        order by t2.ordertotal asc, t2.orderid asc
+        limit 1) as minorderdate,
+       (select t2.ordertotal
+        from ordersummary t2
+        where t2.customerid = t1.customerid
+          and t2.ordermonth = t1.ordermonth
+        order by t2.ordertotal asc, t2.orderid asc
+        limit 1) as minordervalue,
+       (select t2.orderid
+        from ordersummary t2
+        where t2.customerid = t1.customerid
+          and t2.ordermonth = t1.ordermonth
+        order by t2.ordertotal desc, t2.orderid desc
+        limit 1) as maxorderid,
+       (select t2.orderdate
+        from ordersummary t2
+        where t2.customerid = t1.customerid
+          and t2.ordermonth = t1.ordermonth
+        order by t2.ordertotal desc, t2.orderid desc
+        limit 1) as maxorderdate,
+       (select t2.ordertotal
+        from ordersummary t2
+        where t2.customerid = t1.customerid
+          and t2.ordermonth = t1.ordermonth
+        order by t2.ordertotal desc, t2.orderid desc
+        limit 1) as maxordervalue
+from ordersummary t1
+order by t1.customerid, t1.orderdate;
+```
+
+```sql
+-- joiny
+with ordersummary as (select c.companyname,
+                             o.customerid,
+                             o.orderid,
+                             o.orderdate,
+                             date_trunc('month', o.orderdate)                                as ordermonth,
+                             sum(od.unitprice * od.quantity * (1 - od.discount)) + o.freight as ordertotal
+                      from orders o
+                               join customers c on o.customerid = c.customerid
+                               join orderdetails od on o.orderid = od.orderid
+                      group by c.companyname, o.customerid, o.orderid, o.orderdate, o.freight),
+     monthlyextremes as (select customerid,
+                                ordermonth,
+                                min(ordertotal) as minval,
+                                max(ordertotal) as maxval
+                         from ordersummary
+                         group by customerid, ordermonth)
+select os.customerid,
+       os.orderid,
+       os.orderdate,
+       os.ordertotal,
+       os_min.orderid    as minorderid,
+       os_min.orderdate  as minorderdate,
+       os_min.ordertotal as minordervalue,
+       os_max.orderid    as maxorderid,
+       os_max.orderdate  as maxorderdate,
+       os_max.ordertotal as maxordervalue
+from ordersummary os
+         join monthlyextremes ex on os.customerid = ex.customerid and os.ordermonth = ex.ordermonth
+         left join ordersummary os_min on os_min.customerid = ex.customerid
+    and os_min.ordermonth = ex.ordermonth
+    and os_min.ordertotal = ex.minval
+         left join ordersummary os_max on os_max.customerid = ex.customerid
+    and os_max.ordermonth = ex.ordermonth
+    and os_max.ordertotal = ex.maxval
+order by os.customerid, os.orderdate;
+```
+
+Porównanie wyników klazulą `except` w obie strony dało pusty zbiór wynikowy, co oznacza, że wyniki są takie same dla wszystkich trzech podejść.
+
+Porównanie planów wykonania dla różnych podejść:
+
+- funkcje okna:
+
+![alt-text](media/ex6-2-1.png)
+
+![alt-text](media/ex6-2-2.png)
+
+- podzapytanie:
+
+![alt-text](media/ex6-3-1.png)
+
+![alt-text](media/ex6-3-2.png)
+
+- joiny:
+
+![alt-text](media/ex6-4-1.png)
+
+![alt-text](media/ex6-4-2.png)
+
+
+Wnioski:
+- funckje okna znów okazały się najlepsze, zwłaszcza w porównaniu do podejścia z podzapytaniem, które jest bardzo kosztowne, co widać po czasie wykonania i kosztach
+- zapytanie z joinami jest również kosztowne, ale znacznie mniej niż podejście z podzapytaniem, warto jednak zwrócić uwagę na `plan width` (`Estimated average width of rows output by this plan node (in bytes).`), który jest większy dla podejścia z joinami niż dla podejścia z funkcjami okna, co oznacza, że mimo podobnego czasu wykonania, podejście z joinami jest mniej wydajne pod względem wykorzystania pamięci niż podejście z funkcjami okna
+- podejście z podzapytaniem znów wypadło najgorzej pod względem kosztu oraz czasu wykonannia - dla każdego z 830 wierszy w tabeli wykonano 6 podzapytań, które filtowały 828 wierszy, warto zauważyć, że `PostgreSQL` nawet włączył `JIT`, aby przyśpieszyć wykonanie, co zajęło ~340ms (dla porównania zapytanie z funkcjami okna zajęło ~2.4ms!)
 
 ---
 
@@ -497,7 +645,7 @@ Wykonaj kilka "własnych" przykładowych analiz.
 
 Czy są jeszcze jakieś ciekawe/przydatne funkcje okna (z których nie korzystałeś w ćwiczeniu)? Spróbuj ich użyć w zaprezentowanych przykładach.
 
-Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite)
+Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite.
 
 ---
 > Wyniki:
