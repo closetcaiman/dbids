@@ -1,4 +1,3 @@
-
 ## SQL - Funkcje okna (Window functions) <br> Lab 2
 
 ---
@@ -12,6 +11,7 @@ Celem ćwiczenia jest zapoznanie się z działaniem funkcji okna (window functio
 Swoje odpowiedzi wpisuj w miejsca oznaczone jako:
 
 ---
+
 > Wyniki:
 
 ```sql
@@ -49,7 +49,7 @@ Oprogramowanie dostępne jest na przygotowanej maszynie wirtualnej
 - Itzik Ben-Gan, T-SQL Window Functions: For Data Analysis and Beyond, Microsoft 2020
 
 - Kilka linków do materiałów które mogą być pomocne
-  - [https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16](https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16)
+   - [https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16](https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16)
   - [https://www.sqlservertutorial.net/sql-server-window-functions/](https://www.sqlservertutorial.net/sql-server-window-functions/)
   - [https://www.sqlshack.com/use-window-functions-sql-server/](https://www.sqlshack.com/use-window-functions-sql-server/)
   - [https://www.postgresql.org/docs/current/tutorial-window.html](https://www.postgresql.org/docs/current/tutorial-window.html)
@@ -63,7 +63,7 @@ Oprogramowanie dostępne jest na przygotowanej maszynie wirtualnej
 ## Przygotowanie
 
 Uruchom SSMS
-- Skonfiguruj połączenie  z bazą Northwind na lokalnym serwerze MS SQL
+- Skonfiguruj połączenie z bazą Northwind na lokalnym serwerze MS SQL
 
 Uruchom DataGrip (lub Dbeaver)
 
@@ -89,20 +89,21 @@ Bazę Northwind3 można pobrać z moodle (zakładka - Backupy baz danych)
 Funkcje rankingu, `row_number()`, `rank()`, `dense_rank()`
 
 ```sql
-select productid, productname, unitprice, categoryid,  
-    row_number() over(partition by categoryid order by unitprice desc) as rowno,  
-    rank() over(partition by categoryid order by unitprice desc) as rankprice,  
-    dense_rank() over(partition by categoryid order by unitprice desc) as denserankprice  
+select productid, productname, unitprice, categoryid,
+    row_number() over(partition by categoryid order by unitprice desc) as rowno,
+    rank() over(partition by categoryid order by unitprice desc) as rankprice,
+    dense_rank() over(partition by categoryid order by unitprice desc) as denserankprice
 from products;
 ```
 
-Wykonaj polecenie, zaobserwuj wynik. Porównaj funkcje row_number(), rank(), dense_rank().  Skomentuj wyniki.
+Wykonaj polecenie, zaobserwuj wynik. Porównaj funkcje row_number(), rank(), dense_rank(). Skomentuj wyniki.
 
 Spróbuj uzyskać ten sam wynik bez użycia funkcji okna
 
 Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite.
 
 ---
+
 > Wyniki:
 
 ```sql
@@ -133,6 +134,7 @@ Spróbuj uzyskać ten sam wynik bez użycia funkcji okna, porównaj wyniki, czas
 Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 ---
+
 > Wyniki:
 
 ```sql
@@ -148,24 +150,24 @@ Funkcje `lag()`, `lead()`
 Wykonaj polecenia, zaobserwuj wynik. Jak działają funkcje `lag()`, `lead()`
 
 ```sql
-select productid, productname, categoryid, date, unitprice,  
-       lag(unitprice) over (partition by productid order by date)   
-as previousprodprice,  
-       lead(unitprice) over (partition by productid order by date)   
-as nextprodprice  
-from product_history  
-where productid = 1 and year(date) = 2022  
-order by date;  
-  
-with t as (select productid, productname, categoryid, date, unitprice,  
-                  lag(unitprice) over (partition by productid   
-order by date) as previousprodprice,  
-                  lead(unitprice) over (partition by productid   
-order by date) as nextprodprice  
-           from product_history  
-           )  
-select * from t  
-where productid = 1 and year(date) = 2022  
+select productid, productname, categoryid, date, unitprice,
+       lag(unitprice) over (partition by productid order by date)
+as previousprodprice,
+       lead(unitprice) over (partition by productid order by date)
+as nextprodprice
+from product_history
+where productid = 1 and year(date) = 2022
+order by date;
+
+with t as (select productid, productname, categoryid, date, unitprice,
+                  lag(unitprice) over (partition by productid
+order by date) as previousprodprice,
+                  lead(unitprice) over (partition by productid
+order by date) as nextprodprice
+           from product_history
+           )
+select * from t
+where productid = 1 and year(date) = 2022
 order by date;
 ```
 
@@ -176,6 +178,7 @@ Spróbuj uzyskać ten sam wynik bez użycia funkcji okna
 Do analizy użyj wybranego systemu/bazy danych (wybierz MS SQLserver, Postgres lub SQLite).
 
 ---
+
 > Wyniki:
 
 Początek wyniku:
@@ -187,6 +190,7 @@ Koniec wyniku:
 Według sygnatury z [dokumentacji](https://www.postgresql.org/docs/current/functions-window.html) `PostgreSQL` funkcja `lag()` zwraca wartość z poprzedniego wiersza co do offsetu, a `lead()` zwraca wartość z następnego wiersza co do offsetu. W przpadku braku takiego wiersza zwracana jest wartość domyślna. W naszym przypadku (brak podania offsetu i wartości domyślnej) offset jest równy 1, a wartość domyślna jest równa NULL. Oznacza to, że funkcja `lag()` zwraca cenę produktu z poprzedniego dnia, a `lead()` zwraca cenę produktu z następnego dnia. W przypadku pierwszego wiersza (brak poprzedniego dnia) funkcja `lag()` zwraca NULL, a w przypadku ostatniego wiersza (brak następnego dnia) funkcja `lead()` zwraca NULL.
 
 Podejście bez funkcji okna:
+
 ```sql
 -- podzapytanie
 select ph.productid,
@@ -246,15 +250,16 @@ Porównanie wyników klazulą `except` w obie strony dało pusty zbiór wynikowy
 Porównanie planów wykonania dla różnych podejść:
 
 - funkcje okna:
-![alt-text](media/ex3-3.png)
+  ![alt-text](media/ex3-3.png)
 
 - podzapytanie:
-![alt-text](media/ex3-4.png)
+  ![alt-text](media/ex3-4.png)
 
 - joiny:
-![alt-text](media/ex3-5.png)
+  ![alt-text](media/ex3-5.png)
 
 Wnioski:
+
 - podejście z funkcjami okna jest znacznie szybsze niż podzapytanie i joiny, co widać po czasie wykonania i kosztach
 - funkcja okna wykonuje jeden skan tabeli `product_history`, natomiast podzapytanie i joiny wykonują wiele skanów tej tabeli (po jednym dla każdego wiersza), co jest przyczyną dłuższego czasu wykonania
 
@@ -268,7 +273,7 @@ Napisz polecenie które wyświetla inf. o zamówieniach
 
 Zbiór wynikowy powinien zawierać:
 
-- nazwę klienta, 
+- nazwę klienta,
 - nr zamówienia,
 - datę zamówienia,
 - wartość zamówienia (wraz z opłatą za przesyłkę),
@@ -279,6 +284,7 @@ Zbiór wynikowy powinien zawierać:
 Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite.
 
 ---
+
 > Wyniki:
 
 ```sql
@@ -383,15 +389,16 @@ Porównanie wyników klazulą `except` w obie strony dało pusty zbiór wynikowy
 Porównanie planów wykonania dla różnych podejść:
 
 - funkcje okna:
-![alt-text](media/ex4-2.png)
+  ![alt-text](media/ex4-2.png)
 
 - podzapytanie:
-![alt-text](media/ex4-3.png)
+  ![alt-text](media/ex4-3.png)
 
 - joiny:
-![alt-text](media/ex4-4.png)
+  ![alt-text](media/ex4-4.png)
 
 Wnioski:
+
 - w przypadku funkcji okna konieczne było, aby grupować dane po orderdate i orderid, aby dobrze obsłużyć kolejność zamówień, co spowodowało, że próba otrzymania tego samego wyniku bez funkcji okna okazała się trudna do napisania
 - kod z funkcjami okna jest znacznie bardziej czytelny, łatwiejszy oraz zwięzły do napisania niż kod z podzapytaniem i joinami, co jest dodatkową zaletą funkcji okna
 - czasy wykonania są bardzo małe (<1s), ale warto zwrócic uwagę na koszty, które są znacznie większe dla podejścia z podzapytaniem i joinami niż dla podejścia z funkcjami okna
@@ -415,16 +422,17 @@ Co trzeba zmienić żeby funkcja last_value pokazywała najtańszy produkt w dan
 Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite)
 
 ```sql
-select productid, productname, unitprice, categoryid,  
-    first_value(productname) over (partition by categoryid   
-order by unitprice desc) first,  
-    last_value(productname) over (partition by categoryid   
-order by unitprice desc) last  
-from products  
+select productid, productname, unitprice, categoryid,
+    first_value(productname) over (partition by categoryid
+order by unitprice desc) first,
+    last_value(productname) over (partition by categoryid
+order by unitprice desc) last
+from products
 order by categoryid, unitprice desc;
 ```
 
 ---
+
 > Wyniki:
 
 ```sql
@@ -457,6 +465,7 @@ Zbiór wynikowy powinien zawierać:
 Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite.
 
 ---
+
 > Wyniki:
 
 ```sql
@@ -604,11 +613,11 @@ Porównanie planów wykonania dla różnych podejść:
 
 ![alt-text](media/ex6-4-2.png)
 
-
 Wnioski:
-- funckje okna znów okazały się najlepsze, zwłaszcza w porównaniu do podejścia z podzapytaniem, które jest bardzo kosztowne, co widać po czasie wykonania i kosztach
+
+- funkcje okna znów okazały się najlepsze, zwłaszcza w porównaniu do podejścia z podzapytaniem, które jest bardzo kosztowne, co widać po czasie wykonania i kosztach
 - zapytanie z joinami jest również kosztowne, ale znacznie mniej niż podejście z podzapytaniem, warto jednak zwrócić uwagę na `plan width` (`Estimated average width of rows output by this plan node (in bytes).`), który jest większy dla podejścia z joinami niż dla podejścia z funkcjami okna, co oznacza, że mimo podobnego czasu wykonania, podejście z joinami jest mniej wydajne pod względem wykorzystania pamięci niż podejście z funkcjami okna
-- podejście z podzapytaniem znów wypadło najgorzej pod względem kosztu oraz czasu wykonannia - dla każdego z 830 wierszy w tabeli wykonano 6 podzapytań, które filtowały 828 wierszy, warto zauważyć, że `PostgreSQL` nawet włączył `JIT`, aby przyśpieszyć wykonanie, co zajęło ~340ms (dla porównania zapytanie z funkcjami okna zajęło ~2.4ms!)
+- podejście z podzapytaniem znów wypadło najgorzej pod względem kosztu oraz czasu wykonania - dla każdego z 830 wierszy w tabeli wykonano 6 podzapytań, które filtowały 828 wierszy, warto zauważyć, że `PostgreSQL` nawet włączył `JIT`, aby przyśpieszyć wykonanie, co zajęło ~340ms (dla porównania całość zapytania z funkcjami okna zajęło ~2.4ms!)
 
 ---
 
@@ -631,6 +640,7 @@ Spróbuj uzyskać ten sam wynik bez użycia funkcji okna, porównaj wyniki, czas
 Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 ---
+
 > Wyniki:
 
 ```sql
@@ -647,14 +657,84 @@ Czy są jeszcze jakieś ciekawe/przydatne funkcje okna (z których nie korzysta�
 
 Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite.
 
+1. `ntile ( num_buckets integer ) → integer`
+
+Funkcja `ntile` dzieli uporządkowany zbiór wynikowy na `num_buckets` grup (wierszy) i przypisuje każdemu wierszowi numer grupy, do której należy. Grupy są numerowane od 1 do `num_buckets`.
+
+Np. Podziel klientów na 4 grupy (kwartyle) na podstawie ich całkowitych wydatków w 1997 roku.
+
 ---
+
 > Wyniki:
 
 ```sql
---  ...
+-- PostgreSQL
+with customerspending as (
+    select
+        c.companyname,
+        c.customerid,
+        sum(od.unitprice * od.quantity * (1 - od.discount)) as totalspent
+    from orders o
+    join customers c on o.customerid = c.customerid
+    join orderdetails od on o.orderid = od.orderid
+    where o.orderdate >= '1997-01-01' and o.orderdate <= '1997-12-31'
+    group by c.companyname, c.customerid
+)
+select
+    companyname,
+    totalspent,
+    ntile(4) over (order by totalspent desc) as customertier
+from customerspending
+order by customertier, totalspent desc;
 ```
 
+Początek wyniku:
+
+![alt-text](media/ex8-1.png)
+
+Koniec wyniku:
+
+![alt-text](media/ex8-2.png)
+
+2. `percent_rank () → double precision`, `cume_dist () → double precision`
+
+Funkcja `percent_rank` oblicza procentową pozycję wiersza w zbiorze wynikowym, natomiast `cume_dist` oblicza skumulowany procent wierszy, które mają wartość mniejszą lub równą wartości w bieżącym wierszu.
+
+Np. Utwórz zestawienie sprzedaży dla produktu `Chef Anton's Cajun Seasoning` i oblicz percentyl oraz skumulowaną dystrybucję wartości sprzedaży tego produktu. Podaj nazwę klienta, nr zamówienia, wartość sprzedaży, percentyl oraz skumulowaną dystrybucję wartości sprzedaży dla tego produktu.
+
+```sql
+-- PostgreSQL
+with productsales as (select c.companyname,
+                             p.productname,
+                             o.orderid,
+                             (od.unitprice * od.quantity) as salevalue
+                      from orderdetails od
+                               join products p on od.productid = p.productid
+                               join orders o on od.orderid = o.orderid
+                               join customers c on o.customerid = c.customerid)
+select companyname,
+       orderid,
+       productname,
+       salevalue,
+       round(percent_rank() over (
+           partition by productname
+           order by salevalue
+           )::numeric, 3) as percentilerank,
+       round(cume_dist() over (
+           partition by productname
+           order by salevalue
+           )::numeric, 3) as cumulativedistribution
+from productsales
+where productname = 'Chef Anton''s Cajun Seasoning'
+order by salevalue desc;
+```
+
+![alt-text](media/ex8-3.png)
+
+- Przy tym zestawieniu ładnie widać podział na klientów detalicznych i liderów sprzedaży.
+
 ---
+
 Punktacja
 
 |         |     |
