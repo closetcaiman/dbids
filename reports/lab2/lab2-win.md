@@ -233,7 +233,61 @@ order by p.categoryid, custom_rn.rowno_custom;
 
 ![alt text](image-2.png)
 
-Jak widać na załączonym zrzucie ekranu, wszystkie funkcje oraz nasze customowe odpowiedniki dają identyczne rezultaty.
+W celu upewnienia się, że wszystkie wartości naszych odpowiedników są identyczne jak te z zapytań korzystających z funkcji okna, korzystamy z dwukierunkowego zapytania `except` (dzięki temu możemy sprawdzić czy w wyniku dostajemy identyczne wiersze, czy istnieją jakieś różnice):
+
+```sql
+with q1 as (with custom_rn as (select p1.productid,
+                                      count(p2.productid) + 1 as rowno
+                               from products p1
+                                        left join products p2
+                                                  on p2.categoryid = p1.categoryid and
+                                                     (p2.unitprice > p1.unitprice or
+                                                      (p2.unitprice = p1.unitprice and p2.productid < p1.productid))
+                               group by p1.productid),
+                 custom_rk as (select p1.productid,
+                                      count(p2.productid) + 1 as rankprice
+                               from products p1
+                                        left join products p2
+                                                  on p2.categoryid = p1.categoryid and
+                                                     p2.unitprice > p1.unitprice
+                               group by p1.productid),
+                 custom_dk as (select p1.productid,
+                                      count(distinct p2.unitprice) + 1 as denserankprice
+                               from products p1
+                                        left join products p2
+                                                  on p2.categoryid = p1.categoryid and
+                                                     p2.unitprice > p1.unitprice
+                               group by p1.productid)
+            select p.productid,
+                   p.productname,
+                   p.unitprice,
+                   p.categoryid,
+                   custom_rn.rowno,
+                   custom_rk.rankprice,
+                   custom_dk.denserankprice
+            from products p
+                     join custom_rn on custom_rn.productid = p.productid
+                     join custom_rk on custom_rk.productid = p.productid
+                     join custom_dk on custom_dk.productid = p.productid
+            order by p.categoryid, custom_rn.rowno),
+     q2 as (select p.productid,
+                   p.productname,
+                   p.unitprice,
+                   p.categoryid,
+                   row_number() over (partition by categoryid order by p.unitprice desc, p.productid) as rowno,
+                   rank() over (partition by categoryid order by p.unitprice desc)                    as rankprice,
+                   dense_rank() over (partition by categoryid order by p.unitprice desc)              as denserankprice
+            from products p
+            order by p.categoryid)
+(select * from q1 except select * from q2)
+union all
+(select * from q2 except select * from q1);
+```
+
+Wynik:
+![alt text](image-26.png)
+
+Jak widać na załączonym zrzucie ekranu, wszystkie funkcje oraz nasze customowe odpowiedniki dają identyczne rezultaty (zapytanie zwraca 0 wierszy, co oznacza, wynikowy zbiór jest identyczny dla obu zapytań).
 
 Ze względu na różnicę w wydajności podzapytania względem `inner-joina`, w dalszej części konspektu będziemy korzystać z metody wykorzystującej `inner-joina` (porównanie wykonane dla silnika Postgres oraz funkcji `row_number`, wydajność pozostałych funkcji ma podobną charakterystykę):
 
@@ -322,6 +376,67 @@ Rezultaty:
 - z `inner-join`:
   ![alt text](image-11.png)
 
+W celu zweryfikowania poprawności zapytania niekorzystającego z funkcji okna, tworzymy zapytanie korzystające z dwukierunkowego `except`. Ze względu na fakt, że ceny o danej randze mogły zostać zaobserwowane w różnych dniach, a zadanie nie specyfikowała, która data powinna być zawarta w zbiorze wynikowym, data nie jest brana pod uwagę przy porównywaniu dwóch zbiorów wynikowych:
+
+```sql
+with q1 as (with t
+                     as (select distinct on (extract(year from date), productid, unitprice) extract(year from date) as year,
+                                                                                            productid,
+                                                                                            productname,
+                                                                                            unitprice,
+                                                                                            date,
+                                                                                            dense_rank() over (
+                                                                                                partition by extract(year from date), productid
+                                                                                                order by unitprice desc
+                                                                                                )                   as denserankprice
+                         from product_history p)
+            select *
+            from t
+            where t.denserankprice <= 4
+              and t.productid < 10
+            order by year, productid, unitprice desc),
+     q2 as (with t
+                     as (select distinct on (extract(year from date), productid, unitprice) extract(year from date) as year,
+                                                                                            productid,
+                                                                                            productname,
+                                                                                            unitprice,
+                                                                                            date
+                         from product_history),
+                 dr as (select p1.year,
+                               p1.productid,
+                               p1.productname,
+                               p1.unitprice,
+                               p1.date,
+                               count(distinct p2.unitprice) + 1 as denserankprice
+                        from t p1
+                                 left join t p2 on p2.year = p1.year and p2.productid = p1.productid and
+                                                   p2.unitprice > p1.unitprice
+                        group by p1.year, p1.productid, p1.productname, p1.unitprice, p1.date)
+            select *
+            from dr
+            where denserankprice <= 4
+              and productid < 10
+            order by year, productid, unitprice desc)
+    (select year, productid, productname, unitprice, denserankprice
+     from q1
+     except
+     select year, productid, productname, unitprice, denserankprice
+     from q2)
+union all
+(select year, productid, productname, unitprice, denserankprice
+ from q2
+ except
+ select year, productid, productname, unitprice, denserankprice
+ from q1);
+```
+
+Wyniki:
+![alt text](image-27.png)
+
+W przypadku uwzględnienia daty w zapytaniu porównującym te dwa podejścia, obserwujemy pewne różnice (natomiast dla każdego produktu, ceny o danej randze są identyczne, wiersze różnią się wyłącznie datą wystąpienia):
+
+![alt text](image-28.png)
+
 Zapytania dla MSSQL oraz SQLite są generalnie identyczne, z dokładnością do wyciągania roku z daty:
 
 ```sql
@@ -348,15 +463,11 @@ Wnioski:
 - zapytanie wykorzystujące funkcję okna (`dense_rank`), charakteryzuje się ponad 4-krotnie niższym kosztem (`total cost`)
 - faktyczny czas wykonania zapytania jest ~50 razy krótszy (`actual total time`)
 - wiersze w zapytaniu z `inner-join` musiały się zmaterializować, w rezultacie tworzonych jest 85 milionów wierszy pośrednich
-- liczba wierszy jest mocno niedoszacowana względem faktycznej liczby wierszy
+- oczekiwana liczba wierszy (`rows`) jest mocno niedoszacowana względem faktycznej liczby wierszy (`actual rows`), co może skutkować złym wyborem planu wykonania zapytania.
 
 Alternatywne zapytanie korzystające z subquery nie wykonało się w rozsądnym czasie, nawet na ograniczonym zbiorze danych.
 
 Porównanie planów zapytań - MSSQL:
-
-```
-
-```
 
 - zapytanie z `dense_rank`
   ![alt text](image-9.png)
@@ -488,7 +599,7 @@ order by categoryid, unitprice desc;
 
 ![alt text](image-14.png)
 
-Funkcja `first_value()` zwraca pierwszą wartość w danym oknie, funkcja `last_value()` zwraca ostatnią wartość w danym oknie, przy czym zakres funkcji `last_value` jest od początku do **aktualnego wiersza** (`rows between unbounded preceding and current row`). W naszym przypadku, funkcja `first_value()` faktycznie będzie pokazywała najdroższy produkt w danej kategorii, natomiast funkcja `last_value()` będzie zawsze pokazywała produkt z danego wiersza (bo on jest najtańszy licząc od początku do aktualnego wiersza). W celu wykorzystania funkcji `last_value` do wskazywania najtańszego produktu w danej kategorii, musimy zmienić zakres tej funkcji:
+Funkcja `first_value()` zwraca pierwszą wartość w danym oknie zgodnie z zadaną kolejnością, funkcja `last_value()` zwraca ostatnią wartość w danym oknie zgodnie z zadaną kolejnością, przy czym zakres funkcji `last_value` jest od początku do **aktualnego wiersza** (`rows between unbounded preceding and current row`). W naszym przypadku, funkcja `first_value()` faktycznie będzie pokazywała najdroższy produkt w danej kategorii, natomiast funkcja `last_value()` będzie zawsze pokazywała produkt z danego wiersza (bo on jest najtańszy licząc od początku do aktualnego wiersza). W celu wykorzystania funkcji `last_value` do wskazywania najtańszego produktu w danej kategorii, musimy zmienić zakres tej funkcji:
 
 ```sql
 -- wczesniej, zakres do aktualnego wiersza
@@ -625,7 +736,57 @@ Rezultaty zapytania:
 - z `inner-joinem`:
   ![alt text](image-18.png)
 
-Jak widać na załączonych zrzutach ekranu, wartości te są kumulowane w ramach danego miesiąca. Wyniki są identyczny w przypadku obu zapytań.
+Jak widać na załączonych zrzutach ekranu, wartości te są kumulowane w ramach danego miesiąca. W celu upewnienia się, że wyniki są identyczne w przypadku obu zapytań, ponownie korzystamy z dwukierunkowego `except`:
+
+```sql
+with q1 as (with t as (select od.orderid                                     as id,
+                              od.productid,
+                              date_part('month', o.orderdate)                as month,
+                              o.orderdate                                    as date,
+                              od.unitprice * od.quantity * (1 - od.discount) as total,
+                              sum(od.unitprice * od.quantity * (1 - od.discount)) over (
+                                  partition by od.productid,
+                                      date_part('year', o.orderdate),
+                                      date_part('month', o.orderdate)
+                                  order by od.productid, o.orderdate
+                                  )                                          as cum_total
+                       from orderdetails od
+                                join orders o on od.orderid = o.orderid)
+            select t.id,
+                   t.productid,
+                   t.month,
+                   t.date,
+                   t.total,
+                   t.cum_total
+            from t),
+     q2 as (with t as (select od.orderid                                     as id,
+                              od.productid,
+                              date_part('month', o.orderdate)                as month,
+                              o.orderdate                                    as date,
+                              od.unitprice * od.quantity * (1 - od.discount) as total,
+                              sum(od.unitprice * od.quantity * (1 - od.discount)) over (
+                                  partition by od.productid,
+                                      date_part('year', o.orderdate),
+                                      date_part('month', o.orderdate)
+                                  order by od.productid, o.orderdate
+                                  )                                          as cum_total
+                       from orderdetails od
+                                join orders o on od.orderid = o.orderid)
+            select t.id,
+                   t.productid,
+                   t.month,
+                   t.date,
+                   t.total,
+                   t.cum_total
+            from t)
+        (select * from q1 except select * from q2)
+union all
+(select * from q2 except select * from q1);
+```
+
+W wyniku otrzymujmy pusty zbiór, co oznacza, że zbiory wynikowe są identyczne w przypadku obu zapytań:
+
+![alt text](image-29.png)
 
 Porównanie wydajności i planów zapytań - Postgres:
 
@@ -640,7 +801,21 @@ Wnioski:
 - zapytanie z funkcją okna charakteryzuje się około 2 razy niższym kosztem zapytania
 - ze względu na mały rozmiar danych (tabele `orders` i `ordershistory`), zapytania są generalnie bardzo szybkie (~30ms), więc nie ma sensu porównywać bezpośrednio czasu zapytań
 
-Zapytania dla MSSQL oraz SQLite są identyczne, z dokładnością do funkcji ekstrahującej miesiąc oraz rok z daty.
+Zapytania dla MSSQL oraz SQLite są identyczne, z dokładnością do funkcji ekstrahującej miesiąc oraz rok z daty:
+
+```sql
+-- postgres
+date_part('year', o.orderdate) as year
+date_part('month', o.orderdate) as month
+
+-- mssql
+year(o.orderdate) as year
+month(o.orderdate) as month
+
+-- sqlite
+strftime('%Y', o.orderdate) as year
+strftime('%m', o.orderdate) as month
+```
 
 Porównanie wydajności i planów zapytań - MSSQL:
 
@@ -652,7 +827,7 @@ Porównanie wydajności i planów zapytań - MSSQL:
 
 Wnioski:
 
-- koszt całkowity dla funkcji okna jest ~3 krotnie niższy, natomiast czas wykonania jest bardzo zbliżony (ze względu na mały ilość danych)
+- koszt całkowity dla funkcji okna jest ~3 krotnie niższy, natomiast czas wykonania jest bardzo zbliżony (ze względu na małą ilość danych)
 
 Porównanie wydajności i planów zapytań - SQLite:
 
