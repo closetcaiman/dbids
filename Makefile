@@ -1,7 +1,7 @@
 COMPOSE = docker-compose
 SERVICES = mssql postgres sqlite
 
-.PHONY: help up down restart clean status logs-mssql logs-pg
+.PHONY: help up down restart clean status pg-transaction mssql-transaction sqlite-transaction pdf pack
 
 help:
 	@echo "Database in data science"
@@ -11,11 +11,11 @@ help:
 	@echo "make restart            - Restart all services"
 	@echo "make clean              - FULL RESET: Deletes containers and ALL database volumes"
 	@echo "make status             - Show running containers"
-	@echo "make pg-transaction     - Execute SQL file in Postgres (FILE=path/to/file.sql)"
-	@echo "make mssql-transaction  - Execute SQL file in MS SQL (FILE=path/to/file.sql)"
-	@echo "make sqlite-transaction - Execute SQL file in SQLite (FILE=path/to/file.sql)"
-	@echo "make pdf                - Convert Markdown file to PDF (FILE=path/to/file.md)"
-	@echo "make pack               - Create a tar.gz archive of the project (DIR=path/to/directory)"
+	@echo "make pg-transaction     - Execute SQL file (FILE=path/to/file.sql)"
+	@echo "make mssql-transaction  - Execute SQL file (FILE=path/to/file.sql)"
+	@echo "make sqlite-transaction - Execute SQL file (FILE=path/to/file.sql)"
+	@echo "make pdf                - Convert Markdown to PDF (FILE=path.md [MODE=landscape])"
+	@echo "make pack               - Create a tar.gz archive (DIR=path/to/dir)"
 
 up:
 	$(COMPOSE) up -d
@@ -43,7 +43,7 @@ sqlite-transaction:
 	cat $(FILE) | docker exec -i sqlite_server sqlite3 /data/db/northwind.db
 
 pdf:
-	@./scripts/convert-md-to-pdf.sh $(FILE)
+	@./scripts/convert-md-to-pdf.sh $(FILE) $(MODE)
 
 pack:
 	@mkdir -p archives
