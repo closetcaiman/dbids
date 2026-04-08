@@ -560,9 +560,11 @@ Do analizy użyj wybranego systemu/bazy danych (wybierz MS SQLserver, Postgres l
 > Wyniki:
 
 Początek wyniku:
+
 ![alt-text](media/ex3-1.png)
 
 Koniec wyniku:
+
 ![alt-text](media/ex3-2.png)
 
 Według sygnatury z [dokumentacji](https://www.postgresql.org/docs/current/functions-window.html) `PostgreSQL` funkcja `lag()` zwraca wartość z poprzedniego wiersza co do offsetu, a `lead()` zwraca wartość z następnego wiersza co do offsetu. W przypadku braku takiego wiersza zwracana jest wartość domyślna. W naszym przypadku (brak podania offsetu i wartości domyślnej) offset jest równy 1, a wartość domyślna jest równa NULL. Oznacza to, że funkcja `lag()` zwraca cenę produktu z poprzedniego dnia, a `lead()` zwraca cenę produktu z następnego dnia. W przypadku pierwszego wiersza (brak poprzedniego dnia) funkcja `lag()` zwraca NULL, a w przypadku ostatniego wiersza (brak następnego dnia) funkcja `lead()` zwraca NULL.
@@ -628,13 +630,16 @@ Porównanie wyników klazulą `except` w obie strony dało pusty zbiór wynikowy
 Porównanie planów wykonania dla różnych podejść:
 
 - funkcje okna:
-  ![alt-text](media/ex3-3.png)
+
+![alt-text](media/ex3-3.png)
 
 - podzapytanie:
-  ![alt-text](media/ex3-4.png)
+
+![alt-text](media/ex3-4.png)
 
 - joiny:
-  ![alt-text](media/ex3-5.png)
+
+![alt-text](media/ex3-5.png)
 
 Wnioski:
 
@@ -767,13 +772,16 @@ Porównanie wyników klazulą `except` w obie strony dało pusty zbiór wynikowy
 Porównanie planów wykonania dla różnych podejść:
 
 - funkcje okna:
-  ![alt-text](media/ex4-2.png)
+
+![alt-text](media/ex4-2.png)
 
 - podzapytanie:
-  ![alt-text](media/ex4-3.png)
+
+![alt-text](media/ex4-3.png)
 
 - joiny:
-  ![alt-text](media/ex4-4.png)
+
+![alt-text](media/ex4-4.png)
 
 Wnioski:
 
