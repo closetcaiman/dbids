@@ -2,6 +2,10 @@
 header-includes:
   - \usepackage{float}
   - \floatplacement{figure}{H}
+geometry:
+  - paperwidth=13in
+  - paperheight=12.75in
+  - margin=0.75in
 ---
 
 ## SQL - Funkcje okna (Window functions) <br> Lab 2
@@ -110,7 +114,7 @@ Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres 
 
 ---
 
-> Wyniki:
+## Wyniki:
 
 Analiza została przeprowadzona z wykorzystaniem bazy danych PostgreSQL.
 
@@ -123,6 +127,8 @@ Komentarz:
 - `row_number` to numer danego wiersza wewnątrz okna, zgodnie z zadaną kolejnością (tutaj: `unitprice desc`, natomiast zgodnie z [dokumentacją oracle](https://docs.oracle.com/cd/B19306_01/server.102/b14200/functions137.htm), funkcja `row_number` nie jest deterministyczna w przypadku remisów). W przypadku `row_number` nie ma remisów w wartościach, zawsze dostajemy wartości `1..<ilosc wierszy w oknie>`.
 - `rank` to ranga danego wiersza wewnątrz okna, zgodnie z zadaną kolejnością (tutaj: `unitprice desc`). W przypadku remisów, wszystkie wiersze o tej samej wartości dostają tę samą rangę `r`, natomiast wiersze o następnej w kolejności wartości dostają rangę `r+k`, gdzie `k`-ilość remisujących wierszy. `rank` zawsze przyjmowało wartości `1..<ilosc wierszy w oknie>`.
 - `dense_rank` działa podobnie jak `rank`, natomiast w przypadku remisów, wszystkie wiersze o tej samej wartości dostają tę samą rangę `r`, a wiersze o następnej w kolejności wartości dostają rangę `r+1` (nie przeskakujemy wartości).
+
+\newpage
 
 Te same wyniki można także uzyskać nie korzystając z funkcji okna, z wykorzystaniem podzapytań lub instrukcji `join`:
 
@@ -197,6 +203,8 @@ from products p1
 order by p1.categoryid, denserankprice_custom;
 ```
 
+\newpage
+
 W celu porównania wyników uruchamiamy zapytanie łączące wszystkie te zapytania:
 
 ```sql
@@ -240,6 +248,8 @@ order by p.categoryid, custom_rn.rowno_custom;
 ```
 
 ![Zadanie 1 - porównanie funkcji okna z odpowiednikami (PostgreSQL)](media/task1-comparison-postgres.png)
+
+\newpage
 
 W celu upewnienia się, że wszystkie wartości naszych odpowiedników są identyczne jak te z zapytań korzystających z funkcji okna, korzystamy z dwukierunkowego zapytania `except` (dzięki temu możemy sprawdzić czy w wyniku dostajemy identyczne wiersze, czy istnieją jakieś różnice):
 
@@ -296,7 +306,9 @@ Wynik:
 
 ![Zadanie 1 - weryfikacja except, pusty wynik (PostgreSQL)](media/task1-except-postgres.png)
 
-Jak widać na załączonym zrzucie ekranu, wszystkie funkcje oraz nasze customowe odpowiedniki dają identyczne rezultaty (zapytanie zwraca 0 wierszy, co oznacza, wynikowy zbiór jest identyczny dla obu zapytań).
+Jak widać na załączonym zrzucie ekranu, wszystkie funkcje oraz nasze customowe odpowiedniki dają identyczne rezultaty (zapytanie zwraca 0 wierszy, co oznacza, wynikowy zbiór jest identyczny dla obu zapytań). W dalszych częściach konspektu pórównania klauzulą `except` będziemy wykonywać analogicznie.
+
+\newpage
 
 Ze względu na różnicę w wydajności podzapytania względem `inner-joina`, w dalszej części konspektu będziemy korzystać z metody wykorzystującej `inner-joina` (porównanie wykonane dla silnika Postgres oraz funkcji `row_number`, wydajność pozostałych funkcji ma podobną charakterystykę):
 
@@ -335,7 +347,7 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 ---
 
-> Wyniki:
+## Wyniki:
 
 W przypadku zapytania wykorzystującego funkcję okna, korzystamy z funkcji `dense_rank`, a następnie wybieramy unikalne unikalne wartości `(rok, productid, cena)` z `denserankprice < 4` - w rezultacie uzyskamy 4 najwyższe ceny, bez względu na występujące remisy. Ze względu na długi czas wykonania `explain analyse` (w przypadku zapytania z `inner-join`, zapytanie z funkcją okna działa bardzo szybko), zbiór wynikowy został ograniczony jedynie do produktów o `productid < 10`.
 
@@ -382,6 +394,8 @@ where denserankprice <= 4 and productid < 10
 order by year, productid, unitprice desc;
 ```
 
+\newpage
+
 Rezultaty:
 
 - z funkcją okna:
@@ -392,63 +406,11 @@ Rezultaty:
 
 ![Zadanie 2 - wynik dense_rank z inner-join (PostgreSQL)](media/task2-join-result-postgres.png)
 
-W celu zweryfikowania poprawności zapytania niekorzystającego z funkcji okna, tworzymy zapytanie korzystające z dwukierunkowego `except`. Ze względu na fakt, że ceny o danej randze mogły zostać zaobserwowane w różnych dniach, a zadanie nie specyfikowała, która data powinna być zawarta w zbiorze wynikowym, data nie jest brana pod uwagę przy porównywaniu dwóch zbiorów wynikowych:
+W celu zweryfikowania poprawności zapytania niekorzystającego z funkcji okna, tworzymy zapytanie korzystające z dwukierunkowego `except`. Ze względu na fakt, że ceny o danej randze mogły zostać zaobserwowane w różnych dniach, a zadanie nie specyfikowała, która data powinna być zawarta w zbiorze wynikowym, data nie jest brana pod uwagę przy porównywaniu dwóch zbiorów wynikowych.
 
-```sql
-with q1 as (with t
-                     as (select distinct on (extract(year from date), productid, unitprice)
-                            extract(year from date) as year,
-                            productid,
-                            productname,
-                            unitprice,
-                            date,
-                            dense_rank() over (
-                                partition by extract(year from date), productid
-                                order by unitprice desc
-                                )                   as denserankprice
-                         from product_history p)
-            select *
-            from t
-            where t.denserankprice <= 4
-              and t.productid < 10
-            order by year, productid, unitprice desc),
-     q2 as (with t
-                     as (select distinct on (extract(year from date), productid, unitprice)
-                            extract(year from date) as year,
-                            productid,
-                            productname,
-                            unitprice,
-                            date
-                         from product_history),
-                 dr as (select p1.year,
-                               p1.productid,
-                               p1.productname,
-                               p1.unitprice,
-                               p1.date,
-                               count(distinct p2.unitprice) + 1 as denserankprice
-                        from t p1
-                                 left join t p2 on p2.year = p1.year and p2.productid = p1.productid and
-                                                   p2.unitprice > p1.unitprice
-                        group by p1.year, p1.productid, p1.productname, p1.unitprice, p1.date)
-            select *
-            from dr
-            where denserankprice <= 4
-              and productid < 10
-            order by year, productid, unitprice desc)
-    (select year, productid, productname, unitprice, denserankprice
-     from q1
-     except
-     select year, productid, productname, unitprice, denserankprice
-     from q2)
-union all
-(select year, productid, productname, unitprice, denserankprice
- from q2
- except
- select year, productid, productname, unitprice, denserankprice
- from q1);
-```
+\newpage
 
-Wyniki:
+## Wyniki:
 
 ![Zadanie 2 - weryfikacja except, pusty wynik (PostgreSQL)](media/task2-except-postgres.png)
 
@@ -469,6 +431,8 @@ year(date) as year
 strftime('%Y', date) as year
 ```
 
+\newpage
+
 Porównanie planów zapytań (Postgres):
 
 - zapytanie z `dense_rank`
@@ -488,6 +452,8 @@ Wnioski:
 
 Alternatywne zapytanie korzystające z subquery nie wykonało się w rozsądnym czasie, nawet na ograniczonym zbiorze danych.
 
+\newpage
+
 Porównanie planów zapytań - MSSQL:
 
 - zapytanie z `dense_rank`
@@ -503,6 +469,8 @@ Wnioski:
 - dla ograniczonego zapytania, całkowity koszt zapytania z funkcją okna jest około 2,5 raza niższy względem zapytania z `joinem`, a faktyczny czas zapytania jest ~90 razy niższy.
 - zapytanie jest zdecydowanie szybsze w porównaniu do Postgresa (~7 razy dla funkcji okna oraz ~4 razy dla zapytania z `joinem`)
 - zapytanie na nieograniczonym zbiorze wykonało się w rozsądnym czasie zarówno dla zapytania z funkcją okna oraz `joinem` (~200 razy niższy całkowity koszt zapytania, zapytanie z funkcją okna wykonywało się około 400ms, zapytaniem z `joinem` około 1,5 minuty)
+
+\newpage
 
 Porównanie wydajności i planów zapytań - SQLite:
 
@@ -521,6 +489,8 @@ Wnioski:
 
 ---
 
+\newpage
+
 # Zadanie 3
 
 Funkcje `lag()`, `lead()`
@@ -528,24 +498,34 @@ Funkcje `lag()`, `lead()`
 Wykonaj polecenia, zaobserwuj wynik. Jak działają funkcje `lag()`, `lead()`
 
 ```sql
-select productid, productname, categoryid, date, unitprice,
+select productid,
+       productname,
+       categoryid,
+       date,
+       unitprice,
        lag(unitprice) over (partition by productid order by date)
-as previousprodprice,
+           as previousprodprice,
        lead(unitprice) over (partition by productid order by date)
-as nextprodprice
+           as nextprodprice
 from product_history
-where productid = 1 and year(date) = 2022
+where productid = 1
+  and year(date) = 2022
 order by date;
 
-with t as (select productid, productname, categoryid, date, unitprice,
+with t as (select productid,
+                  productname,
+                  categoryid,
+                  date,
+                  unitprice,
                   lag(unitprice) over (partition by productid
-order by date) as previousprodprice,
+                      order by date) as previousprodprice,
                   lead(unitprice) over (partition by productid
-order by date) as nextprodprice
-           from product_history
-           )
-select * from t
-where productid = 1 and year(date) = 2022
+                      order by date) as nextprodprice
+           from product_history)
+select *
+from t
+where productid = 1
+  and year(date) = 2022
 order by date;
 ```
 
@@ -557,17 +537,21 @@ Do analizy użyj wybranego systemu/bazy danych (wybierz MS SQLserver, Postgres l
 
 ---
 
-> Wyniki:
+\newpage
+
+## Wyniki:
 
 Początek wyniku:
 
-![alt-text](media/ex3-1.png)
+![Zadanie 3 - Początek wyniku](media/ex3-1.png)
 
 Koniec wyniku:
 
-![alt-text](media/ex3-2.png)
+![Zadanie 3 - Koniec wyniku](media/ex3-2.png)
 
 Według sygnatury z [dokumentacji](https://www.postgresql.org/docs/current/functions-window.html) `PostgreSQL` funkcja `lag()` zwraca wartość z poprzedniego wiersza co do offsetu, a `lead()` zwraca wartość z następnego wiersza co do offsetu. W przypadku braku takiego wiersza zwracana jest wartość domyślna. W naszym przypadku (brak podania offsetu i wartości domyślnej) offset jest równy 1, a wartość domyślna jest równa NULL. Oznacza to, że funkcja `lag()` zwraca cenę produktu z poprzedniego dnia, a `lead()` zwraca cenę produktu z następnego dnia. W przypadku pierwszego wiersza (brak poprzedniego dnia) funkcja `lag()` zwraca NULL, a w przypadku ostatniego wiersza (brak następnego dnia) funkcja `lead()` zwraca NULL.
+
+\newpage
 
 Podejście bez funkcji okna:
 
@@ -627,19 +611,21 @@ order by ph.date;
 
 Porównanie wyników klazulą `except` w obie strony dało pusty zbiór wynikowy, co oznacza, że wyniki są takie same dla wszystkich trzech podejść.
 
+\newpage
+
 Porównanie planów wykonania dla różnych podejść:
 
 - funkcje okna:
 
-![alt-text](media/ex3-3.png)
+![Zadanie 3 - Plan wykonania (funkcje okna)](media/ex3-3.png)
 
 - podzapytanie:
 
-![alt-text](media/ex3-4.png)
+![Zadanie 3 - Plan wykonania (podzapytanie)](media/ex3-4.png)
 
 - joiny:
 
-![alt-text](media/ex3-5.png)
+![Zadanie 3 - Plan wykonania (joiny)](media/ex3-5.png)
 
 Wnioski:
 
@@ -668,7 +654,9 @@ Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres 
 
 ---
 
-> Wyniki:
+\newpage
+
+## Wyniki:
 
 ```sql
 -- PostgreSQL
@@ -691,9 +679,11 @@ from ordersummary
 order by companyname, orderdate;
 ```
 
-![alt-text](media/ex4-1.png)
+![Zadanie 4 - Wynik](media/ex4-1.png)
 
 Dla każdego klienta widzimy jego zamówienia wraz z informacjami o poprzednim zamówieniu. W przypadku pierwszego zamówienia danego klienta, kolumny dotyczące poprzedniego zamówienia będą zawierały wartość `NULL`.
+
+\newpage
 
 Podejścia bez funkcji okna:
 
@@ -767,21 +757,25 @@ from ordersummary curr
 order by curr.companyname, curr.orderdate, curr.orderid;
 ```
 
+\newpage
+
 Porównanie wyników klazulą `except` w obie strony dało pusty zbiór wynikowy, co oznacza, że wyniki są takie same dla wszystkich trzech podejść.
 
 Porównanie planów wykonania dla różnych podejść:
 
 - funkcje okna:
 
-![alt-text](media/ex4-2.png)
+![Zadanie 4 - Plan wykonania (funkcje okna)](media/ex4-2.png)
 
 - podzapytanie:
 
-![alt-text](media/ex4-3.png)
+![Zadanie 4 - Plan wykonania (podzapytanie)](media/ex4-3.png)
+
+\newpage
 
 - joiny:
 
-![alt-text](media/ex4-4.png)
+![Zadanie 4 - Plan wykonania (joiny)](media/ex4-4.png)
 
 Wnioski:
 
@@ -819,7 +813,9 @@ order by categoryid, unitprice desc;
 
 ---
 
-> Wyniki:
+\newpage
+
+## Wyniki:
 
 Analiza została przeprowadzona z wykorzystaniem bazy danych PostgreSQL.
 
@@ -838,9 +834,12 @@ last_value(productname) over (partition by categoryid
 ```
 
 Rezultaty poprawionego zapytania:
+
 ![Zadanie 5 - poprawiony wynik first_value/last_value (PostgreSQL)](media/task5-firstlast-corrected-postgres.png)
 
 ---
+
+\newpage
 
 # Zadanie 6
 
@@ -867,7 +866,9 @@ Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres 
 
 ---
 
-> Wyniki:
+\newpage
+
+## Wyniki:
 
 ```sql
 -- PostgreSQL
@@ -893,7 +894,9 @@ from ordersummary
 order by customerid, orderdate;
 ```
 
-![alt-text](media/ex6-1.png)
+![Zadanie 6 - Wynik](media/ex6-1.png)
+
+\newpage
 
 Podejścia bez funkcji okna:
 
@@ -953,6 +956,8 @@ from ordersummary t1
 order by t1.customerid, t1.orderdate;
 ```
 
+\newpage
+
 ```sql
 -- joiny
 with ordersummary as (select c.companyname,
@@ -998,21 +1003,27 @@ Porównanie planów wykonania dla różnych podejść:
 
 - funkcje okna:
 
-![alt-text](media/ex6-2-1.png)
+![Zadanie 6 - Plan wykonania (funkcje okna)](media/ex6-2-1.png)
 
-![alt-text](media/ex6-2-2.png)
+![Zadanie 6 - Plan wykonania (funkcje okna, surowy)](media/ex6-2-2.png)
+
+\newpage
 
 - podzapytanie:
 
-![alt-text](media/ex6-3-1.png)
+![Zadanie 6 - Plan wykonania (podzapytanie)](media/ex6-3-1.png)
 
-![alt-text](media/ex6-3-2.png)
+![Zadanie 6 - Plan wykonania (podzapytanie, surowy)](media/ex6-3-2.png)
+
+\newpage
 
 - joiny:
 
-![alt-text](media/ex6-4-1.png)
+![Zadanie 6 - Plan wykonania (joiny)](media/ex6-4-1.png)
 
-![alt-text](media/ex6-4-2.png)
+![Zadanie 6 - Plan wykonania (joiny, surowy)](media/ex6-4-2.png)
+
+\newpage
 
 Wnioski:
 
@@ -1042,7 +1053,9 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 ---
 
-> Wyniki:
+\newpage
+
+## Wyniki:
 
 Zapytanie realizujące opisane zadanie w Postgresie:
 
@@ -1101,67 +1114,23 @@ order by t.productid,
          t.date;
 ```
 
+\newpage
+
 Rezultaty zapytania:
 
 - z funkcją okna:
 
 ![Zadanie 7 - wynik sumy narastającej z funkcją okna (PostgreSQL)](media/task7-window-result-postgres.png)
 
+\newpage
+
 - z `inner-joinem`:
 
 ![Zadanie 7 - wynik sumy narastającej z inner-join (PostgreSQL)](media/task7-join-result-postgres.png)
 
-Jak widać na załączonych zrzutach ekranu, wartości te są kumulowane w ramach danego miesiąca. W celu upewnienia się, że wyniki są identyczne w przypadku obu zapytań, ponownie korzystamy z dwukierunkowego `except`:
+Jak widać na załączonych zrzutach ekranu, wartości te są kumulowane w ramach danego miesiąca. W celu upewnienia się, że wyniki są identyczne w przypadku obu zapytań, ponownie korzystamy z dwukierunkowego `except`, który zwrócił pusty zbiór wynikowy, co oznacza, że wyniki są takie same dla obu podejść.
 
-```sql
-with q1 as (with t as (select od.orderid                                     as id,
-                              od.productid,
-                              date_part('month', o.orderdate)                as month,
-                              o.orderdate                                    as date,
-                              od.unitprice * od.quantity * (1 - od.discount) as total,
-                              sum(od.unitprice * od.quantity * (1 - od.discount)) over (
-                                  partition by od.productid,
-                                      date_part('year', o.orderdate),
-                                      date_part('month', o.orderdate)
-                                  order by od.productid, o.orderdate
-                                  )                                          as cum_total
-                       from orderdetails od
-                                join orders o on od.orderid = o.orderid)
-            select t.id,
-                   t.productid,
-                   t.month,
-                   t.date,
-                   t.total,
-                   t.cum_total
-            from t),
-     q2 as (with t as (select od.orderid                                     as id,
-                              od.productid,
-                              date_part('month', o.orderdate)                as month,
-                              o.orderdate                                    as date,
-                              od.unitprice * od.quantity * (1 - od.discount) as total,
-                              sum(od.unitprice * od.quantity * (1 - od.discount)) over (
-                                  partition by od.productid,
-                                      date_part('year', o.orderdate),
-                                      date_part('month', o.orderdate)
-                                  order by od.productid, o.orderdate
-                                  )                                          as cum_total
-                       from orderdetails od
-                                join orders o on od.orderid = o.orderid)
-            select t.id,
-                   t.productid,
-                   t.month,
-                   t.date,
-                   t.total,
-                   t.cum_total
-            from t)
-        (select * from q1 except select * from q2)
-union all
-(select * from q2 except select * from q1);
-```
-
-W wyniku otrzymujmy pusty zbiór, co oznacza, że zbiory wynikowe są identyczne w przypadku obu zapytań:
-
-![Zadanie 7 - weryfikacja except, pusty wynik (PostgreSQL)](media/task7-except-postgres.png)
+\newpage
 
 Porównanie wydajności i planów zapytań - Postgres:
 
@@ -1177,6 +1146,8 @@ Wnioski:
 
 - zapytanie z funkcją okna charakteryzuje się około 2 razy niższym kosztem zapytania
 - ze względu na mały rozmiar danych (tabele `orders` i `ordershistory`), zapytania są generalnie bardzo szybkie (~30ms), więc nie ma sensu porównywać bezpośrednio czasu zapytań
+
+\newpage
 
 Zapytania dla MSSQL oraz SQLite są identyczne, z dokładnością do funkcji ekstrahującej miesiąc oraz rok z daty:
 
@@ -1208,6 +1179,8 @@ Wnioski:
 
 - koszt całkowity dla funkcji okna jest ~3 krotnie niższy, natomiast czas wykonania jest bardzo zbliżony (ze względu na małą ilość danych)
 
+\newpage
+
 Porównanie wydajności i planów zapytań - SQLite:
 
 - z funkcją okna:
@@ -1231,6 +1204,8 @@ Wykonaj kilka "własnych" przykładowych analiz.
 Czy są jeszcze jakieś ciekawe/przydatne funkcje okna (z których nie korzystałeś w ćwiczeniu)? Spróbuj ich użyć w zaprezentowanych przykładach.
 
 Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite.
+
+\newpage
 
 1. `ntile ( num_buckets integer ) → integer`
 
@@ -1260,13 +1235,19 @@ from customerspending
 order by customertier, totalspent desc;
 ```
 
+\newpage
+
 Początek wyniku:
 
-![alt-text](media/ex8-1.png)
+![Zadanie 8 - Wynik (początek)](media/ex8-1.png)
+
+\newpage
 
 Koniec wyniku:
 
-![alt-text](media/ex8-2.png)
+![Zadanie 8 - Wynik (koniec)](media/ex8-2.png)
+
+\newpage
 
 2. `percent_rank () → double precision`, `cume_dist () → double precision`
 
@@ -1301,7 +1282,7 @@ where productname = 'Chef Anton''s Cajun Seasoning'
 order by salevalue desc;
 ```
 
-![alt-text](media/ex8-3.png)
+![Zadanie 8 - Wynik (percentyl i skumulowana dystrybucja)](media/ex8-3.png)
 
 - Przy tym zestawieniu ładnie widać podział na klientów detalicznych i liderów sprzedaży.
 

@@ -43,7 +43,7 @@ sqlite-transaction:
 	cat $(FILE) | docker exec -i sqlite_server sqlite3 /data/db/northwind.db
 
 pdf:
-	@./scripts/convert-md-to-pdf.sh $(FILE) $(MODE)
+	@./scripts/convert-md-to-pdf.sh $(FILE)
 
 pack:
 	@mkdir -p archives
