@@ -627,6 +627,8 @@ Porównanie planów wykonania dla różnych podejść:
 
 ![Zadanie 3 - Plan wykonania (joiny)](media/ex3-5.png)
 
+\newpage
+
 Wnioski:
 
 - podejście z funkcjami okna jest znacznie szybsze niż podzapytanie i joiny, co widać po czasie wykonania i kosztach
