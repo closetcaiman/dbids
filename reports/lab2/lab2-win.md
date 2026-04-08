@@ -1,3 +1,9 @@
+---
+header-includes:
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+---
+
 ## SQL - Funkcje okna (Window functions) <br> Lab 2
 
 ---
@@ -106,9 +112,11 @@ Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres 
 
 > Wyniki:
 
+Analiza została przeprowadzona z wykorzystaniem bazy danych PostgreSQL.
+
 Wynik zapytania z polecenia:
 
-![alt text](image-1.png)
+![Zadanie 1 - wynik zapytania rankingowego (PostgreSQL)](media/task1-ranking-postgres.png)
 
 Komentarz:
 
@@ -231,7 +239,7 @@ from products p
 order by p.categoryid, custom_rn.rowno_custom;
 ```
 
-![alt text](image-2.png)
+![Zadanie 1 - porównanie funkcji okna z odpowiednikami (PostgreSQL)](media/task1-comparison-postgres.png)
 
 W celu upewnienia się, że wszystkie wartości naszych odpowiedników są identyczne jak te z zapytań korzystających z funkcji okna, korzystamy z dwukierunkowego zapytania `except` (dzięki temu możemy sprawdzić czy w wyniku dostajemy identyczne wiersze, czy istnieją jakieś różnice):
 
@@ -285,20 +293,24 @@ union all
 ```
 
 Wynik:
-![alt text](image-26.png)
+
+![Zadanie 1 - weryfikacja except, pusty wynik (PostgreSQL)](media/task1-except-postgres.png)
 
 Jak widać na załączonym zrzucie ekranu, wszystkie funkcje oraz nasze customowe odpowiedniki dają identyczne rezultaty (zapytanie zwraca 0 wierszy, co oznacza, wynikowy zbiór jest identyczny dla obu zapytań).
 
 Ze względu na różnicę w wydajności podzapytania względem `inner-joina`, w dalszej części konspektu będziemy korzystać z metody wykorzystującej `inner-joina` (porównanie wykonane dla silnika Postgres oraz funkcji `row_number`, wydajność pozostałych funkcji ma podobną charakterystykę):
 
 - funkcja okna:
-  ![alt text](image-3.png)
+
+![Zadanie 1 - plan zapytania z funkcją okna (PostgreSQL)](media/task1-window-plan-postgres.png)
 
 - `inner-join`:
-  ![alt text](image-4.png)
+
+![Zadanie 1 - plan zapytania z inner-join (PostgreSQL)](media/task1-join-plan-postgres.png)
 
 - podzapytanie:
-  ![alt text](image-5.png)
+
+![Zadanie 1 - plan zapytania z podzapytaniem (PostgreSQL)](media/task1-subquery-plan-postgres.png)
 
 # Zadanie 2
 
@@ -330,15 +342,16 @@ W przypadku zapytania wykorzystującego funkcję okna, korzystamy z funkcji `den
 ```sql
 -- zapytanie wykorzystujące dense_rank()
 
-with t as (select distinct on (extract(year from date), productid, unitprice) extract(year from date) as year,
-                                                                              productid,
-                                                                              productname,
-                                                                              unitprice,
-                                                                              date,
-                                                                              dense_rank() over (
-                                                                                  partition by extract(year from date), productid
-                                                                                  order by unitprice desc
-                                                                                  )                   as denserankprice
+with t as (select distinct on (extract(year from date), productid, unitprice)
+              extract(year from date) as year,
+              productid,
+              productname,
+              unitprice,
+              date,
+              dense_rank() over (
+                  partition by extract(year from date), productid
+                  order by unitprice desc
+                  )                   as denserankprice
            from product_history p)
 select *
 from t
@@ -347,11 +360,12 @@ order by year, productid, unitprice desc;
 
 -- zapytanie bez funkcji okna (inner-join)
 
-with t as (select distinct on (extract(year from date), productid, unitprice) extract(year from date) as year,
-                                                                              productid,
-                                                                              productname,
-                                                                              unitprice,
-                                                                              date
+with t as (select distinct on (extract(year from date), productid, unitprice)
+              extract(year from date) as year,
+              productid,
+              productname,
+              unitprice,
+              date
            from product_history),
      dr as (select p1.year,
                    p1.productid,
@@ -371,24 +385,27 @@ order by year, productid, unitprice desc;
 Rezultaty:
 
 - z funkcją okna:
-  ![alt text](image-10.png)
+
+![Zadanie 2 - wynik dense_rank z funkcją okna (PostgreSQL)](media/task2-window-result-postgres.png)
 
 - z `inner-join`:
-  ![alt text](image-11.png)
+
+![Zadanie 2 - wynik dense_rank z inner-join (PostgreSQL)](media/task2-join-result-postgres.png)
 
 W celu zweryfikowania poprawności zapytania niekorzystającego z funkcji okna, tworzymy zapytanie korzystające z dwukierunkowego `except`. Ze względu na fakt, że ceny o danej randze mogły zostać zaobserwowane w różnych dniach, a zadanie nie specyfikowała, która data powinna być zawarta w zbiorze wynikowym, data nie jest brana pod uwagę przy porównywaniu dwóch zbiorów wynikowych:
 
 ```sql
 with q1 as (with t
-                     as (select distinct on (extract(year from date), productid, unitprice) extract(year from date) as year,
-                                                                                            productid,
-                                                                                            productname,
-                                                                                            unitprice,
-                                                                                            date,
-                                                                                            dense_rank() over (
-                                                                                                partition by extract(year from date), productid
-                                                                                                order by unitprice desc
-                                                                                                )                   as denserankprice
+                     as (select distinct on (extract(year from date), productid, unitprice)
+                            extract(year from date) as year,
+                            productid,
+                            productname,
+                            unitprice,
+                            date,
+                            dense_rank() over (
+                                partition by extract(year from date), productid
+                                order by unitprice desc
+                                )                   as denserankprice
                          from product_history p)
             select *
             from t
@@ -396,11 +413,12 @@ with q1 as (with t
               and t.productid < 10
             order by year, productid, unitprice desc),
      q2 as (with t
-                     as (select distinct on (extract(year from date), productid, unitprice) extract(year from date) as year,
-                                                                                            productid,
-                                                                                            productname,
-                                                                                            unitprice,
-                                                                                            date
+                     as (select distinct on (extract(year from date), productid, unitprice)
+                            extract(year from date) as year,
+                            productid,
+                            productname,
+                            unitprice,
+                            date
                          from product_history),
                  dr as (select p1.year,
                                p1.productid,
@@ -431,11 +449,12 @@ union all
 ```
 
 Wyniki:
-![alt text](image-27.png)
+
+![Zadanie 2 - weryfikacja except, pusty wynik (PostgreSQL)](media/task2-except-postgres.png)
 
 W przypadku uwzględnienia daty w zapytaniu porównującym te dwa podejścia, obserwujemy pewne różnice (natomiast dla każdego produktu, ceny o danej randze są identyczne, wiersze różnią się wyłącznie datą wystąpienia):
 
-![alt text](image-28.png)
+![Zadanie 2 - except z datą, widoczne różnice (PostgreSQL)](media/task2-except-date-postgres.png)
 
 Zapytania dla MSSQL oraz SQLite są generalnie identyczne, z dokładnością do wyciągania roku z daty:
 
@@ -453,10 +472,12 @@ strftime('%Y', date) as year
 Porównanie planów zapytań (Postgres):
 
 - zapytanie z `dense_rank`
-  ![alt text](image-7.png)
+
+![Zadanie 2 - plan zapytania z dense_rank (PostgreSQL)](media/task2-window-plan-postgres.png)
 
 - zapytanie z `inner-join`
-  ![alt text](image-6.png)
+
+![Zadanie 2 - plan zapytania z inner-join (PostgreSQL)](media/task2-join-plan-postgres.png)
 
 Wnioski:
 
@@ -470,10 +491,12 @@ Alternatywne zapytanie korzystające z subquery nie wykonało się w rozsądnym 
 Porównanie planów zapytań - MSSQL:
 
 - zapytanie z `dense_rank`
-  ![alt text](image-9.png)
+
+  ![Zadanie 2 - plan zapytania z dense_rank (MSSQL)](media/task2-window-plan-mssql.png)
 
 - zapytanie z `inner-join`
-  ![alt text](image-8.png)
+
+  ![Zadanie 2 - plan zapytania z inner-join (MSSQL)](media/task2-join-plan-mssql.png)
 
 Wnioski:
 
@@ -484,10 +507,12 @@ Wnioski:
 Porównanie wydajności i planów zapytań - SQLite:
 
 - z funkcją `dense_rank`:
-  ![alt text](image-13.png)
+
+![Zadanie 2 - plan zapytania z dense_rank (SQLite)](media/task2-window-plan-sqlite.png)
 
 - z `inner-join`:
-  ![alt text](image-12.png)
+
+![Zadanie 2 - plan zapytania z inner-join (SQLite)](media/task2-join-plan-sqlite.png)
 
 Wnioski:
 
@@ -597,7 +622,9 @@ order by categoryid, unitprice desc;
 
 > Wyniki:
 
-![alt text](image-14.png)
+Analiza została przeprowadzona z wykorzystaniem bazy danych PostgreSQL.
+
+![Zadanie 5 - domyślny wynik first_value/last_value (PostgreSQL)](media/task5-firstlast-default-postgres.png)
 
 Funkcja `first_value()` zwraca pierwszą wartość w danym oknie zgodnie z zadaną kolejnością, funkcja `last_value()` zwraca ostatnią wartość w danym oknie zgodnie z zadaną kolejnością, przy czym zakres funkcji `last_value` jest od początku do **aktualnego wiersza** (`rows between unbounded preceding and current row`). W naszym przypadku, funkcja `first_value()` faktycznie będzie pokazywała najdroższy produkt w danej kategorii, natomiast funkcja `last_value()` będzie zawsze pokazywała produkt z danego wiersza (bo on jest najtańszy licząc od początku do aktualnego wiersza). W celu wykorzystania funkcji `last_value` do wskazywania najtańszego produktu w danej kategorii, musimy zmienić zakres tej funkcji:
 
@@ -612,7 +639,7 @@ last_value(productname) over (partition by categoryid
 ```
 
 Rezultaty poprawionego zapytania:
-![alt text](image-15.png)
+![Zadanie 5 - poprawiony wynik first_value/last_value (PostgreSQL)](media/task5-firstlast-corrected-postgres.png)
 
 ---
 
@@ -731,10 +758,12 @@ order by t.productid,
 Rezultaty zapytania:
 
 - z funkcją okna:
-  ![alt text](image-19.png)
+
+![Zadanie 7 - wynik sumy narastającej z funkcją okna (PostgreSQL)](media/task7-window-result-postgres.png)
 
 - z `inner-joinem`:
-  ![alt text](image-18.png)
+
+![Zadanie 7 - wynik sumy narastającej z inner-join (PostgreSQL)](media/task7-join-result-postgres.png)
 
 Jak widać na załączonych zrzutach ekranu, wartości te są kumulowane w ramach danego miesiąca. W celu upewnienia się, że wyniki są identyczne w przypadku obu zapytań, ponownie korzystamy z dwukierunkowego `except`:
 
@@ -786,15 +815,17 @@ union all
 
 W wyniku otrzymujmy pusty zbiór, co oznacza, że zbiory wynikowe są identyczne w przypadku obu zapytań:
 
-![alt text](image-29.png)
+![Zadanie 7 - weryfikacja except, pusty wynik (PostgreSQL)](media/task7-except-postgres.png)
 
 Porównanie wydajności i planów zapytań - Postgres:
 
 - zapytanie z funkcją okna:
-  ![alt text](image-20.png)
+
+  ![Zadanie 7 - plan zapytania z funkcją okna (PostgreSQL)](media/task7-window-plan-postgres.png)
 
 - zapytanie z `inner-joinem`:
-  ![alt text](image-21.png)
+
+  ![Zadanie 7 - plan zapytania z inner-join (PostgreSQL)](media/task7-join-plan-postgres.png)
 
 Wnioski:
 
@@ -820,10 +851,12 @@ strftime('%m', o.orderdate) as month
 Porównanie wydajności i planów zapytań - MSSQL:
 
 - z funkcją okna:
-  ![alt text](image-22.png)
+
+![Zadanie 7 - plan zapytania z funkcją okna (MSSQL)](media/task7-window-plan-mssql.png)
 
 - z `inner-join`:
-  ![alt text](image-23.png)
+
+![Zadanie 7 - plan zapytania z inner-join (MSSQL)](media/task7-join-plan-mssql.png)
 
 Wnioski:
 
@@ -832,15 +865,16 @@ Wnioski:
 Porównanie wydajności i planów zapytań - SQLite:
 
 - z funkcją okna:
-  ![alt text](image-25.png)
+
+![Zadanie 7 - plan zapytania z funkcją okna (SQLite)](media/task7-window-plan-sqlite.png)
 
 - z `inner-join`:
-  ![alt text](image-24.png)
+
+![Zadanie 7 - plan zapytania z inner-join (SQLite)](media/task7-join-plan-sqlite.png)
 
 Wnioski:
 
 - czas wykonania zapytań jest bardzo zbliżony (~400ms) zarówno dla funkcji okna i `inner-joina`, jest to około 20-krotnie dłużej niż to samo zapytanie w Postgres i MSSQL
-- ze względu na format daty w tabelach `orders` i `orderhistory` konieczne było niewygodne castowanie daty do odpowiedniego formatu (`cast(substr(o.orderdate, 1, instr(o.orderdate, '/') - 1) as int) as month`)
 
 ---
 
