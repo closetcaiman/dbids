@@ -669,21 +669,18 @@ Np. Podziel klientów na 4 grupy (kwartyle) na podstawie ich całkowitych wydatk
 
 ```sql
 -- PostgreSQL
-with customerspending as (
-    select
-        c.companyname,
-        c.customerid,
-        sum(od.unitprice * od.quantity * (1 - od.discount)) as totalspent
-    from orders o
-    join customers c on o.customerid = c.customerid
-    join orderdetails od on o.orderid = od.orderid
-    where o.orderdate >= '1997-01-01' and o.orderdate <= '1997-12-31'
-    group by c.companyname, c.customerid
-)
-select
-    companyname,
-    totalspent,
-    ntile(4) over (order by totalspent desc) as customertier
+with customerspending as (select c.companyname,
+                                 c.customerid,
+                                 sum(od.unitprice * od.quantity * (1 - od.discount)) as totalspent
+                          from orders o
+                                   join customers c on o.customerid = c.customerid
+                                   join orderdetails od on o.orderid = od.orderid
+                          where o.orderdate >= '1997-01-01'
+                            and o.orderdate <= '1997-12-31'
+                          group by c.companyname, c.customerid)
+select companyname,
+       totalspent,
+       ntile(4) over (order by totalspent desc) as customertier
 from customerspending
 order by customertier, totalspent desc;
 ```
