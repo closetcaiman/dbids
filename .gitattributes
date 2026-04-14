@@ -1,2 +1,35 @@
-*.md linguist-documentation=false
+###############################################################################
+# 1. Technical Integrity (End-of-Line & Binary Protection)
+###############################################################################
+# Ensure all text files use LF (Linux) line endings—critical for Docker & Bash
+* text=auto eol=lf
+
+# Explicitly treat database and binary files as non-text to prevent corruption
+*.db binary
+*.bak binary
+*.mdf binary
+*.ldf binary
+*.tar.gz binary
+*.pdf binary
+
+# Keep the Makefile healthy (requires specific tab/line-ending handling)
+Makefile text eol=lf
+
+###############################################################################
+# 2. Linguist Showcase (The GitHub "Language Bar")
+###############################################################################
+# Treat Markdown reports as primary code/content instead of "documentation"
 *.md linguist-detectable=true
+*.md linguist-documentation=false
+
+# Ensure your YAML orchestration (Compose/Env) is counted in stats
+*.yml linguist-detectable=true
+*.yaml linguist-detectable=true
+.env linguist-detectable=true
+
+###############################################################################
+# 3. Diff & Merge Settings
+###############################################################################
+# Improve how Git shows changes in SQL and Markdown files
+*.sql text diff=sql
+*.md text diff=markdown

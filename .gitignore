@@ -1,8 +1,7 @@
 # Database files
-/northwind/db
+db/
+
+
 
 # DataGrip files
 .idea/
-
-# Archives
-archives/

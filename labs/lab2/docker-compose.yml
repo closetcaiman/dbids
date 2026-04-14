@@ -1,0 +1,44 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql_server_lab2
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Admin!1234"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+      - ./common/sql/northwind/mssql:/data/sql
+      - ./labs/lab2/scripts/setup-mssql-container.sh:/data/setup-mssql-container.sh
+    entrypoint: /bin/bash data/setup-mssql-container.sh
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_server_lab2
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./common/sql/northwind/postgres:/data/sql
+      - ./common/sql/northwind/postgres/pg_north_ddl_data.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./common/sql/northwind/postgres/pg_north_ph.sql:/docker-entrypoint-initdb.d/ph.sql
+    restart: unless-stopped
+
+  sqlite:
+    image: alpine
+    container_name: sqlite_server_lab2
+    command: sh -c "sh /data/setup-sqlite-container.sh && tail -f /dev/null"
+    volumes:
+      - ./labs/lab2/db:/data/db
+      - ./common/sql/northwind/sqlite:/data/sql
+      - ./labs/lab2/scripts/setup-sqlite-container.sh:/data/setup-sqlite-container.sh
+    working_dir: /data
+
+volumes:
+  mssql_data:
+  postgres_data:
