@@ -19,7 +19,7 @@ bash ${ROOT}/common/scripts/mssql-transaction.sh mssql_server_lab1 "$MSSQL_SQL_F
 echo "Product History setup in SQL Server completed successfully."
 
 echo "Setting up Product History in SQLite..."
-bash ${ROOT}/common/scripts/sqlite-transaction.sh sqlite_server_lab1 db/northwind.db "$SQLITE_SQL_FILE"
+bash ${ROOT}/common/scripts/sqlite-transaction.sh sqlite_server_lab1 db/northwind-lab1.db "$SQLITE_SQL_FILE"
 echo "Product History setup in SQLite completed successfully."
 
 echo "All Product History setups completed successfully."
