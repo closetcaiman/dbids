@@ -1,8 +1,7 @@
 # Database files
-.db
+db/
+
+
 
 # DataGrip files
 .idea/
-
-# Archives
-archives/

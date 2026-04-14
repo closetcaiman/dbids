@@ -1,53 +1,68 @@
 COMPOSE = docker-compose
-SERVICES = mssql postgres sqlite
 
-.PHONY: help up down restart clean status pg-transaction mssql-transaction sqlite-transaction pdf pack
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
+
+LABS_DIR := $(REPO_ROOT)/labs
+
+COMPOSE_FLAGS := --project-directory $(REPO_ROOT)
+COMPOSE := $(COMPOSE) $(COMPOSE_FLAGS)
+
+.PHONY: help up down restart clean status pdf
 
 help:
-	@echo "Database in data science"
-	@echo "--------------------------"
-	@echo "make up                 - Start all database services"
-	@echo "make down               - Stop all services"
-	@echo "make restart            - Restart all services"
-	@echo "make clean              - FULL RESET: Deletes containers and ALL database volumes"
-	@echo "make status             - Show running containers"
-	@echo "make pg-transaction     - Execute SQL file (FILE=path/to/file.sql)"
-	@echo "make mssql-transaction  - Execute SQL file (FILE=path/to/file.sql)"
-	@echo "make sqlite-transaction - Execute SQL file (FILE=path/to/file.sql)"
-	@echo "make pdf                - Convert Markdown to PDF (FILE=path.md [MODE=landscape])"
-	@echo "make pack               - Create a tar.gz archive (DIR=path/to/dir)"
+	@echo "Databases in data science"
+	@echo "Usage: make [target] [LAB=lab-name]"
+	@echo "Targets:"
+	@echo "  up       - Start the services for the specified lab"
+	@echo "  down     - Stop the services for the specified lab"
+	@echo "  restart  - Restart the services for the specified lab"
+	@echo "  clean    - Stop the services and remove volumes for the specified lab"
+	@echo "  status   - Show the status of the services for the specified lab"
+	@echo "  pdf      - Convert a markdown file to PDF (usage: make pdf FILE=path/to/file.md)"
+
 
 up:
-	$(COMPOSE) up -d
+	@if [ -z "$(LAB)" ]; then \
+		echo Usage: make up LAB=lab-name; \
+	else \
+		echo Starting $(LAB) services...; \
+		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml up -d; \
+	fi
 
 down:
-	$(COMPOSE) stop
+	@if [ -z "$(LAB)" ]; then \
+		echo Usage: make down LAB=lab-name; \
+	else \
+		echo Stopping $(LAB) services...; \
+		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml down; \
+	fi
 
 restart:
-	$(COMPOSE) restart
+	@if [ -z "$(LAB)" ]; then \
+		echo Usage: make restart LAB=lab-name; \
+	else \
+		echo Restarting $(LAB) services...; \
+		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml restart; \
+	fi
 
 clean:
-	$(COMPOSE) down -v
+	@if [ -z "$(LAB)" ]; then \
+		echo Usage: make clean LAB=lab-name; \
+	else \
+		echo Deleting volumes for $(LAB) services...; \
+		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml down -v; \
+	fi
 	@echo "All volumes deleted. Run 'make up' for a fresh start."
 
 status:
-	$(COMPOSE) ps
-
-pg-transaction:
-	cat $(FILE) | docker exec -i postgres_server psql -U admin -d postgres
-
-mssql-transaction:
-	cat $(FILE) | docker exec -i mssql_server /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!1234" -C
-
-sqlite-transaction:
-	cat $(FILE) | docker exec -i sqlite_server sqlite3 /data/db/northwind.db
+	@if [ -z "$(LAB)" ]; then \
+		echo Usage: make status LAB=lab-name; \
+		$(COMPOSE) ps; \
+	else \
+		echo Showing status for $(LAB) services...; \
+		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml ps; \
+	fi
 
 pdf:
 	@./scripts/convert-md-to-pdf.sh $(FILE)
 
-pack:
-	@mkdir -p archives
-	@tar -czf archives/$(notdir $(DIR)).tar.gz \
-		--exclude='.git' \
-		-C $(shell dirname $(DIR)) $(notdir $(DIR))
-	@echo "Packed $(DIR) into archives/$(notdir $(DIR)).tar.gz"
