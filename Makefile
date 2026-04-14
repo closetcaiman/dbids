@@ -1,7 +1,7 @@
 COMPOSE = docker-compose
 
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
-
+SCRIPTS_DIR := $(REPO_ROOT)/common/scripts
 LABS_DIR := $(REPO_ROOT)/labs
 
 COMPOSE_FLAGS := --project-directory $(REPO_ROOT)
@@ -64,5 +64,5 @@ status:
 	fi
 
 pdf:
-	@./scripts/convert-md-to-pdf.sh $(FILE)
+	@$(SCRIPTS_DIR)/convert-md-to-pdf.sh $(LABS_DIR)/$(LAB)/report.md
 

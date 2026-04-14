@@ -12,6 +12,10 @@ INPUT_DIR=$(dirname "$INPUT_PATH")
 INPUT_FILENAME=$(basename "$INPUT_PATH")
 OUTPUT_FILENAME="${INPUT_FILENAME%.md}.pdf"
 
+ROOT="$(git rev-parse --show-toplevel)"
+TYPST_TEMPLATE="${ROOT}/common/templates/report.typ"
+
+echo $TYPST_TEMPLATE
 
 if [ ! -f "$INPUT_PATH" ]; then
     echo "Error: File '$1' not found."
@@ -22,10 +26,12 @@ echo "Converting $INPUT_FILENAME to PDF via Pandoc..."
 
 docker run --rm \
     -v "$INPUT_DIR:/data" \
+    -v "$TYPST_TEMPLATE:/template.typ" \
     -u "$(id -u):$(id -g)" \
-    pandoc/latex \
+    pandoc/typst \
     "$INPUT_FILENAME" \
     -o "$OUTPUT_FILENAME" \
-    --pdf-engine=xelatex
+    --pdf-engine=typst \
+    --template=/template.typ \
 
 echo "Success: $OUTPUT_FILENAME created."
