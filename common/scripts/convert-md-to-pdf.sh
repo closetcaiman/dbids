@@ -15,8 +15,6 @@ OUTPUT_FILENAME="${INPUT_FILENAME%.md}.pdf"
 ROOT="$(git rev-parse --show-toplevel)"
 TYPST_TEMPLATE="${ROOT}/common/templates/report.typ"
 
-echo $TYPST_TEMPLATE
-
 if [ ! -f "$INPUT_PATH" ]; then
     echo "Error: File '$1' not found."
     exit 1
