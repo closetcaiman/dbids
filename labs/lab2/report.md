@@ -1,13 +1,3 @@
----
-header-includes:
-  - \usepackage{float}
-  - \floatplacement{figure}{H}
-geometry:
-  - paperwidth=13in
-  - paperheight=12.75in
-  - margin=0.75in
----
-
 ## SQL - Funkcje okna (Window functions) <br> Lab 2
 
 ---
