@@ -294,19 +294,19 @@ Zanotuj czas zapytania oraz jego koszt koszt:
 
 - zapytanie z warunkiem `where storeid = 594`
 
-![alt text](image-5.png)
+![Plan zapytania dla warunku "where storeid=594"](media/image-5.png)
 
-![alt text](image-6.png)
+![Plan zapytania dla warunku "where storeid=594"](media/image-6.png)
 
-![alt text](image-4.png)
+![Czas wykonania zapytania dla warunku "where storeid=594"](media/image-4.png)
 
 - zapytanie z warunkiem `where storeid between 594 and 610`:
 
-![alt text](image-8.png)
+![Plan zapytania dla warunku "where storeid between 594 and 610"](media/image-8.png)
 
-![alt text](image-9.png)
+![Plan zapytania dla warunku "where storeid between 594 and 610"](media/image-9.png)
 
-![alt text](image-7.png)
+![Czas wykonania zapytania dla warunku "where storeid between 594 and 610"](media/image-7.png)
 
 Komentarz:
 
@@ -326,19 +326,19 @@ Jak zmienił się plan i czas? Czy jest możliwość optymalizacji?
 
 - zapytanie z warunkiem `where storeid = 594`:
 
-![alt text](image-11.png)
+![Plan zapytania dla warunku "where storeid=594" - indeks nieklastrowany](media/image-11.png)
 
-![alt text](image-12.png)
+![Plan zapytania dla warunku "where storeid=594" - indeks nieklastrowany](media/image-12.png)
 
-![alt text](image-13.png)
+![Czas wykonania zapytania dla warunku "where storeid=594" - indeks nieklastrowany](media/image-13.png)
 
 - zapytanie z warunkiem `where storeid between 594 and 610`:
 
-![alt text](image-15.png)
+![Plan zapytania dla warunku "where storeid between 594 and 610" - indeks nieklastrowany](media/image-15.png)
 
-![alt text](image-14.png)
+![Plan zapytania dla warunku "where storeid between 594 and 610" - indeks nieklastrowany](media/image-14.png)
 
-![alt text](image-16.png)
+![Czas wykonania zapytania dla warunku where storeid between 594 and 610" - indeks nieklastrowany](media/image-16.png)
 
 Komentarz:
 
@@ -360,19 +360,19 @@ Czy zmienił się plan/koszt/czas? Skomentuj dwa podejścia w wyszukiwaniu krote
 
 - zapytanie z warunkiem `where storeid=594`
 
-![alt text](image-17.png)
+![Plan zapytania dla warunku "where storeid=594" - indeks klastrowany](media/image-17.png)
 
-![alt text](image-18.png)
+![Plan zapytania dla warunku "where storeid=594" - indeks klastrowany](media/image-18.png)
 
-![alt text](image-19.png)
+![Czas wykonania zapytania dla warunku "where storeid=594" - indeks klastrowany](media/image-19.png)
 
 - zapytanie z warunkiem `where storeid between 594 and 610`:
 
-![alt text](image-38.png)
+![Plan zapytania dla warunku "where storeid between 594 and 610" - indeks klastrowany](media/image-38.png)
 
-![alt text](image-37.png)
+![Plan zapytania dla warunku "where storeid between 594 and 610" - indeks klastrowany](media/image-37.png)
 
-![alt text](image-39.png)
+![Czas wykonania zapytania dla warunku "where storeid between 594 and 610" - indeks klastrowany](media/image-39.png)
 
 Komentarz:
 
@@ -440,27 +440,27 @@ where postalcode between '98000' and '99999'
 
 - bez indeksu:
 
-![alt text](image-21.png)
+![Plan zapytania dla warunku - brak indeksu](media/image-21.png)
 
-![alt text](image-20.png)
+![Plan zapytania dla warunku - brak indeksu](media/image-20.png)
 
-![alt text](image-22.png)
+![Czas wykonania zapytania dla warunku - brak indeksu](media/image-22.png)
 
 - z indeksem `address_postalcode_1`:
 
-![alt text](image-24.png)
+![Plan zapytania dla warunku - indeks nr 1](media/image-24.png)
 
-![alt text](image-23.png)
+![Plan zapytania dla warunku - indeks nr 1](media/image-23.png)
 
-![alt text](image-25.png)
+![Czas wykonania zapytania dla warunku - indeks nr 1](media/image-25.png)
 
 - z indeksem `address_postalcode_2`:
 
-![alt text](image-27.png)
+![Plan zapytania dla warunku - indeks nr 2](media/image-27.png)
 
-![alt text](image-26.png)
+![Plan zapytania dla warunku - indeks nr 2](media/image-26.png)
 
-![alt text](image-28.png)
+![Czas wykonania zapytania dla warunku - indeks nr 2](media/image-28.png)
 
 Komentarz:
 
@@ -481,7 +481,7 @@ Który jest większy? Jak można skomentować te dwa podejścia do indeksowania?
 
 > Wyniki:
 
-![alt text](image-29.png)
+![Rozmiary indeksów "address_postalcode_1" oraz "address_postalcode_2"](media/image-29.png)
 
 Komentarz:
 
@@ -527,7 +527,7 @@ Co można o nich powiedzieć?
 
 > Wyniki:
 
-![alt text](image-34.png)
+![Plany zapytań dla zapytań o Osarumwese Agbonile - brak indeksu](media/image-34.png)
 
 Komentarz:
 
@@ -546,7 +546,7 @@ Sprawdź plan zapytania. Co się zmieniło?
 
 > Wyniki:
 
-![alt text](image-35.png)
+![Plany zapytań o Osarumwese Agbonile - indeks na (lastname, firstame)](media/image-35.png)
 
 Komentarz:
 
@@ -562,7 +562,7 @@ Czym różni się ten plan od zapytania o `'Osarumwense Agbonile'` . Dlaczego ta
 
 > Wyniki:
 
-![alt text](image-36.png)
+![Plany zapytań o Angela Price - indeks na (lastname, firstame)](media/image-36.png)
 
 Komentarz:
 
