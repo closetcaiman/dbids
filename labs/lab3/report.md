@@ -14,7 +14,7 @@
 
 ---
 
-**Imiona i nazwiska:**
+**Imiona i nazwiska:** Marek Małek, Mateusz Lampert
 
 ---
 
@@ -300,8 +300,6 @@ Zanotuj czas zapytania oraz jego koszt koszt:
 
 ![alt text](image-4.png)
 
-![alt text](image-3.png)
-
 - zapytanie z warunkiem `where storeid between 594 and 610`:
 
 ![alt text](image-8.png)
@@ -310,7 +308,9 @@ Zanotuj czas zapytania oraz jego koszt koszt:
 
 ![alt text](image-7.png)
 
-![alt text](image-10.png)
+Komentarz:
+
+Jak widać na załączonych zrzutach ekranu, w przypadku braku indeksu wykonywane jest pełny skan tabeli (wszystkie wiersze muszą zostać przeskanowane pod kątem warunku). Koszt obu zapytań jest identyczny (i tak muszą zostać przeskanowane wszystkie wiersze).
 
 Dodaj indeks:
 
@@ -340,6 +340,12 @@ Jak zmienił się plan i czas? Czy jest możliwość optymalizacji?
 
 ![alt text](image-16.png)
 
+Komentarz:
+
+Po dodaniu indeksu zmienił się plan zapytania - zamiast przeglądania całej tabeli, używa `Nested Loops`, aby dla każdego adresu znalezionego na podstawie `Index Scan` wykonać `RID Lookup` i pobrać brakujące dane z tabeli (w indeksie jest tylko `storeid`, resztę danych musimy pobrać z odpowiedniego miejsca w tabeli). W przypadku obu zapytań koszt zapytania jest zdecydowanie mniejszy w porównaniu do zapytania na tabeli bez indeksu (odpowiednio ~20 razy niższy w przypadku `where storid=594` oraz ~2.5 razy niższe w przypadku `where storeid between 594 and 610`). Różnica w koszcie wynika z faktu, że w przypadku stworzonego indeksu nie mamy dostępu do pobieranych danych (w indeksie zawarte jest tylko `storeid`) i musimy pobrać je ze znalezionych adresów.
+
+Choć koszt zapytań jest niższy, to faktyczny czas wykonania zapytania jest większy w porównaniu do zapytania bez indeksu (w przypadku tak małej ilości danych przeszukanie całej tabeli może być szybsze niż skorzystanie z indeksu)
+
 Dodaj indeks klastrowany:
 
 ```sql
@@ -359,6 +365,25 @@ Czy zmienił się plan/koszt/czas? Skomentuj dwa podejścia w wyszukiwaniu krote
 ![alt text](image-18.png)
 
 ![alt text](image-19.png)
+
+- zapytanie z warunkiem `where storeid between 594 and 610`:
+
+![alt text](image-38.png)
+
+![alt text](image-37.png)
+
+![alt text](image-39.png)
+
+Komentarz:
+
+Plan zapytania ponownie się zmienił, ponieważ stworzyliśmy indeks klastrowany ze względu na `storeid` mamy bezpośredni dostęp do wszystkich pól (dane zostały fizycznie przeorganizowane). Koszt w przypadku obu zapytań jest praktycznie identyczny, a także jest około:
+
+- ~2-krotnie niższy niż zapytanie z indeksem nieklastrowanym oraz ~40-krotnie niższy niż zapytanie bez indeksu dla warunku `where storeid=594`
+- ~10-krotnie niższy niż zapytanie z indeksem nieklastrowanym oraz ~40-krotnie niższy niż zapytanie bez indeksu dla warunku `where storeid between 594 and 610`
+
+Różnice w koszcie wynikają z faktu, że w przypadku indeksu klastrowanego, dane są fizycznie reorganizowane na dysku, w rezultacie czego mamy bezpośredni dostęp do wszystkich atrybutów i nie musimy pobierać brakujących danych spod konkretnego adresu.
+
+W przypadku warunku `where storeid between 594 and 610` przewaga indeksu klastrowanego jest jeszcze większa, ponieważ dane te leż fizycznie obok siebie na dysku.
 
 # Zadanie 4 - dodatkowe kolumny w indeksie
 
@@ -437,6 +462,10 @@ where postalcode between '98000' and '99999'
 
 ![alt text](image-28.png)
 
+Komentarz:
+
+Pomiędzy zapytaniem bez indeksu a zapytaniami korzystającymi z indeksów występuje znacząca różnica w planach zapytania (zapytanie bez indeksu wykonuje pełne przeszukiwanie tabeli, zapytania z indeksami scanuje tylko indeks, a ponieważ oba indeksy pokrywają zapytanie to nie ma konieczności dodatkowego pobierania brakujących danych). Zapytania korzystające z indeksu `address_postalcode_1` oraz `address_postalcode_2` mają de facto identyczne plany zapytań (koszt również jest identyczny).
+
 Sprawdź rozmiar Indeksów:
 
 ```sql
@@ -453,6 +482,12 @@ Który jest większy? Jak można skomentować te dwa podejścia do indeksowania?
 > Wyniki:
 
 ![alt text](image-29.png)
+
+Komentarz:
+
+Indeks `address_postalcode_2` jest nieznacznie większy niż indeks `address_postalcode_1` - wynika to z faktu, że w indeksie nr 1 kolumny `addressline1`, `addressline2`, `city` oraz `stateprovinceid` znajdują się wyłącznie na poziomie liści (indeks uwzględnia tylko `postalcode`, ale mamy bezpośredni dostęp do pozostałych kolumn), natomiast w indeksie nr 2 kolumny `addressline1`, `addressline2`, `city` oraz `stateprovinceid` są częścią klucza, a więc muszą one być uwzględnione na wszystkich poziomach drzewa indeksu.
+
+W przypadku naszego zapytania indeks `address_postalcode_2` nie daje nam znaczącej przewagi, natomiast byłby on dużo bardziej wydajny niż indeks nr 1 np. przypadku filtrowania po większej liczbie kolumn (np. `where postalcode="..." and city="..."`).
 
 # Zadanie 5 - kolejność atrybutów
 
@@ -496,6 +531,8 @@ Co można o nich powiedzieć?
 
 Komentarz:
 
+W przypadku wszystkich zapytań korzystamy z pełnego przeszukiwania (`full scan`), ponieważ nie mamy indeksu. Niezależnie od kolejności atrybutów, koszt zapytania jest identyczny, ponieważ i tak musimy przejrzeć wszystkie wiersze.
+
 Przygotuj indeks obejmujący te zapytania:
 
 ```sql
@@ -511,6 +548,12 @@ Sprawdź plan zapytania. Co się zmieniło?
 
 ![alt text](image-35.png)
 
+Komentarz:
+
+- w przypadku zapytań korzystających z filtra `where lastname="Agbonile"` zapytania korzystają z bardzo wydajnej operacji `Index Seek`, która pozwala na dostęp
+- w przypadku zapytania korzystającego jedynie z filtra `where firstname=...`, zapytanie nie może korzystać z `Index Seek`, a zamiast tego wykorzystywana jest operacja `Index Scan` - wynika to z tego, że "pominęliśmy" jeden poziom w indeksie (klauzula nie pozwala na precyzyjne wyznaczenie "ścieżki" do danych i w rezultacie musimy przeszukać cały indeks)
+- zapytanie korzystające z obu atrybutów w klauzuli `where` charakteryzuje się najniższym kosztem (~0.006 w porównaniu do ~0.008 dla zapytanie korzystające wyłącznie z atrybutu `lastname`). Zapytanie korzystające jedynie z atrybutu `firstname` charakteryzuje się najwyższym kosztem i ma jedynie nieznacznie mniejszy koszt niż zapytanie bez indeksu.
+
 Przeprowadź ponownie analizę zapytań tym razem dla parametrów: `FirstName = ‘Angela’` `LastName = ‘Price’`. (Trzy zapytania, różna kombinacja parametrów).
 
 Czym różni się ten plan od zapytania o `'Osarumwense Agbonile'` . Dlaczego tak jest?
@@ -520,6 +563,10 @@ Czym różni się ten plan od zapytania o `'Osarumwense Agbonile'` . Dlaczego ta
 > Wyniki:
 
 ![alt text](image-36.png)
+
+Komentarz:
+
+W przypadku zapytań 1. oraz 3. (odpowiednio tylko z warunkiem `where lastname="..."` oraz `where firstname="..."`), ze względu na ilość osób o odpowiedniu zadanym nazwisku lub imieniu, MSSQL zdecydował że skorzystanie z indeksu (a następnie pobieranie brakujących w indeksie danych ze znalezionych adresów) będzie mniej wydajne niż przeszukiwanie całej tabeli (`Table Scan`). W przypadku warunku `FirstName = ‘Angela’` `LastName = ‘Price’` indeks jest wykorzystywany.
 
 ---
 
