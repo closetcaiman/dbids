@@ -292,9 +292,25 @@ Zanotuj czas zapytania oraz jego koszt koszt:
 
 > Wyniki:
 
-```sql
---  ...
-```
+- zapytanie z warunkiem `where storeid = 594`
+
+![alt text](image-5.png)
+
+![alt text](image-6.png)
+
+![alt text](image-4.png)
+
+![alt text](image-3.png)
+
+- zapytanie z warunkiem `where storeid between 594 and 610`:
+
+![alt text](image-8.png)
+
+![alt text](image-9.png)
+
+![alt text](image-7.png)
+
+![alt text](image-10.png)
 
 Dodaj indeks:
 
@@ -308,9 +324,21 @@ Jak zmienił się plan i czas? Czy jest możliwość optymalizacji?
 
 > Wyniki:
 
-```sql
---  ...
-```
+- zapytanie z warunkiem `where storeid = 594`:
+
+![alt text](image-11.png)
+
+![alt text](image-12.png)
+
+![alt text](image-13.png)
+
+- zapytanie z warunkiem `where storeid between 594 and 610`:
+
+![alt text](image-15.png)
+
+![alt text](image-14.png)
+
+![alt text](image-16.png)
 
 Dodaj indeks klastrowany:
 
@@ -324,9 +352,13 @@ Czy zmienił się plan/koszt/czas? Skomentuj dwa podejścia w wyszukiwaniu krote
 
 > Wyniki:
 
-```sql
---  ...
-```
+- zapytanie z warunkiem `where storeid=594`
+
+![alt text](image-17.png)
+
+![alt text](image-18.png)
+
+![alt text](image-19.png)
 
 # Zadanie 4 - dodatkowe kolumny w indeksie
 
@@ -381,9 +413,29 @@ where postalcode between '98000' and '99999'
 
 > Wyniki:
 
-```sql
---  ...
-```
+- bez indeksu:
+
+![alt text](image-21.png)
+
+![alt text](image-20.png)
+
+![alt text](image-22.png)
+
+- z indeksem `address_postalcode_1`:
+
+![alt text](image-24.png)
+
+![alt text](image-23.png)
+
+![alt text](image-25.png)
+
+- z indeksem `address_postalcode_2`:
+
+![alt text](image-27.png)
+
+![alt text](image-26.png)
+
+![alt text](image-28.png)
 
 Sprawdź rozmiar Indeksów:
 
@@ -400,9 +452,7 @@ Który jest większy? Jak można skomentować te dwa podejścia do indeksowania?
 
 > Wyniki:
 
-```sql
---  ...
-```
+![alt text](image-29.png)
 
 # Zadanie 5 - kolejność atrybutów
 
@@ -442,9 +492,9 @@ Co można o nich powiedzieć?
 
 > Wyniki:
 
-```sql
---  ...
-```
+![alt text](image-34.png)
+
+Komentarz:
 
 Przygotuj indeks obejmujący te zapytania:
 
@@ -459,9 +509,7 @@ Sprawdź plan zapytania. Co się zmieniło?
 
 > Wyniki:
 
-```sql
---  ...
-```
+![alt text](image-35.png)
 
 Przeprowadź ponownie analizę zapytań tym razem dla parametrów: `FirstName = ‘Angela’` `LastName = ‘Price’`. (Trzy zapytania, różna kombinacja parametrów).
 
@@ -471,9 +519,7 @@ Czym różni się ten plan od zapytania o `'Osarumwense Agbonile'` . Dlaczego ta
 
 > Wyniki:
 
-```sql
---  ...
-```
+![alt text](image-36.png)
 
 ---
 
