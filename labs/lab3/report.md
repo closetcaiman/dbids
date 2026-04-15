@@ -150,13 +150,128 @@ Teraz wykonaj poszczególne zapytania (najlepiej każde analizuj oddzielnie). Co
 
 ---
 
-> Wyniki:
+## Wyniki:
 
 ```sql
---  ...
+-- zapytanie 1
+select *
+from salesorderheader sh
+inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+where orderdate = '2008-06-01 00:00:00.000'
+go
 ```
 
----
+- Live Query Statistics:
+
+![Live Query Statistics dla zapytania 1](media/ex1-1-live-query-stats.png)
+
+- Execution Plan:
+
+![Execution Plan dla zapytania 1](media/ex1-1-execution-plan.png)
+
+- Wnioski:
+  - najwięcej kosztu generuje skanowanie tabeli `salesorderheader` (Table Scan) w celu znalezienia wszystkich rekordów z datą `2008-06-01`
+  - to zapytanie można zoptymalizować poprzez dodanie indeksu na kolumnie `orderdate` w tabeli `salesorderheader`, co pozwoliłoby na szybsze wyszukiwanie rekordów z określoną datą (co proponuje SSMS poprzez `Missing Index Suggestion` z `Impact` ~ 25%)
+  - serwer wykonuje `Hash Match` do połączenia tabel `salesorderheader` i `salesorderdetail`, co jest kosztowne pamięciowo (`Row Size` = 444B)
+  - serwer estymuje, że zapytanie zwróci 5 rekordów, w rzeczywistości zwraca 0
+
+```sql
+-- zapytanie 1.1
+select *
+from salesorderheader sh
+inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+where orderdate = '2013-01-28 00:00:00.000'
+go
+```
+
+- Live Query Statistics:
+
+![Live Query Statistics dla zapytania 1.1](media/ex1-1.1-live-query-stats.png)
+
+- Execution Plan:
+
+![Execution Plan dla zapytania 1.1](media/ex1-1.1-execution-plan.png)
+
+Wnioski:
+
+- znów najwięcej kosztu generuje skanowanie tabeli `salesorderheader` (Table Scan) w celu znalezienia wszystkich rekordów z datą `2013-01-28`
+- znów SSMS proponuje dodanie indeksu na kolumnie `orderdate` w tabeli `salesorderheader` z `Impact` ~ 25%
+- serwer wykonuje `Hash Match` do połączenia tabel `salesorderheader` i `salesorderdetail`
+- serwer estymuje, że zapytanie zwróci 575 rekordów, w rzeczywistości zwraca 1224 rekordy
+
+```sql
+-- zapytanie 2
+select orderdate, productid, sum(orderqty) as orderqty,
+       sum(unitpricediscount) as unitpricediscount, sum(linetotal)
+from salesorderheader sh
+inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+group by orderdate, productid
+having sum(orderqty) >= 100
+go
+```
+
+- Live Query Statistics:
+
+![Live Query Statistics dla zapytania 2](media/ex1-2-live-query-stats.png)
+
+- Execution Plan:
+
+![Execution Plan dla zapytania 2](media/ex1-2-execution-plan.png)
+
+Wnioski:
+
+- znów najwięcej kosztu generuje skanowanie tabeli `salesorderheader` (Table Scan) w celu znalezienia wszystkich rekordów (kosz ~37%)
+- serwer wykonuje `Hash Match` do połączenia tabel `salesorderheader` i `salesorderdetail` oraz do grupowania danych
+- SSMS proponuje dodanie indeksu na kolumnie `orderdate` w tabeli `salesorderheader` z `Impact` ~ 50%, ale w tym przypadku proponuje włączenie też innych kolumn do indeksu
+- serwer wykorzystał `Parallelism` do wykonania zapytania, co skrócioło czas jego wykonania (z `XML`: `<QueryTimeStats CpuTime="247" ElapsedTime="36" />`)
+- serwer estymuje, że zapytanie zwróci 1 rekord, w rzeczywistości zwraca 523 rekordów
+
+```sql
+-- zapytanie 3
+select salesordernumber, purchaseordernumber, duedate, shipdate
+from salesorderheader sh
+inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+where orderdate in ('2008-06-01','2008-06-02', '2008-06-03', '2008-06-04', '2008-06-05')
+go
+```
+
+- Live Query Statistics:
+
+![Live Query Statistics dla zapytania 3](media/ex1-3-live-query-stats.png)
+
+- Execution Plan:
+
+![Execution Plan dla zapytania 3](media/ex1-3-execution-plan.png)
+
+- Wnioski: - znów najwięcej kosztu generuje skanowanie tabeli `salesorderheader` (Table Scan) w celu znalezienia wszystkich rekordów z datami z zakresu `2008-06-01` - `2008-06-05`
+  - serwer wykonuje `Hash Match` do połączenia tabel `salesorderheader` i `salesorderdetail`
+  - SSMS proponuje dodanie indeksu na kolumnie `orderdate` w tabeli `salesorderheader` z `Impact` ~ 25% oraz włączenie innych kolumn do indeksu
+  - serwer estymuje, że zapytanie zwróci 5 rekordów, w rzeczywistości zwraca 0
+
+```sql
+-- zapytanie 4
+select sh.salesorderid, salesordernumber, purchaseordernumber, duedate, shipdate
+from salesorderheader sh
+inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+where carriertrackingnumber in ('ef67-4713-bd', '6c08-4c4c-b8')
+order by sh.salesorderid
+go
+```
+
+- Live Query Statistics:
+
+![Live Query Statistics dla zapytania 4](media/ex1-4-live-query-stats.png)
+
+- Execution Plan:
+
+![Execution Plan dla zapytania 4](media/ex1-4-execution-plan.png)
+
+- Wnioski:
+  - znów najwięcej kosztu generuje skanowanie tabeli `salesorderheader` (Table Scan) w celu znalezienia wszystkich rekordów z określonymi `carriertrackingnumber`
+    - w tym wypadku większy koszt generuje skanowanie tabeli predykatowej, jako, że ma ona więcej rekordow (`orderdetails > orderheader`)
+  - serwer wykonuje `Hash Match` do połączenia tabel `salesorderheader` i `salesorderdetail`
+  - SSMS proponuje dodanie indeksu na kolumnie `carriertrackingnumber` w tabeli `salesorderdetail` z `Impact` ~ 57%, włączając `SalesOrderID` do indeksu
+  - serwer estymuje, że zapytanie zwróci 76 rekordy, a w rzeczywistości zwraca 68 rekordy
 
 # Zadanie 2 - Dobór indeksów / optymalizacja
 
