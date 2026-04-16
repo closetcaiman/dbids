@@ -24,7 +24,7 @@ Swoje odpowiedzi wpisuj w miejsca oznaczone jako:
 
 ---
 
-> Wyniki:
+## Wyniki:
 
 ```sql
 --  ...
@@ -507,7 +507,7 @@ Zanotuj czas zapytania oraz jego koszt koszt:
 
 ---
 
-> Wyniki:
+## Wyniki:
 
 - zapytanie z warunkiem `where storeid = 594`
 
@@ -539,7 +539,7 @@ Jak zmienił się plan i czas? Czy jest możliwość optymalizacji?
 
 ---
 
-> Wyniki:
+## Wyniki:
 
 - zapytanie z warunkiem `where storeid = 594`:
 
@@ -573,7 +573,7 @@ Czy zmienił się plan/koszt/czas? Skomentuj dwa podejścia w wyszukiwaniu krote
 
 ---
 
-> Wyniki:
+## Wyniki:
 
 - zapytanie z warunkiem `where storeid=594`
 
@@ -653,7 +653,7 @@ from address  WITH(INDEX(Address_PostalCode_2))
 where postalcode between '98000' and '99999'
 ```
 
-> Wyniki:
+## Wyniki:
 
 - bez indeksu:
 
@@ -696,7 +696,7 @@ go
 
 Który jest większy? Jak można skomentować te dwa podejścia do indeksowania? Które kolumny na to wpływają?
 
-> Wyniki:
+## Wyniki:
 
 ![Rozmiary indeksów "address_postalcode_1" oraz "address_postalcode_2"](media/image-29.png)
 
@@ -742,7 +742,7 @@ Co można o nich powiedzieć?
 
 ---
 
-> Wyniki:
+## Wyniki:
 
 ![Plany zapytań dla zapytań o Osarumwese Agbonile - brak indeksu](media/image-34.png)
 
@@ -761,7 +761,7 @@ Sprawdź plan zapytania. Co się zmieniło?
 
 ---
 
-> Wyniki:
+## Wyniki:
 
 ![Plany zapytań o Osarumwese Agbonile - indeks na (lastname, firstame)](media/image-35.png)
 
@@ -777,7 +777,7 @@ Czym różni się ten plan od zapytania o `'Osarumwense Agbonile'` . Dlaczego ta
 
 ---
 
-> Wyniki:
+## Wyniki:
 
 ![Plany zapytań o Angela Price - indeks na (lastname, firstame)](media/image-36.png)
 
