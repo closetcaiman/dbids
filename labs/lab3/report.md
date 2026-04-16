@@ -172,8 +172,8 @@ go
 - Wnioski:
   - najwięcej kosztu generuje skanowanie tabeli `salesorderheader` (Table Scan) w celu znalezienia wszystkich rekordów z datą `2008-06-01`
   - to zapytanie można zoptymalizować poprzez dodanie indeksu na kolumnie `orderdate` w tabeli `salesorderheader`, co pozwoliłoby na szybsze wyszukiwanie rekordów z określoną datą (co proponuje SSMS poprzez `Missing Index Suggestion` z `Impact` ~ 25%)
-  - serwer wykonuje `Hash Match` do połączenia tabel `salesorderheader` i `salesorderdetail`, co jest kosztowne pamięciowo (`Row Size` = 444B)
-  - serwer estymuje, że zapytanie zwróci 5 rekordów, w rzeczywistości zwraca 0
+  - serwer wykonuje `Hash Match` do połączenia tabel `salesorderheader` i `salesorderdetail`
+  - podczas skanowania serwer estymuje, że zapytanie zwróci 121317 rekordów, a w rzeczywistości zwraca 0 rekordów, co mogło wpłynąć na wybór planu zapytania
 
 ```sql
 -- zapytanie 1.1
@@ -220,7 +220,7 @@ go
 
 Wnioski:
 
-- znów najwięcej kosztu generuje skanowanie tabeli `salesorderheader` (Table Scan) w celu znalezienia wszystkich rekordów (kosz ~37%)
+- znów najwięcej kosztu generuje skanowanie tabeli `salesorderheader` (Table Scan) w celu znalezienia wszystkich rekordów (kosz~y ~37%), dalej agregacja wyników (koszt ~25%)
 - serwer wykonuje `Hash Match` do połączenia tabel `salesorderheader` i `salesorderdetail` oraz do grupowania danych
 - SSMS proponuje dodanie indeksu na kolumnie `orderdate` w tabeli `salesorderheader` z `Impact` ~ 50%, ale w tym przypadku proponuje włączenie też innych kolumn do indeksu
 - serwer wykorzystał `Parallelism` do wykonania zapytania, co skrócioło czas jego wykonania (z `XML`: `<QueryTimeStats CpuTime="247" ElapsedTime="36" />`)
@@ -243,7 +243,8 @@ go
 
 ![Execution Plan dla zapytania 3](media/ex1-3-execution-plan.png)
 
-- Wnioski: - znów najwięcej kosztu generuje skanowanie tabeli `salesorderheader` (Table Scan) w celu znalezienia wszystkich rekordów z datami z zakresu `2008-06-01` - `2008-06-05`
+- Wnioski:
+  - znów najwięcej kosztu generuje skanowanie tabeli `salesorderheader` (Table Scan) w celu znalezienia wszystkich rekordów z datami z zakresu `2008-06-01` - `2008-06-05`
   - serwer wykonuje `Hash Match` do połączenia tabel `salesorderheader` i `salesorderdetail`
   - SSMS proponuje dodanie indeksu na kolumnie `orderdate` w tabeli `salesorderheader` z `Impact` ~ 25% oraz włączenie innych kolumn do indeksu
   - serwer estymuje, że zapytanie zwróci 5 rekordów, w rzeczywistości zwraca 0
@@ -280,6 +281,7 @@ Do wykonania tego ćwiczenia potrzebne jest narzędzie SSMS
 Zapytania 1, 2, 3, 4 z poprzedniego zadania
 
 ```sql
+-- zapytanie 1
 select *
 from salesorderheader sh
 inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
@@ -309,7 +311,6 @@ inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 where carriertrackingnumber in ('ef67-4713-bd', '6c08-4c4c-b8')
 order by sh.salesorderid
 go
-
 ```
 
 Zaznacz wszystkie zapytania, i uruchom je w **Database Engine Tuning Advisor**:
@@ -322,13 +323,18 @@ Sprawdź zakładkę **Tuning Options**, co tam można skonfigurować?
 
 ---
 
-> Wyniki:
+## Wyniki:
 
-```sql
---  ...
-```
+![Tuning Options](media/ex2-tuning-options.png)
 
----
+Można tam skonfigurować:
+
+- limit czasu analizy
+- jakie fizyczne struktury mają być brane pod uwagę przy rekomendacji
+- strategia partycjonowania danych
+- jakie fizyczne struktury należy zachować (np. istniejące indeksy)
+- maksymalne rozmiary rekomendacji
+- czy rekomendacje mają być offline czy online (online - bez przerywania pracy serwera, offline - z przerwą w pracy serwera)
 
 Użyj **Start Analysis**:
 
@@ -352,11 +358,15 @@ Opisz, dlaczego dane indeksy zostały zaproponowane do zapytań:
 
 ---
 
-> Wyniki:
+## Wyniki:
 
-```sql
---  ...
-```
+Raporty:
+
+![Statement Cost](media/ex2-statement-cost-report.png)
+
+![Statement Cost Range](media/ex2-statement-cost-range-report.png)
+
+![Statement Detail](media/ex2-statement-detail-report.png)
 
 ---
 
@@ -364,11 +374,103 @@ Sprawdź jak zmieniły się Execution Plany. Opisz zmiany:
 
 ---
 
-> Wyniki:
+## Wyniki:
 
 ```sql
---  ...
+-- zapytanie 1
+select *
+from salesorderheader sh
+inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+where orderdate = '2008-06-01 00:00:00.000'
+go
 ```
+
+- Live Query Statistics:
+
+![Live Query Statistics dla zapytania 1 po optymalizacji](media/ex2-1-live-query-stats.png)
+
+- Execution Plan:
+
+![Execution Plan dla zapytania 1 po optymalizacji](media/ex2-1-execution-plan.png)
+
+Wnioski:
+
+- serwer wykorzystuje `Nested Loops` do połączenia tabel `salesorderheader` i `salesorderdetail`
+- serwer dokonuje wykorzystania indeksu `orderdate` w tabeli `salesorderheader` do wyszukania rekordów z datą `2008-06-01`, co jest dużo szybsze niż skanowanie całej tabeli
+- serwer o wiele lepiej estymuje liczbę zwracanych rekordów:
+  - np. w przeszukiwaniu tabel 4, a zwracane jest 0 (dla porównania w poprzednim planie serwer estymował, że zwróci 121317 rekordów, a w rzeczywistości zwracał 0 rekordów)
+  - w tym wypadku błąd estymacji jest mały, co sprawia, że plan jest bardziej efektywny, ponieważ serwer nie musi wykonywać dodatkowych operacji (np. `Hash Match`) do połączenia tabel, a może wykorzystać `Nested Loops`, który jest bardziej efektywny przy mniejszej liczbie zwracanych rekordów
+
+```sql
+-- zapytanie 2
+select orderdate, productid, sum(orderqty) as orderqty,
+       sum(unitpricediscount) as unitpricediscount, sum(linetotal)
+from salesorderheader sh
+inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+group by orderdate, productid
+having sum(orderqty) >= 100
+go
+```
+
+- Live Query Statistics:
+
+![Live Query Statistics dla zapytania 2 po optymalizacji](media/ex2-2-live-query-stats.png)
+
+- Execution Plan:
+
+![Execution Plan dla zapytania 2 po optymalizacji](media/ex2-2-execution-plan.png)
+Wnioski:
+
+- w odróźnieniu od innych zapytań, serwer wykonuje `Index Scan` zamiast `Index Seek` do wyszukania rekordów z określonymi datami, co jest spowodowane tym, że potrzebuje każdego wiersza do wyliczenia sumy
+- raport wskazał, że to zapytanie najmniej skorzysta na dodaniu indeksu, co jest spowodowane tym, że nawet po optymalizacji wyszukiwania, bottleneckiem pozostaje agregacja danych (koszt ~38%, najwyższy spośród wszystkich operatorów)
+- zapytanie nadal wykorzystuje `Parallelism` do wykonania zapytania, co skróciło czas jego wykonania (z `XML`: `<QueryTimeStats CpuTime="217" ElapsedTime="31" />`)
+
+```sql
+-- zapytanie 3
+select salesordernumber, purchaseordernumber, duedate, shipdate
+from salesorderheader sh
+inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+where orderdate in ('2008-06-01','2008-06-02', '2008-06-03', '2008-06-04', '2008-06-05')
+go
+```
+
+- Live Query Statistics:
+
+![Live Query Statistics dla zapytania 3 po optymalizacji](media/ex2-3-live-query-stats.png)
+
+- Execution Plan:
+
+![Execution Plan dla zapytania 3 po optymalizacji](media/ex2-3-execution-plan.png)
+
+Wnioski:
+
+- serwer wykorzystuje `Nested Loops` do połączenia tabel `salesorderheader` i `salesorderdetail`
+- serwer dokonuje wykorzystania indeksu `orderdate` w tabeli `salesorderheader` do wyszukania rekordów z datami z zakresu `2008-06-01` - `2008-06-05` (`Index Seek`), co jest dużo szybsze niż skanowanie całej tabeli
+- serwer o wiele lepiej estymuje liczbę zwracanych rekordów:
+
+```sql
+-- zapytanie 4
+select sh.salesorderid, salesordernumber, purchaseordernumber, duedate, shipdate
+from salesorderheader sh
+inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+where carriertrackingnumber in ('ef67-4713-bd', '6c08-4c4c-b8')
+order by sh.salesorderid
+go
+```
+
+- Live Query Statistics:
+
+![Live Query Statistics dla zapytania 4 po optymalizacji](media/ex2-4-live-query-stats.png)
+
+- Execution Plan:
+
+![Execution Plan dla zapytania 4 po optymalizacji](media/ex2-4-execution-plan.png)
+
+Wnioski:
+
+- dodanie indeksu zmieniło plan zapytania, ponieważ serwer wykonuje teraz `Sort` przed `Nested Loops`, co jest spowodowane tym, że serwerowi bardziej opłaca się posortować dane przed połączeniem tabel, niż po połączeniu tabel
+- zamiast `Table Scan` serwer wykorzystuje `Index Seek` do wyszukania rekordów z określonymi `carriertrackingnumber`, co jest dużo szybsze niż skanowanie całej tabeli
+- są błędy estymacji, ale nie są one duże, aby znacząco wpłynąć na plan zapytania
 
 ---
 
