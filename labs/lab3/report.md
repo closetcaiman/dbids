@@ -87,13 +87,19 @@ Operatory (oraz reprezentujące je piktogramy/Ikonki) używane w graficznej prez
 Wykonaj poniższy skrypt, aby przygotować dane:
 
 ```sql
-select * into [salesorderheader]
+select *
+into [salesorderheader]
 from [adventureworks2017].sales.[salesorderheader]
 go
 
-select * into [salesorderdetail]
+select *
+into [salesorderdetail]
 from [adventureworks2017].sales.[salesorderdetail]
 go
+```
+
+```{=typst}
+#pagebreak()
 ```
 
 # Zadanie 1 - Obserwacja
@@ -104,22 +110,25 @@ Wpisz do MSSQL Managment Studio (na razie nie wykonuj tych zapytań):
 -- zapytanie 1
 select *
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 where orderdate = '2008-06-01 00:00:00.000'
 go
 
 -- zapytanie 1.1
 select *
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 where orderdate = '2013-01-28 00:00:00.000'
 go
 
 -- zapytanie 2
-select orderdate, productid, sum(orderqty) as orderqty,
-       sum(unitpricediscount) as unitpricediscount, sum(linetotal)
+select orderdate,
+       productid,
+       sum(orderqty)          as orderqty,
+       sum(unitpricediscount) as unitpricediscount,
+       sum(linetotal)
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 group by orderdate, productid
 having sum(orderqty) >= 100
 go
@@ -127,14 +136,14 @@ go
 -- zapytanie 3
 select salesordernumber, purchaseordernumber, duedate, shipdate
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
-where orderdate in ('2008-06-01','2008-06-02', '2008-06-03', '2008-06-04', '2008-06-05')
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+where orderdate in ('2008-06-01', '2008-06-02', '2008-06-03', '2008-06-04', '2008-06-05')
 go
 
 -- zapytanie 4
 select sh.salesorderid, salesordernumber, purchaseordernumber, duedate, shipdate
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 where carriertrackingnumber in ('ef67-4713-bd', '6c08-4c4c-b8')
 order by sh.salesorderid
 go
@@ -150,13 +159,17 @@ Teraz wykonaj poszczególne zapytania (najlepiej każde analizuj oddzielnie). Co
 
 ---
 
+```{=typst}
+#pagebreak()
+```
+
 ## Wyniki:
 
 ```sql
 -- zapytanie 1
 select *
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 where orderdate = '2008-06-01 00:00:00.000'
 go
 ```
@@ -175,11 +188,15 @@ go
   - serwer wykonuje `Hash Match` do połączenia tabel `salesorderheader` i `salesorderdetail`
   - podczas skanowania serwer estymuje, że zapytanie zwróci 121317 rekordów, a w rzeczywistości zwraca 0 rekordów, co mogło wpłynąć na wybór planu zapytania
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 -- zapytanie 1.1
 select *
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 where orderdate = '2013-01-28 00:00:00.000'
 go
 ```
@@ -199,12 +216,19 @@ Wnioski:
 - serwer wykonuje `Hash Match` do połączenia tabel `salesorderheader` i `salesorderdetail`
 - serwer estymuje, że zapytanie zwróci 575 rekordów, w rzeczywistości zwraca 1224 rekordy
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 -- zapytanie 2
-select orderdate, productid, sum(orderqty) as orderqty,
-       sum(unitpricediscount) as unitpricediscount, sum(linetotal)
+select orderdate,
+       productid,
+       sum(orderqty)          as orderqty,
+       sum(unitpricediscount) as unitpricediscount,
+       sum(linetotal)
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 group by orderdate, productid
 having sum(orderqty) >= 100
 go
@@ -226,12 +250,16 @@ Wnioski:
 - serwer wykorzystał `Parallelism` do wykonania zapytania, co skrócioło czas jego wykonania (z `XML`: `<QueryTimeStats CpuTime="247" ElapsedTime="36" />`)
 - serwer estymuje, że zapytanie zwróci 1 rekord, w rzeczywistości zwraca 523 rekordów
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 -- zapytanie 3
 select salesordernumber, purchaseordernumber, duedate, shipdate
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
-where orderdate in ('2008-06-01','2008-06-02', '2008-06-03', '2008-06-04', '2008-06-05')
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+where orderdate in ('2008-06-01', '2008-06-02', '2008-06-03', '2008-06-04', '2008-06-05')
 go
 ```
 
@@ -249,11 +277,15 @@ go
   - SSMS proponuje dodanie indeksu na kolumnie `orderdate` w tabeli `salesorderheader` z `Impact` ~ 25% oraz włączenie innych kolumn do indeksu
   - serwer estymuje, że zapytanie zwróci 5 rekordów, w rzeczywistości zwraca 0
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 -- zapytanie 4
 select sh.salesorderid, salesordernumber, purchaseordernumber, duedate, shipdate
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 where carriertrackingnumber in ('ef67-4713-bd', '6c08-4c4c-b8')
 order by sh.salesorderid
 go
@@ -274,6 +306,10 @@ go
   - SSMS proponuje dodanie indeksu na kolumnie `carriertrackingnumber` w tabeli `salesorderdetail` z `Impact` ~ 57%, włączając `SalesOrderID` do indeksu
   - serwer estymuje, że zapytanie zwróci 76 rekordy, a w rzeczywistości zwraca 68 rekordy
 
+```{=typst}
+#pagebreak()
+```
+
 # Zadanie 2 - Dobór indeksów / optymalizacja
 
 Do wykonania tego ćwiczenia potrzebne jest narzędzie SSMS
@@ -284,15 +320,18 @@ Zapytania 1, 2, 3, 4 z poprzedniego zadania
 -- zapytanie 1
 select *
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 where orderdate = '2008-06-01 00:00:00.000'
 go
 
 -- zapytanie 2
-select orderdate, productid, sum(orderqty) as orderqty,
-       sum(unitpricediscount) as unitpricediscount, sum(linetotal)
+select orderdate,
+       productid,
+       sum(orderqty)          as orderqty,
+       sum(unitpricediscount) as unitpricediscount,
+       sum(linetotal)
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 group by orderdate, productid
 having sum(orderqty) >= 100
 go
@@ -300,14 +339,14 @@ go
 -- zapytanie 3
 select salesordernumber, purchaseordernumber, duedate, shipdate
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
-where orderdate in ('2008-06-01','2008-06-02', '2008-06-03', '2008-06-04', '2008-06-05')
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+where orderdate in ('2008-06-01', '2008-06-02', '2008-06-03', '2008-06-04', '2008-06-05')
 go
 
 -- zapytanie 4
 select sh.salesorderid, salesordernumber, purchaseordernumber, duedate, shipdate
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 where carriertrackingnumber in ('ef67-4713-bd', '6c08-4c4c-b8')
 order by sh.salesorderid
 go
@@ -358,6 +397,10 @@ Opisz, dlaczego dane indeksy zostały zaproponowane do zapytań:
 
 ---
 
+```{=typst}
+#pagebreak()
+```
+
 ## Wyniki:
 
 Raporty:
@@ -367,6 +410,10 @@ Raporty:
 ![Statement Cost Range](media/ex2-statement-cost-range-report.png)
 
 ![Statement Detail](media/ex2-statement-detail-report.png)
+
+```{=typst}
+#pagebreak()
+```
 
 ---
 
@@ -380,7 +427,7 @@ Sprawdź jak zmieniły się Execution Plany. Opisz zmiany:
 -- zapytanie 1
 select *
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 where orderdate = '2008-06-01 00:00:00.000'
 go
 ```
@@ -401,12 +448,19 @@ Wnioski:
   - np. w przeszukiwaniu tabel 4, a zwracane jest 0 (dla porównania w poprzednim planie serwer estymował, że zwróci 121317 rekordów, a w rzeczywistości zwracał 0 rekordów)
   - w tym wypadku błąd estymacji jest mały, co sprawia, że plan jest bardziej efektywny, ponieważ serwer nie musi wykonywać dodatkowych operacji (np. `Hash Match`) do połączenia tabel, a może wykorzystać `Nested Loops`, który jest bardziej efektywny przy mniejszej liczbie zwracanych rekordów
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 -- zapytanie 2
-select orderdate, productid, sum(orderqty) as orderqty,
-       sum(unitpricediscount) as unitpricediscount, sum(linetotal)
+select orderdate,
+       productid,
+       sum(orderqty)          as orderqty,
+       sum(unitpricediscount) as unitpricediscount,
+       sum(linetotal)
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 group by orderdate, productid
 having sum(orderqty) >= 100
 go
@@ -425,12 +479,16 @@ Wnioski:
 - raport wskazał, że to zapytanie najmniej skorzysta na dodaniu indeksu, co jest spowodowane tym, że nawet po optymalizacji wyszukiwania, bottleneckiem pozostaje agregacja danych (koszt ~38%, najwyższy spośród wszystkich operatorów)
 - zapytanie nadal wykorzystuje `Parallelism` do wykonania zapytania, co skróciło czas jego wykonania (z `XML`: `<QueryTimeStats CpuTime="217" ElapsedTime="31" />`)
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 -- zapytanie 3
 select salesordernumber, purchaseordernumber, duedate, shipdate
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
-where orderdate in ('2008-06-01','2008-06-02', '2008-06-03', '2008-06-04', '2008-06-05')
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+where orderdate in ('2008-06-01', '2008-06-02', '2008-06-03', '2008-06-04', '2008-06-05')
 go
 ```
 
@@ -448,11 +506,15 @@ Wnioski:
 - serwer dokonuje wykorzystania indeksu `orderdate` w tabeli `salesorderheader` do wyszukania rekordów z datami z zakresu `2008-06-01` - `2008-06-05` (`Index Seek`), co jest dużo szybsze niż skanowanie całej tabeli
 - serwer o wiele lepiej estymuje liczbę zwracanych rekordów:
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 -- zapytanie 4
 select sh.salesorderid, salesordernumber, purchaseordernumber, duedate, shipdate
 from salesorderheader sh
-inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
+         inner join salesorderdetail sd on sh.salesorderid = sd.salesorderid
 where carriertrackingnumber in ('ef67-4713-bd', '6c08-4c4c-b8')
 order by sh.salesorderid
 go
@@ -549,6 +611,10 @@ Jak zmienił się plan i czas? Czy jest możliwość optymalizacji?
 
 ![Czas wykonania zapytania dla warunku "where storeid=594" - indeks nieklastrowany](media/image-13.png)
 
+```{=typst}
+#pagebreak()
+```
+
 - zapytanie z warunkiem `where storeid between 594 and 610`:
 
 ![Plan zapytania dla warunku "where storeid between 594 and 610" - indeks nieklastrowany](media/image-15.png)
@@ -562,6 +628,10 @@ Komentarz:
 Po dodaniu indeksu zmienił się plan zapytania - zamiast przeglądania całej tabeli, używa `Nested Loops`, aby dla każdego adresu znalezionego na podstawie `Index Scan` wykonać `RID Lookup` i pobrać brakujące dane z tabeli (w indeksie jest tylko `storeid`, resztę danych musimy pobrać z odpowiedniego miejsca w tabeli). W przypadku obu zapytań koszt zapytania jest zdecydowanie mniejszy w porównaniu do zapytania na tabeli bez indeksu (odpowiednio ~20 razy niższy w przypadku `where storid=594` oraz ~2.5 razy niższe w przypadku `where storeid between 594 and 610`). Różnica w koszcie wynika z faktu, że w przypadku stworzonego indeksu nie mamy dostępu do pobieranych danych (w indeksie zawarte jest tylko `storeid`) i musimy pobrać je ze znalezionych adresów.
 
 Choć koszt zapytań jest niższy, to faktyczny czas wykonania zapytania jest większy w porównaniu do zapytania bez indeksu (w przypadku tak małej ilości danych przeszukanie całej tabeli może być szybsze niż skorzystanie z indeksu)
+
+```{=typst}
+#pagebreak()
+```
 
 Dodaj indeks klastrowany:
 
@@ -582,6 +652,10 @@ Czy zmienił się plan/koszt/czas? Skomentuj dwa podejścia w wyszukiwaniu krote
 ![Plan zapytania dla warunku "where storeid=594" - indeks klastrowany](media/image-18.png)
 
 ![Czas wykonania zapytania dla warunku "where storeid=594" - indeks klastrowany](media/image-19.png)
+
+```{=typst}
+#pagebreak()
+```
 
 - zapytanie z warunkiem `where storeid between 594 and 610`:
 
@@ -622,12 +696,12 @@ where postalcode between '98000' and '99999'
 
 ```sql
 create index address_postalcode_1
-on address (postalcode)
-include (addressline1, addressline2, city, stateprovinceid);
+    on address (postalcode)
+    include (addressline1, addressline2, city, stateprovinceid);
 go
 
 create index address_postalcode_2
-on address (postalcode, addressline1, addressline2, city, stateprovinceid);
+    on address (postalcode, addressline1, addressline2, city, stateprovinceid);
 go
 ```
 
@@ -644,12 +718,12 @@ Aby wymusić użycie indeksu użyj `WITH(INDEX(Address_PostalCode_1))` po `FROM`
 
 ```sql
 select addressline1, addressline2, city, stateprovinceid, postalcode
-from address  WITH(INDEX(Address_PostalCode_1))
+from address WITH (INDEX (Address_PostalCode_1))
 where postalcode between '98000' and '99999'
 
 
 select addressline1, addressline2, city, stateprovinceid, postalcode
-from address  WITH(INDEX(Address_PostalCode_2))
+from address WITH (INDEX (Address_PostalCode_2))
 where postalcode between '98000' and '99999'
 ```
 
@@ -662,6 +736,10 @@ where postalcode between '98000' and '99999'
 ![Plan zapytania dla warunku - brak indeksu](media/image-20.png)
 
 ![Czas wykonania zapytania dla warunku - brak indeksu](media/image-22.png)
+
+```{=typst}
+#pagebreak()
+```
 
 - z indeksem `address_postalcode_1`:
 
@@ -683,13 +761,18 @@ Komentarz:
 
 Pomiędzy zapytaniem bez indeksu a zapytaniami korzystającymi z indeksów występuje znacząca różnica w planach zapytania (zapytanie bez indeksu wykonuje pełne przeszukiwanie tabeli, zapytania z indeksami scanuje tylko indeks, a ponieważ oba indeksy pokrywają zapytanie to nie ma konieczności dodatkowego pobierania brakujących danych). Zapytania korzystające z indeksu `address_postalcode_1` oraz `address_postalcode_2` mają de facto identyczne plany zapytań (koszt również jest identyczny).
 
+```{=typst}
+#pagebreak()
+```
+
 Sprawdź rozmiar Indeksów:
 
 ```sql
 select i.name as indexname, sum(s.used_page_count) * 8 as indexsizekb
 from sys.dm_db_partition_stats as s
-inner join sys.indexes as i on s.object_id = i.object_id and s.index_id = i.index_id
-where i.name = 'address_postalcode_1' or i.name = 'address_postalcode_2'
+         inner join sys.indexes as i on s.object_id = i.object_id and s.index_id = i.index_id
+where i.name = 'address_postalcode_1'
+   or i.name = 'address_postalcode_2'
 group by i.name
 go
 ```
@@ -764,6 +847,10 @@ Sprawdź plan zapytania. Co się zmieniło?
 ## Wyniki:
 
 ![Plany zapytań o Osarumwese Agbonile - indeks na (lastname, firstame)](media/image-35.png)
+
+```{=typst}
+#pagebreak()
+```
 
 Komentarz:
 
