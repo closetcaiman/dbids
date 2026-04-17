@@ -1,0 +1,18 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql_server_lab3
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Admin!1234"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+      - ./common/sql/adventure-works/:/data/sql/adventure-works
+      - ./common/sql/northwind/mssql/:/data/sql/northwind
+      - ./common/backups/:/data/backups
+      - ./labs/lab4/scripts/setup-mssql.sh:/data/setup-mssql.sh
+    entrypoint: /bin/bash /data/setup-mssql.sh
+volumes:
+  mssql_data:
