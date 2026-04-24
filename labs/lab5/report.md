@@ -176,7 +176,40 @@ ORDER BY n DESC;
 
 Dwa pozostałe zapytania przygotuj samodzielnie na analogicznej zasadzie.
 
-**W komentarzu:** napisz 2-3 zdania podsumowania. Nie oddawaj tylko trzech niezależnych wyników bez wniosków.
+Rozwiązanie:
+
+```sql
+SELECT
+    event_type,
+    count(*) AS n
+FROM events
+GROUP BY event_type
+ORDER BY n DESC;
+
+SELECT
+    country,
+    count(*) AS n
+FROM events
+GROUP BY country
+ORDER BY n DESC;
+
+SELECT
+    device,
+    count(*) AS n
+FROM events
+GROUP BY device
+ORDER BY n DESC;
+```
+
+Wyniki:
+
+![alt text](image.png)
+
+![alt text](image-1.png)
+
+![alt text](image-2.png)
+
+Wśród wszystkich wydarzeń występują eventy 3 typów (`view`, `add_to_cart` oraz `purchase`), dominującą kategorią są zdarzenia typu `view`. Wydarzenia miały miejsce w 10 różnych krajach, z czego większość miała miejsce w Wielkiej Brytanii (`GB`). Wśród urządzeń dominowały telefony komórkowe, a wszystkie eventy dotyczyły jednego z typów urządzeń - `mobile`, `tablet` lub `desktop`.
 
 ---
 
