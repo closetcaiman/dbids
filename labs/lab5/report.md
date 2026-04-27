@@ -102,6 +102,56 @@ FROM events;
 
 **W komentarzu napisz:** czy liczba rekordów i zakres czasu są zgodne w obu bazach, czy w danych występują NULL-e.
 
+### Wyniki
+
+#### Struktura tabeli
+
+- PostgreSQL:
+
+![alt text](image-1.png)
+
+- ClickHouse:
+
+![alt text](image.png)
+
+Struktura tabeli jest zgodna co do nazw typów danych.
+
+#### Przykładowe rekordy
+
+- PostgreSQL:
+
+![alt text](image-2.png)
+
+- ClickHouse:
+
+![alt text](image-3.png)
+
+Wyniki są zgodne, oba systemy pokazują te same dane.
+
+#### Liczba wierszy i zakres czasu
+
+- PostgreSQL:
+
+![alt text](image-5.png)
+
+- ClickHouse:
+
+![alt text](image-4.png)
+
+Liczba wierszy jest zgodna w obu tabelach, podobnie jak zakres czasu zdarzeń. PostgreSQL stosuje dokdładność do mikrosekund, a ClickHouse do sekund, ale oba zakresy są zgodne.
+
+#### `NULL`-e w kolumnach price i quantity
+
+- PostgreSQL:
+
+![alt text](image-6.png)
+
+- ClickHouse:
+
+![alt text](image-7.png)
+
+Wyniki są takie same, brak wartości `NULL`
+
 ---
 
 ## 2. Profil danych zdarzeniowych - 1 pkt
