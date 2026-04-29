@@ -349,6 +349,43 @@ LIMIT 20;
 - czy duża aktywność użytkownika zawsze oznacza wysoki przychód,
 - jakie wnioski można wyciągnąć z porównania liczby zdarzeń i przychodu.
 
+Rozwiązanie:
+
+```sql
+-- postgres
+select
+    user_id,
+    count(*) as all_events,
+    count(case when event_type = 'purchase' then 1 end) as purchase_events,
+    sum(case when event_type = 'purchase' then quantity * price else 0 end) as revenue
+from events
+group by user_id
+order by revenue desc
+limit 20;
+
+-- clickhouse
+select
+    user_id,
+    count(*) as all_events,
+    countIf(event_type = 'purchase') as purchase_events,
+    sumIf(price * quantity, event_type = 'purchase') as revenue
+from events
+group by user_id
+order by revenue desc
+limit 20;
+```
+
+Rezultaty obu zapytań są identyczne:
+
+![alt text](image-6.png)
+![alt text](image-5.png)
+
+Komentarz:
+
+- użytkownik z najwyższym przychodem nie ma największej liczby wszystkich zdarzeń, nie ma też największej liczby zdarzeń typu `purchase`
+- duża aktywność użytkownika pewnie w pewien sposób koreluje z wysokim przychodem, ale nie zawsze jednoznacznie oznacza wysoki przychód (aktywność oraz ilość wydarzeń typu `purchase` nie różni się w jakkolwiek znaczący sposób wśród użytkowników z miejsc 1-200)
+- kluczowa dla wyniku jest faktyczna wartość zamówienia, a nie sama częstotliwość interakcji - użytkownik o niższej aktywności może wygenerować większy przychód jeśli kupuje droższe produkty.
+
 ---
 
 ## 7. Benchmark zapytań w PostgreSQL i ClickHouse - 3 pkt
