@@ -203,11 +203,11 @@ ORDER BY n DESC;
 
 Wyniki:
 
-![alt text](image.png)
+![alt text](media/image.png)
 
-![alt text](image-1.png)
+![alt text](media/image-1.png)
 
-![alt text](image-2.png)
+![alt text](media/image-2.png)
 
 Wśród wszystkich wydarzeń występują eventy 3 typów (`view`, `add_to_cart` oraz `purchase`), dominującą kategorią są zdarzenia typu `view`. Wydarzenia miały miejsce w 10 różnych krajach, z czego większość miała miejsce w Wielkiej Brytanii (`GB`). Wśród urządzeń dominowały telefony komórkowe, a wszystkie eventy dotyczyły jednego z typów urządzeń - `mobile`, `tablet` lub `desktop`.
 
@@ -284,8 +284,8 @@ from events;
 
 Wyniki z obu zapytań zwróciły identyczne rezultaty (z dokładnością do dokładności numerycznej):
 
-![alt text](image-3.png)
-![alt text](image-4.png)
+![alt text](media/image-3.png)
+![alt text](media/image-4.png)
 
 Komentarz:
 
@@ -377,8 +377,8 @@ limit 20;
 
 Rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej):
 
-![alt text](image-6.png)
-![alt text](image-5.png)
+![alt text](media/image-6.png)
+![alt text](media/image-5.png)
 
 Komentarz:
 
@@ -563,10 +563,10 @@ Dla tego zapytania pokaż wynik z obu baz, napisz, czy wyniki są zgodne, oraz z
 Wyniki:
 
 - Clickhouse:
-  ![alt text](image-7.png)
+  ![alt text](media/image-7.png)
 
 - Postgres:
-  ![alt text](image-8.png)
+  ![alt text](media/image-8.png)
 
 Rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej).
 
