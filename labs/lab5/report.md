@@ -282,7 +282,7 @@ select
 from events;
 ```
 
-Wyniki z obu zapytań zwróciły identyczne rezultaty:
+Wyniki z obu zapytań zwróciły identyczne rezultaty (z dokładnością do dokładności numerycznej):
 
 ![alt text](image-3.png)
 ![alt text](image-4.png)
@@ -375,7 +375,7 @@ order by revenue desc
 limit 20;
 ```
 
-Rezultaty obu zapytań są identyczne:
+Rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej):
 
 ![alt text](image-6.png)
 ![alt text](image-5.png)
@@ -426,6 +426,83 @@ Na końcu napisz 3-5 zdań komentarza, w których odniesiesz się do następują
 Wybierz dwa zapytania z wcześniejszych zadań tego laboratorium i wykonaj je w obu bazach danych. Dla każdego zapytania pokaż wynik, napisz, czy wynik liczbowy jest zgodny w PostgreSQL i ClickHouse, oraz zapisz czas wykonania odczytany z klienta SQL.
 
 Wybierz zapytania o różnym poziomie trudności, np. jedno prostsze zapytanie i jedno średnio złożone zapytanie.
+
+#### Zapytanie z zadania 4
+
+```sql
+-- postgres
+with t as (
+    select count(distinct session_id) as total_sessions
+    from events
+),
+q as (
+    select count(distinct session_id) as purchase_sessions
+    from events
+    where event_type = 'purchase'
+)
+select
+    purchase_sessions,
+    (purchase_sessions * 1.0) / total_sessions as conversion
+from q, t;
+
+-- clickhouse
+select
+    uniqExactIf(session_id, event_type = 'purchase') as purchase_sessions,
+    purchase_sessions / count(distinct session_id) as conversion
+from events;
+```
+
+Zgodnie z wynikami z zadania 4, rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej).
+
+Czasy wykonania zapytania:
+
+|              | Postgres | Clickhouse |
+| ------------ | -------- | ---------- |
+| Time 1 [ms]  | 647      | 351        |
+| Time 2 [ms]  | 645      | 348        |
+| Time 3 [ms]  | 649      | 356        |
+| Average [ms] | 647      | 351.67     |
+
+Zapytanie w Clickhousie okazało się ponad 1.8 raza szybsze w porównaniu do Postgresa.
+
+#### Zapytanie z zadania 6
+
+```sql
+-- postgres
+select
+    user_id,
+    count(*) as all_events,
+    count(case when event_type = 'purchase' then 1 end) as purchase_events,
+    sum(case when event_type = 'purchase' then quantity * price else 0 end) as revenue
+from events
+group by user_id
+order by revenue desc
+limit 20;
+
+-- clickhouse
+select
+    user_id,
+    count(*) as all_events,
+    countIf(event_type = 'purchase') as purchase_events,
+    sumIf(price * quantity, event_type = 'purchase') as revenue
+from events
+group by user_id
+order by revenue desc
+limit 20;
+```
+
+Zgodnie z wynikami z zadania 6, rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej).
+
+Czasy wykonania zapytania:
+
+|              | Postgres | Clickhouse |
+| ------------ | -------- | ---------- |
+| Time 1 [ms]  | 585      | 375        |
+| Time 2 [ms]  | 553      | 355        |
+| Time 3 [ms]  | 560      | 352        |
+| Average [ms] | 566      | 360.67     |
+
+Zapytanie w Clickhousie okazało się ponad 1.5 razy szybsze w porównaniu do Postgresa.
 
 ### Część B. Zapytanie benchmarkowe podane przez prowadzącego
 
@@ -482,6 +559,25 @@ LIMIT 20;
 ```
 
 Dla tego zapytania pokaż wynik z obu baz, napisz, czy wyniki są zgodne, oraz zapisz czas wykonania w PostgreSQL i ClickHouse.
+
+Wyniki:
+
+- Clickhouse:
+  ![alt text](image-7.png)
+
+- Postgres:
+  ![alt text](image-8.png)
+
+Rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej).
+
+Czasy wykonania zapytania:
+
+|              | Postgres | Clickhouse |
+| ------------ | -------- | ---------- |
+| Time 1 [ms]  | 1568     | 422        |
+| Time 2 [ms]  | 1603     | 425        |
+| Time 3 [ms]  | 1445     | 391        |
+| Average [ms] | 1538.67  | 412.67     |
 
 ### Część C. Własne analogiczne zapytanie
 
