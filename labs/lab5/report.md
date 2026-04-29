@@ -257,6 +257,40 @@ Drugą część zadania - dotyczącą sesji i konwersji - przygotuj samodzielnie
 
 **W komentarzu napisz:** czy wyniki w obu bazach są zgodne oraz dlaczego udział sesji zakupowych lepiej opisuje konwersję niż prosty stosunek liczby zdarzeń purchase do liczby zdarzeń view.
 
+Rozwiązanie:
+
+```sql
+-- postgres
+with t as (
+    select count(distinct session_id) as total_sessions
+    from events
+),
+q as (
+    select count(distinct session_id) as purchase_sessions
+    from events
+    where event_type = 'purchase'
+)
+select
+    purchase_sessions,
+    (purchase_sessions * 1.0) / total_sessions as conversion
+from q, t;
+
+-- clickhouse
+select
+    uniqExactIf(session_id, event_type = 'purchase') as purchase_sessions,
+    purchase_sessions / count(distinct session_id) as conversion
+from events;
+```
+
+Wyniki z obu zapytań zwróciły identyczne rezultaty:
+
+![alt text](image-3.png)
+![alt text](image-4.png)
+
+Komentarz:
+
+- udział sesji zakupowych lepiej opisuje konwersję niż prosty stosunek liczby zdarzeń `purchase` do liczby zdarzeń `view`, ponieważ wiele zdarzeń `purchase` oraz `view` mogło wystąpić w trakcie jednej sesji. Konwersja obliczana w taki sposób (jako udział sesji zakupowych) pozwala na bardziej rzetelną ocenę, ponieważ nie bierze pod uwagę zachowań specyficznych dla poszczególnych użytkowników (jeden użytkownik może otwierać bardzo wiele zakładek i kupić tylko jeden przedmiot, a inny użytkownik może otworzyć tylko jeden link i kupić dany przedmiot) - dzięki temu nasza miara konwersji faktycznie odpowiada na pytanie ile razy, gdy ktoś wszedł do naszego sklepu, wizyta zakończyła się sprzedażą.
+
 ---
 
 ## 5. KPI w przekrojach biznesowych - 1 pkt
