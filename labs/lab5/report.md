@@ -176,7 +176,40 @@ ORDER BY n DESC;
 
 Dwa pozostałe zapytania przygotuj samodzielnie na analogicznej zasadzie.
 
-**W komentarzu:** napisz 2-3 zdania podsumowania. Nie oddawaj tylko trzech niezależnych wyników bez wniosków.
+Rozwiązanie:
+
+```sql
+SELECT
+    event_type,
+    count(*) AS n
+FROM events
+GROUP BY event_type
+ORDER BY n DESC;
+
+SELECT
+    country,
+    count(*) AS n
+FROM events
+GROUP BY country
+ORDER BY n DESC;
+
+SELECT
+    device,
+    count(*) AS n
+FROM events
+GROUP BY device
+ORDER BY n DESC;
+```
+
+Wyniki:
+
+![alt text](media/image.png)
+
+![alt text](media/image-1.png)
+
+![alt text](media/image-2.png)
+
+Wśród wszystkich wydarzeń występują eventy 3 typów (`view`, `add_to_cart` oraz `purchase`), dominującą kategorią są zdarzenia typu `view`. Wydarzenia miały miejsce w 10 różnych krajach, z czego większość miała miejsce w Wielkiej Brytanii (`GB`). Wśród urządzeń dominowały telefony komórkowe, a wszystkie eventy dotyczyły jednego z typów urządzeń - `mobile`, `tablet` lub `desktop`.
 
 ---
 
@@ -223,6 +256,40 @@ WHERE event_type = 'purchase';
 Drugą część zadania - dotyczącą sesji i konwersji - przygotuj samodzielnie.
 
 **W komentarzu napisz:** czy wyniki w obu bazach są zgodne oraz dlaczego udział sesji zakupowych lepiej opisuje konwersję niż prosty stosunek liczby zdarzeń purchase do liczby zdarzeń view.
+
+Rozwiązanie:
+
+```sql
+-- postgres
+with t as (
+    select count(distinct session_id) as total_sessions
+    from events
+),
+q as (
+    select count(distinct session_id) as purchase_sessions
+    from events
+    where event_type = 'purchase'
+)
+select
+    purchase_sessions,
+    (purchase_sessions * 1.0) / total_sessions as conversion
+from q, t;
+
+-- clickhouse
+select
+    uniqExactIf(session_id, event_type = 'purchase') as purchase_sessions,
+    purchase_sessions / count(distinct session_id) as conversion
+from events;
+```
+
+Wyniki z obu zapytań zwróciły identyczne rezultaty (z dokładnością do dokładności numerycznej):
+
+![alt text](media/image-3.png)
+![alt text](media/image-4.png)
+
+Komentarz:
+
+- udział sesji zakupowych lepiej opisuje konwersję niż prosty stosunek liczby zdarzeń `purchase` do liczby zdarzeń `view`, ponieważ wiele zdarzeń `purchase` oraz `view` mogło wystąpić w trakcie jednej sesji. Konwersja obliczana w taki sposób (jako udział sesji zakupowych) pozwala na bardziej rzetelną ocenę, ponieważ nie bierze pod uwagę zachowań specyficznych dla poszczególnych użytkowników (jeden użytkownik może otwierać bardzo wiele zakładek i kupić tylko jeden przedmiot, a inny użytkownik może otworzyć tylko jeden link i kupić dany przedmiot) - dzięki temu nasza miara konwersji faktycznie odpowiada na pytanie ile razy, gdy ktoś wszedł do naszego sklepu, wizyta zakończyła się sprzedażą.
 
 ---
 
@@ -282,6 +349,43 @@ LIMIT 20;
 - czy duża aktywność użytkownika zawsze oznacza wysoki przychód,
 - jakie wnioski można wyciągnąć z porównania liczby zdarzeń i przychodu.
 
+Rozwiązanie:
+
+```sql
+-- postgres
+select
+    user_id,
+    count(*) as all_events,
+    count(case when event_type = 'purchase' then 1 end) as purchase_events,
+    sum(case when event_type = 'purchase' then quantity * price else 0 end) as revenue
+from events
+group by user_id
+order by revenue desc
+limit 20;
+
+-- clickhouse
+select
+    user_id,
+    count(*) as all_events,
+    countIf(event_type = 'purchase') as purchase_events,
+    sumIf(price * quantity, event_type = 'purchase') as revenue
+from events
+group by user_id
+order by revenue desc
+limit 20;
+```
+
+Rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej):
+
+![alt text](media/image-6.png)
+![alt text](media/image-5.png)
+
+Komentarz:
+
+- użytkownik z najwyższym przychodem nie ma największej liczby wszystkich zdarzeń, nie ma też największej liczby zdarzeń typu `purchase`
+- duża aktywność użytkownika pewnie w pewien sposób koreluje z wysokim przychodem, ale nie zawsze jednoznacznie oznacza wysoki przychód (aktywność oraz ilość wydarzeń typu `purchase` nie różni się w jakkolwiek znaczący sposób wśród użytkowników z miejsc 1-200)
+- kluczowa dla wyniku jest faktyczna wartość zamówienia, a nie sama częstotliwość interakcji - użytkownik o niższej aktywności może wygenerować większy przychód jeśli kupuje droższe produkty.
+
 ---
 
 ## 7. Benchmark zapytań w PostgreSQL i ClickHouse - 3 pkt
@@ -322,6 +426,83 @@ Na końcu napisz 3-5 zdań komentarza, w których odniesiesz się do następują
 Wybierz dwa zapytania z wcześniejszych zadań tego laboratorium i wykonaj je w obu bazach danych. Dla każdego zapytania pokaż wynik, napisz, czy wynik liczbowy jest zgodny w PostgreSQL i ClickHouse, oraz zapisz czas wykonania odczytany z klienta SQL.
 
 Wybierz zapytania o różnym poziomie trudności, np. jedno prostsze zapytanie i jedno średnio złożone zapytanie.
+
+#### Zapytanie z zadania 4
+
+```sql
+-- postgres
+with t as (
+    select count(distinct session_id) as total_sessions
+    from events
+),
+q as (
+    select count(distinct session_id) as purchase_sessions
+    from events
+    where event_type = 'purchase'
+)
+select
+    purchase_sessions,
+    (purchase_sessions * 1.0) / total_sessions as conversion
+from q, t;
+
+-- clickhouse
+select
+    uniqExactIf(session_id, event_type = 'purchase') as purchase_sessions,
+    purchase_sessions / count(distinct session_id) as conversion
+from events;
+```
+
+Zgodnie z wynikami z zadania 4, rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej).
+
+Czasy wykonania zapytania:
+
+|              | Postgres | Clickhouse |
+| ------------ | -------- | ---------- |
+| Time 1 [ms]  | 647      | 351        |
+| Time 2 [ms]  | 645      | 348        |
+| Time 3 [ms]  | 649      | 356        |
+| Average [ms] | 647      | 351.67     |
+
+Zapytanie w Clickhousie okazało się ponad 1.8 raza szybsze w porównaniu do Postgresa.
+
+#### Zapytanie z zadania 6
+
+```sql
+-- postgres
+select
+    user_id,
+    count(*) as all_events,
+    count(case when event_type = 'purchase' then 1 end) as purchase_events,
+    sum(case when event_type = 'purchase' then quantity * price else 0 end) as revenue
+from events
+group by user_id
+order by revenue desc
+limit 20;
+
+-- clickhouse
+select
+    user_id,
+    count(*) as all_events,
+    countIf(event_type = 'purchase') as purchase_events,
+    sumIf(price * quantity, event_type = 'purchase') as revenue
+from events
+group by user_id
+order by revenue desc
+limit 20;
+```
+
+Zgodnie z wynikami z zadania 6, rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej).
+
+Czasy wykonania zapytania:
+
+|              | Postgres | Clickhouse |
+| ------------ | -------- | ---------- |
+| Time 1 [ms]  | 585      | 375        |
+| Time 2 [ms]  | 553      | 355        |
+| Time 3 [ms]  | 560      | 352        |
+| Average [ms] | 566      | 360.67     |
+
+Zapytanie w Clickhousie okazało się ponad 1.5 razy szybsze w porównaniu do Postgresa.
 
 ### Część B. Zapytanie benchmarkowe podane przez prowadzącego
 
@@ -378,6 +559,27 @@ LIMIT 20;
 ```
 
 Dla tego zapytania pokaż wynik z obu baz, napisz, czy wyniki są zgodne, oraz zapisz czas wykonania w PostgreSQL i ClickHouse.
+
+Wyniki:
+
+- Clickhouse:
+  ![alt text](media/image-7.png)
+
+- Postgres:
+  ![alt text](media/image-8.png)
+
+Rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej).
+
+Czasy wykonania zapytania:
+
+|              | Postgres | Clickhouse |
+| ------------ | -------- | ---------- |
+| Time 1 [ms]  | 1568     | 422        |
+| Time 2 [ms]  | 1603     | 425        |
+| Time 3 [ms]  | 1445     | 391        |
+| Average [ms] | 1538.67  | 412.67     |
+
+Średni czas zapytania w bazie Clickhouse jest prawie 4 razy krótszy w porównaniu do analogicznego zapytania w Postgresie.
 
 ### Część C. Własne analogiczne zapytanie
 
