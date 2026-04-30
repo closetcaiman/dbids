@@ -579,6 +579,8 @@ Czasy wykonania zapytania:
 | Time 3 [ms]  | 1445     | 391        |
 | Average [ms] | 1538.67  | 412.67     |
 
+Średni czas zapytania w bazie Clickhouse jest prawie 4 razy krótszy w porównaniu do analogicznego zapytania w Postgresie.
+
 ### Część C. Własne analogiczne zapytanie
 
 Na podstawie zapytania z części B przygotuj jedno własne zapytanie analogiczne, które będzie oparte na tym samym schemacie, ale zmodyfikowane w co najmniej jednym lub dwóch elementach.
