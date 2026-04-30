@@ -1,7 +1,8 @@
 # Database files
 db/
 
-
-
 # DataGrip files
 .idea/
+
+Python environment
+.venv/
