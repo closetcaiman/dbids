@@ -6,7 +6,7 @@
 
 **Imię i nazwisko:** Marek Małek, Mateusz Lampert
 
-**Grupa:**
+**Grupa: 4 (Piątek, 15:00-16:30)**
 
 ---
 
