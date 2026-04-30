@@ -70,6 +70,10 @@ Pokaż, że środowisko jest przygotowane do pracy.
 
 ---
 
+```{=typst}
+#pagebreak()
+```
+
 ## 1. Pierwsze poznanie tabeli events - 1 pkt
 
 Zapoznaj się z tabelą events w obu bazach.
@@ -108,11 +112,15 @@ FROM events;
 
 - PostgreSQL:
 
-![alt text](media/ex1-1.png)
+![](media/ex1-1.png)
+
+```{=typst}
+#pagebreak()
+```
 
 - ClickHouse:
 
-![alt text](media/ex1-2.png)
+![](media/ex1-2.png)
 
 Typy danych są zgodne co do nazwy, ale kolumny metadanych istotnie się róźnią. PostgreSQL ma dodatkowo opcje `collation` (jak porównywać dane). Clickhouse oprócz wartości domyślnej ma też `default_expression` (jak zachowa się kolumna, gdy nie zostanie podana wartość), `codecs_compression` (jak kompresować dane) oraz `ttl_expression` (czy dane mają mieć czas życia).
 
@@ -120,11 +128,15 @@ Typy danych są zgodne co do nazwy, ale kolumny metadanych istotnie się róźni
 
 - PostgreSQL:
 
-![alt text](media/ex1-3.png)
+![](media/ex1-3.png)
+
+```{=typst}
+#pagebreak()
+```
 
 - ClickHouse:
 
-![alt text](media/ex1-4.png)
+![](media/ex1-4.png)
 
 Wyniki są zgodne, oba systemy pokazują te same dane.
 
@@ -132,11 +144,11 @@ Wyniki są zgodne, oba systemy pokazują te same dane.
 
 - PostgreSQL:
 
-![alt text](media/ex1-5.png)
+![](media/ex1-5.png)
 
 - ClickHouse:
 
-![alt text](media/ex1-6.png)
+![](media/ex1-6.png)
 
 Liczba wierszy jest zgodna w obu tabelach, podobnie jak zakres czasu zdarzeń. PostgreSQL stosuje dokdładność do mikrosekund, a ClickHouse do sekund, ale oba zakresy są zgodne.
 
@@ -144,11 +156,15 @@ Liczba wierszy jest zgodna w obu tabelach, podobnie jak zakres czasu zdarzeń. P
 
 - PostgreSQL:
 
-![alt text](media/ex1-7.png)
+![](media/ex1-7.png)
+
+```{=typst}
+#pagebreak()
+```
 
 - ClickHouse:
 
-![alt text](media/ex1-8.png)
+![](media/ex1-8.png)
 
 Wyniki są takie same, brak wartości `NULL`
 
@@ -176,7 +192,7 @@ ORDER BY n DESC;
 
 Dwa pozostałe zapytania przygotuj samodzielnie na analogicznej zasadzie.
 
-Rozwiązanie:
+### Rozwiązanie:
 
 ```sql
 SELECT
@@ -185,14 +201,30 @@ SELECT
 FROM events
 GROUP BY event_type
 ORDER BY n DESC;
+```
 
+![](media/ex2-1.png)
+
+```{=typst}
+#pagebreak()
+```
+
+```sql
 SELECT
     country,
     count(*) AS n
 FROM events
 GROUP BY country
 ORDER BY n DESC;
+```
 
+![](media/ex2-2.png)
+
+```{=typst}
+#pagebreak()
+```
+
+```sql
 SELECT
     device,
     count(*) AS n
@@ -201,13 +233,7 @@ GROUP BY device
 ORDER BY n DESC;
 ```
 
-Wyniki:
-
-![alt text](media/ex2-1.png)
-
-![alt text](media/ex2-2.png)
-
-![alt text](media/ex2-3.png)
+![](media/ex2-3.png)
 
 Wśród wszystkich wydarzeń występują eventy 3 typów (`view`, `add_to_cart` oraz `purchase`), dominującą kategorią są zdarzenia typu `view`. Wydarzenia miały miejsce w 10 różnych krajach, z czego większość miała miejsce w Wielkiej Brytanii (`GB`). Wśród urządzeń dominowały telefony komórkowe, a wszystkie eventy dotyczyły jednego z typów urządzeń - `mobile`, `tablet` lub `desktop`.
 
@@ -227,6 +253,104 @@ Możesz przygotować osobno: pełne zestawienie dzienne, 5 dni o największej li
 **Wskazówka:** w PostgreSQL możesz użyć `DATE(event_time)`, a w ClickHouse możesz użyć `toDate(event_time)`.
 
 **W komentarzu:** napisz krótko, czy rozkład wygląda stabilnie, czy są widoczne dni odstające.
+
+```{=typst}
+#pagebreak()
+```
+
+### Rozwiązanie:
+
+- Pełne zestawienie dzienne:
+
+```sql
+--- PostgreSQL
+select date(event_time) as day, count(*) as event_count
+from events
+group by day;
+```
+
+![](media/ex3-1.png)
+
+```{=typst}
+#pagebreak()
+```
+
+```sql
+--- ClickHouse
+select toDate(event_time) as day, count(*) as event_count
+from events
+group by day;
+```
+
+![](media/ex3-2.png)
+
+```{=typst}
+#pagebreak()
+```
+
+- 5 dni o największej liczbie zdarzeń:
+
+```sql
+--- PostgreSQL
+select date(event_time) as day, count(*) as event_count
+from events
+group by day
+order by event_count desc
+limit 5;
+```
+
+![](media/ex3-3.png)
+
+```sql
+--- ClickHouse
+select toDate(event_time) as day, count(*) as event_count
+from events
+group by day
+order by event_count desc
+limit 5;
+```
+
+![](media/ex3-4.png)
+
+```{=typst}
+#pagebreak()
+```
+
+- 5 dni o najmniejszej liczbie zdarzeń:
+
+```sql
+--- PostgreSQL
+select date(event_time) as day, count(*) as event_count
+from events
+group by day
+order by event_count asc
+limit 5;
+```
+
+![](media/ex3-5.png)
+
+```sql
+--- ClickHouse
+select toDate(event_time) as day, count(*) as event_count
+from events
+group by day
+order by event_count asc
+limit 5;
+```
+
+![](media/ex3-6.png)
+
+```{=typst}
+#pagebreak()
+```
+
+- Rozkład liczby zdarzeń w czasie (histogram + średnia):
+
+![](media/ex3-event-distribution.png)
+
+Komentarz:
+
+- rozkład jest raczej stabilny, ale jest kilka dni odstających. Najbardziej odstaje `2025-05-26` (634 zdarzenia do 555 (średnia) ~14%).
 
 ---
 
@@ -257,7 +381,11 @@ Drugą część zadania - dotyczącą sesji i konwersji - przygotuj samodzielnie
 
 **W komentarzu napisz:** czy wyniki w obu bazach są zgodne oraz dlaczego udział sesji zakupowych lepiej opisuje konwersję niż prosty stosunek liczby zdarzeń purchase do liczby zdarzeń view.
 
-Rozwiązanie:
+```{=typst}
+#pagebreak()
+```
+
+### Rozwiązanie:
 
 ```sql
 -- postgres
@@ -274,7 +402,15 @@ select
     purchase_sessions,
     (purchase_sessions * 1.0) / total_sessions as conversion
 from q, t;
+```
 
+![](media/ex4-1.png)
+
+```{=typst}
+#pagebreak()
+```
+
+```sql
 -- clickhouse
 select
     uniqExactIf(session_id, event_type = 'purchase') as purchase_sessions,
@@ -282,10 +418,9 @@ select
 from events;
 ```
 
-Wyniki z obu zapytań zwróciły identyczne rezultaty (z dokładnością do dokładności numerycznej):
+![](media/ex4-2.png)
 
-![alt text](media/ex4-1.png)
-![alt text](media/ex4-2.png)
+Wyniki z obu zapytań zwróciły identyczne rezultaty (z dokładnością do dokładności numerycznej).
 
 Komentarz:
 
@@ -317,7 +452,59 @@ ORDER BY revenue DESC;
 
 Drugie zapytanie przygotuj samodzielnie.
 
----
+```{=typst}
+#pagebreak()
+```
+
+### Rozwiązanie
+
+- według urządzenia (dla obu serwerów kod zapytania jest taki sam):
+
+```sql
+--- PostgreSQL & ClickHouse
+select device,
+       sum(price * quantity) as revenue
+from events
+where event_type = 'purchase'
+group by device
+order by revenue desc;
+```
+
+Wyniki:
+
+- dla przekroju według kraju:
+  - ClickHouse:
+
+    ![](media/ex5-1.png)
+
+```{=typst}
+#pagebreak()
+```
+
+- Postgres:
+
+  ![](media/ex5-2.png)
+
+Wyniki są zgodne co do precyzji obliczeń.
+
+```{=typst}
+#pagebreak()
+```
+
+- dla przekroju według urządzenia:
+  - ClickHouse:
+
+    ![](media/ex5-3.png)
+
+  - Postgres:
+
+    ![](media/ex5-4.png)
+
+Wyniki są zgodne co do precyzji obliczeń.
+
+Komentarz:
+
+- Największy przychód pochodzi z Wielkiej Brytanii (`country` = 'GB'), co może oznaczać, że jest to główny rynek. Jeśli chodzi o przekrój według urządzenia, to największy przychód pochodzi z urządzeń typu `mobile`, co może sugerować, że większość klientów korzysta z telefonów komórkowych do dokonywania zakupów (raczej popularny trend).
 
 ## 6. Użytkownicy o najwyższym przychodzie - 1 pkt
 
@@ -349,7 +536,11 @@ LIMIT 20;
 - czy duża aktywność użytkownika zawsze oznacza wysoki przychód,
 - jakie wnioski można wyciągnąć z porównania liczby zdarzeń i przychodu.
 
-Rozwiązanie:
+```{=typst}
+#pagebreak()
+```
+
+### Rozwiązanie:
 
 ```sql
 -- postgres
@@ -362,7 +553,15 @@ from events
 group by user_id
 order by revenue desc
 limit 20;
+```
 
+![](media/ex6-1.png)
+
+```{=typst}
+#pagebreak()
+```
+
+```sql
 -- clickhouse
 select
     user_id,
@@ -375,10 +574,9 @@ order by revenue desc
 limit 20;
 ```
 
-Rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej):
+![](media/ex6-2.png)
 
-![alt text](media/ex6-1.png)
-![alt text](media/ex6-2.png)
+Rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej):
 
 Komentarz:
 
@@ -427,6 +625,10 @@ Wybierz dwa zapytania z wcześniejszych zadań tego laboratorium i wykonaj je w 
 
 Wybierz zapytania o różnym poziomie trudności, np. jedno prostsze zapytanie i jedno średnio złożone zapytanie.
 
+```{=typst}
+#pagebreak()
+```
+
 #### Zapytanie z zadania 4
 
 ```sql
@@ -444,7 +646,6 @@ select
     purchase_sessions,
     (purchase_sessions * 1.0) / total_sessions as conversion
 from q, t;
-
 -- clickhouse
 select
     uniqExactIf(session_id, event_type = 'purchase') as purchase_sessions,
@@ -478,7 +679,6 @@ from events
 group by user_id
 order by revenue desc
 limit 20;
-
 -- clickhouse
 select
     user_id,
@@ -560,15 +760,19 @@ LIMIT 20;
 
 Dla tego zapytania pokaż wynik z obu baz, napisz, czy wyniki są zgodne, oraz zapisz czas wykonania w PostgreSQL i ClickHouse.
 
-Wyniki:
+#### Wyniki:
 
 - Clickhouse:
-  ![alt text](media/ex7b-1.png)
+  ![](media/ex7b-1.png)
 
 - Postgres:
-  ![alt text](media/ex7b-2.png)
+  ![](media/ex7b-2.png)
 
 Rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej).
+
+```{=typst}
+#pagebreak()
+```
 
 Czasy wykonania zapytania:
 
@@ -595,6 +799,80 @@ Możesz skorzystać z poniższych modyfikacji:
 - ograniczyć analizę do wybranego przedziału czasu.
 
 Własne zapytanie wykonaj w obu bazach danych. Dla tego zapytania pokaż kod, pokaż wynik, napisz, czy wyniki są zgodne, oraz zapisz czas wykonania w PostgreSQL i ClickHouse.
+
+Zapytanie:
+
+- zdarzenia typu `purchase`,
+- grupowanie tylko według dnia i kraju,
+- filtr dla urządzenia `mobile`,
+- analiza dla pierwszych 6 miesięcy 2025 roku
+- filtr dla krajów "GB", "US" i "DE".
+
+```sql
+--- PostgreSQL
+select
+    date(event_time) as day,
+    country,
+    count() as purchase_cnt,
+    sum(price * quantity) as total_revenue,
+    avg(price * quantity) as avg_order_value
+from events
+where event_type = 'purchase'
+  and device = 'mobile'
+  and event_time >= '2025-01-01 00:00:00'
+  and event_time < '2025-07-01 00:00:00'
+  and country in ('GB', 'US', 'DE')
+group by
+    day,
+    country
+order by total_revenue desc
+limit 20;
+```
+
+```sql
+--- ClickHouse
+select
+    toDate(event_time) as day,
+    country,
+    count() as purchase_cnt,
+    sum(price * quantity) as total_revenue,
+    avg(price * quantity) as avg_order_value
+from events
+where event_type = 'purchase'
+  and device = 'mobile'
+  and event_time >= '2025-01-01 00:00:00'
+  and event_time < '2025-07-01 00:00:00'
+  and country in ('GB', 'US', 'DE')
+group by
+    day,
+    country
+order by total_revenue desc
+limit 20;
+```
+
+Wyniki:
+
+- Clickhouse:
+  ![](media/ex7c-1.png)
+
+```{=typst}
+#pagebreak()
+```
+
+- Postgres:
+
+  ![](media/ex7c-2.png)
+
+Wyniki są zgodne co do precyzji obliczeń.
+
+|              | Postgres | Clickhouse |
+| ------------ | -------- | ---------- |
+| Time 1 [ms]  | 447      | 334        |
+| Time 2 [ms]  | 452      | 345        |
+| Time 3 [ms]  | 445      | 349        |
+| Average [ms] | 448      | 342.67     |
+
+Czas wykonania zapytania w Clickhousie jest około 1.3 razy krótszy w porównaniu do Postgresa.
 
 ---
 
