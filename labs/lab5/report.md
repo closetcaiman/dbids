@@ -108,23 +108,23 @@ FROM events;
 
 - PostgreSQL:
 
-![alt text](image-1.png)
+![alt text](media/ex1-1.png)
 
 - ClickHouse:
 
-![alt text](image.png)
+![alt text](media/ex1-2.png)
 
-Struktura tabeli jest zgodna co do nazw typów danych.
+Typy danych są zgodne co do nazwy, ale kolumny metadanych istotnie się róźnią. PostgreSQL ma dodatkowo opcje `collation` (jak porównywać dane). Clickhouse oprócz wartości domyślnej ma też `default_expression` (jak zachowa się kolumna, gdy nie zostanie podana wartość), `codecs_compression` (jak kompresować dane) oraz `ttl_expression` (czy dane mają mieć czas życia).
 
 #### Przykładowe rekordy
 
 - PostgreSQL:
 
-![alt text](image-2.png)
+![alt text](media/ex1-3.png)
 
 - ClickHouse:
 
-![alt text](image-3.png)
+![alt text](media/ex1-4.png)
 
 Wyniki są zgodne, oba systemy pokazują te same dane.
 
@@ -132,11 +132,11 @@ Wyniki są zgodne, oba systemy pokazują te same dane.
 
 - PostgreSQL:
 
-![alt text](image-5.png)
+![alt text](media/ex1-5.png)
 
 - ClickHouse:
 
-![alt text](image-4.png)
+![alt text](media/ex1-6.png)
 
 Liczba wierszy jest zgodna w obu tabelach, podobnie jak zakres czasu zdarzeń. PostgreSQL stosuje dokdładność do mikrosekund, a ClickHouse do sekund, ale oba zakresy są zgodne.
 
@@ -144,11 +144,11 @@ Liczba wierszy jest zgodna w obu tabelach, podobnie jak zakres czasu zdarzeń. P
 
 - PostgreSQL:
 
-![alt text](image-6.png)
+![alt text](media/ex1-7.png)
 
 - ClickHouse:
 
-![alt text](image-7.png)
+![alt text](media/ex1-8.png)
 
 Wyniki są takie same, brak wartości `NULL`
 
@@ -203,11 +203,11 @@ ORDER BY n DESC;
 
 Wyniki:
 
-![alt text](media/image.png)
+![alt text](media/ex2-1.png)
 
-![alt text](media/image-1.png)
+![alt text](media/ex2-2.png)
 
-![alt text](media/image-2.png)
+![alt text](media/ex2-3.png)
 
 Wśród wszystkich wydarzeń występują eventy 3 typów (`view`, `add_to_cart` oraz `purchase`), dominującą kategorią są zdarzenia typu `view`. Wydarzenia miały miejsce w 10 różnych krajach, z czego większość miała miejsce w Wielkiej Brytanii (`GB`). Wśród urządzeń dominowały telefony komórkowe, a wszystkie eventy dotyczyły jednego z typów urządzeń - `mobile`, `tablet` lub `desktop`.
 
@@ -284,8 +284,8 @@ from events;
 
 Wyniki z obu zapytań zwróciły identyczne rezultaty (z dokładnością do dokładności numerycznej):
 
-![alt text](media/image-3.png)
-![alt text](media/image-4.png)
+![alt text](media/ex4-1.png)
+![alt text](media/ex4-2.png)
 
 Komentarz:
 
@@ -377,8 +377,8 @@ limit 20;
 
 Rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej):
 
-![alt text](media/image-6.png)
-![alt text](media/image-5.png)
+![alt text](media/ex6-1.png)
+![alt text](media/ex6-2.png)
 
 Komentarz:
 
@@ -563,10 +563,10 @@ Dla tego zapytania pokaż wynik z obu baz, napisz, czy wyniki są zgodne, oraz z
 Wyniki:
 
 - Clickhouse:
-  ![alt text](media/image-7.png)
+  ![alt text](media/ex7b-1.png)
 
 - Postgres:
-  ![alt text](media/image-8.png)
+  ![alt text](media/ex7b-2.png)
 
 Rezultaty obu zapytań są identyczne (z dokładnością do dokładności numerycznej).
 
