@@ -36,3 +36,6 @@ go
 
 drop table region
 go
+
+drop db northwind
+go

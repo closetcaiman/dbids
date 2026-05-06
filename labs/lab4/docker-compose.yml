@@ -1,7 +1,7 @@
 services:
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: mssql_server_lab3
+    container_name: mssql_server_lab4
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "Admin!1234"
@@ -13,6 +13,7 @@ services:
       - ./common/sql/northwind/mssql/:/data/sql/northwind
       - ./common/backups/:/data/backups
       - ./labs/lab4/scripts/setup-mssql.sh:/data/setup-mssql.sh
+      - ./labs/lab4/scripts/setup-database.sql:/data/sql/index-lab2/setup-database.sql
     entrypoint: /bin/bash /data/setup-mssql.sh
 volumes:
   mssql_data:

@@ -1,4 +1,5 @@
-
+use northwind
+go
 
 INSERT INTO CATEGORIES (CATEGORYID, CATEGORYNAME, DESCRIPTION, PICTURE) VALUES (1, 'Beverages', 'Soft drinks, coffees, teas, beers, and ales', null);
 INSERT INTO CATEGORIES (CATEGORYID, CATEGORYNAME, DESCRIPTION, PICTURE) VALUES (2, 'Condiments', 'Sweet and savory sauces, relishes, spreads, and seasonings', null);

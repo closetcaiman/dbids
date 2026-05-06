@@ -1,3 +1,6 @@
+use northwind
+go
+
 -- drop tables
 
 drop table orderhist

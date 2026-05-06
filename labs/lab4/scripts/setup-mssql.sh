@@ -13,9 +13,6 @@ for i in {1..60}; do
         echo "Restoring AdventureWorks2017 database..."
         /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!1234" -C -i /data/sql/adventure-works/mssql_restore_db.sql
 
-        echo "Setting up AdventureWorks2017 shallow copy..."
-        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!1234" -C -i /data/sql/adventure-works/mssql_advworks_ddl_data.sql
-
         echo "Setting up Northwind database schema..."
         /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!1234" -C -i /data/sql/northwind/mssql_north_ddl.sql
 
@@ -24,6 +21,9 @@ for i in {1..60}; do
 
         echo "Importing product history data into Northwind database..."
         /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!1234" -C -i /data/sql/northwind/mssql_north_ph.sql
+
+        echo "Setting up database for lab4..."
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!1234" -C -i /data/sql/index-lab2/setup-database.sql
 
         echo "Setup complete."
         break
