@@ -23,7 +23,7 @@ for i in {1..60}; do
         /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!1234" -C -i /data/sql/northwind/mssql_north_ph.sql
 
         echo "Setting up database for lab4..."
-        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!1234" -C -i /data/sql/index-lab2/setup-database.sql
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!1234" -C -i /data/sql/lab4/setup-database.sql
 
         echo "Setup complete."
         break
