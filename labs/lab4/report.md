@@ -14,11 +14,11 @@
 
 ---
 
-**Imię i nazwisko:**
+**Imiona i nazwiska:** Marek Małek, Mateusz Lampert
 
 ---
 
-Celem ćwiczenia jest zapoznanie się z planami wykonania zapytań (execution plans), oraz z budową i możliwością wykorzystaniem indeksów
+Celem ćwiczenia jest zapoznanie się z planami wykonania zapytań (execution plans), oraz z budową i możliwością wykorzystaniem indeksów
 (kontynuacja poprzedniego ćwiczenia)
 
 Swoje odpowiedzi wpisuj w miejsca oznaczone jako:
@@ -95,11 +95,15 @@ sprawdź liczbę wierszy w tabeli
 select count(*) from product_history
 ```
 
+![Liczba wierszy tabeli `product_history`](./media/ex1-1.png)
+
 Sprawdź jakie indeksy istnieją dla tej tabeli
 
 ```sql
 exec sp_helpindex 'dbo.product_history'
 ```
+
+![Indeksy tabeli `product_history`](./media/ex1-2.png)
 
 ```sql
 Select
@@ -120,6 +124,8 @@ where i.object_id = object_id('dbo.product_history')
 order by i.name, ic.key_ordinal;
 ```
 
+![Indeksy tabeli `product_history`](./media/ex1-3.png)
+
 włącz statystyki IO i TIME
 
 ```sql
@@ -137,6 +143,10 @@ podczas analiz sprawdzaj jak zachowują się zapytania, zwróć uwagę na
 
 porównaj zapytania
 
+Sprzęt:
+
+- wykonane na maszynie z procesorem AMD Ryzen 7 7800X3D 8-Core Processor (16 logical processors)
+
 ### a)
 
 ```sql
@@ -147,16 +157,110 @@ select count(*) from product_history
 where id between 999000 and 10000000
 ```
 
+#### Wyniki
+
+```sql
+select count(*) from product_history
+where id = 1000000
+```
+
+- wynik zapytania:
+
+![alt text](image-2.png)
+
+- plan zapytania i koszt:
+
+![alt text](image.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-1.png)
+
+Komentarz:
+
+- execution plan wskazuje, że największy koszt jest związany ze skanowaniem tabeli, dodatkowo `mssql` włączył parallelism, co znacząco zredukowało czas (CPU time = 224 ms, elapsed time = 17 ms.)
+- z analizy XML planu, wiemy, że przez paralelilzm odczytanych stron było 25266 (~ 1500 na wątek), podobnie skany tabeli - 17, (1 na wątek + 1 główny (tylko jest governerem, nie ma odczytów - też XML planu))
+- `mssql` zasygnalizowal brak indeksu na kolumnie `id` z dużym `Impact` (~99.9%)
+
+```sql
+select count(*) from product_history
+where id between 999000 and 10000000
+```
+
+- wynik zapytania:
+
+![alt text](image-3.png)
+
+- plan zapytania i koszt:
+
+![alt text](image-4.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-5.png)
+
+Komentarz:
+
+- w planie zapytania widać wskazanie, że tabela nie ma indeksu klastrowego, więc jest to Heap Table Scan, w tym wypadku zapytanie filtruje po przedziale, więc też jest Hash Match
+- podobnie jak w poprzednim zapytaniu, `mssql` włączył parallelism, co też zredukowało czas (CPU time = 247 ms, elapsed time = 22 ms.)
+- liczba czytanych stron jak i skanów tabeli jest taka sama (podobnie ~1500 na wątek, 1 na wątek)
+- tak samo jak w poprzednim zapytaniu największy koszt jest związany ze skanowaniem tabeli, a `mssql` zasygnalizowal brak indeksu na kolumnie `id` z dużym `Impact` (~95%)
+
 ### b)
 
 ```sql
-select  * from product_history
+select * from product_history
 where id = 1000000
 
 
 select * from product_history
 where id between 999000 and 10000000
 ```
+
+#### Wyniki
+
+```sql
+select * from product_history
+where id = 1000000
+```
+
+- wynik zapytania:
+
+![alt text](image-6.png)
+
+- plan zapytania i koszt:
+
+![alt text](image-7.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-8.png)
+
+Komentarz:
+
+- wnioski są podobne do pierwszego zapytania z podpunktu a), z tą różnicą, że w planie zapytnia nie ma operatora `Stream Aggregate` i `Compute Scalar`, co jest związane z tym, że zapytanie zwraca wszystkie kolumny, a nie tylko ich liczbe
+
+```sql
+select * from product_history
+where id between 999000 and 10000000
+```
+
+- wynik zapytania:
+
+![alt text](image-9.png)
+
+- plan zapytania i koszt:
+
+![alt text](image-10.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-11.png)
+
+Komentarz:
+
+- `ssms` zasugerował dodanie indeksu klastrowego, ale już z mniejszym `Impact` (~50%), co jest związane z tym, że zapytanie ~1 mln rekordów z całej tabeli, która ma ~2,3 mln rekordów w sumie
+- tutaj liczba czytanych stron i skanów tabeli jest znów taka sama, ale czas jest znacznie dłuższy (CPU time = 6480 ms, elapsed time = 4929 ms.). Analizując czas per wątek (~20ms) widzimy, że one nie są bottleneckiem, a do tego przeglądając XML, tag `<WaitStats>`, widać, że czas dla `CXPACKET` jest bardzo duży (`<Wait WaitType="CXPACKET" WaitTimeMs="70734" WaitCount="265802" />`), co może sugerować, że bottleneckiem jest sam `SSMS` (przetworzenie i prezentacja ~1 mln pełnych rekordów)
 
 ### c)
 
@@ -178,6 +282,83 @@ drop index product_history_idx on product_history
 ```
 
 po zakończeniu pozostaw indeks klastrowy
+
+#### Wyniki
+
+##### Indeks klastrowy
+
+###### a1)
+
+- plan zapytania i koszt:
+
+  ![alt text](image-12.png)
+
+- czas i liczba odczytywanych stron:
+
+  ![alt text](image-13.png)
+
+Komentarz:
+
+- czas jest praktycznie zerowy (0ms)
+- liczba czytanych stron drastycznie spadła z ~25000 do 3, podobnie skanów z 17 do 1. (co też jest związane z brakiem paralelizmu)
+- w planie wykonywany jest `Index Seek`, który błyskawicznie znajduje pożądany rekord
+
+###### a2)
+
+- plan zapytania i koszt:
+
+  ![alt text](image-14.png)
+
+- czas i liczba odczytywanych stron:
+
+  ![alt text](image-15.png)
+
+Komentarz:
+
+- liczba czytanych stron również spadła ale do 14802, co jest spowodowane, że te 1 mln rekordów musiało zostać przeczytanych, jednak mimo to warto zwrócić uwagę, że teraz liczba czytanych stron jest proporcjonalna do zwracanego zakresu
+- czas spadł nieznacznie o 3ms
+
+###### b1)
+
+- plan zapytania i koszt:
+
+  ![alt text](image-16.png)
+
+- czas i liczba odczytywanych stron:
+
+  ![alt text](image-17.png)
+
+Komentarz:
+
+- podobnie jak w przypadku zapytania a1) czas jest praktycznie zerowy (0ms)
+- liczba czytanych stron spadła z ~25000 do 3, podobnie skanów z 17 do 1. (co też jest związane z brakim paralelizmu)
+- w planie wykonywany jest `Index Seek`, który błyskawnie znajduje pożądany rekord
+
+###### b2)
+
+- plan zapytania i koszt:
+
+  ![alt text](image-19.png)
+
+- czas i liczba odczytywanych stron:
+
+  ![alt text](image-18.png)
+
+Komentarz:
+
+- liczba czytanych stron również spadła ale do 14802, co jest spowodowane, że te 1 mln rekordów musiało zostać przeczytanych, podobnie jak w przypadku a2) liczba czytanych stron jest proporcjonalna do zwracanego zakresu
+- czas (elapsed time) nie zmienił się drastycznie (CPU time = 598 ms, elapsed time = 4449 ms.), co może być spowodowanie bottleneckiem `SSMS` (przetworzenie i prezentacja ~1 mln pełnych rekordów), ale czas CPU spadł drastycznie z 6480ms do 615ms, co jest związane z tym, że teraz `mssql` nie musi skanować całej tabeli, a może od razu znaleźć pożądany rekord i zwrócić zakres do końca
+- nie ma tu też paralelizmu
+
+##### Indeks nieklastrowy
+
+###### a1)
+
+###### a2)
+
+###### b1)
+
+###### b2)
 
 ### d)
 
