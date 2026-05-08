@@ -2,9 +2,9 @@
 
 ## Zaawansowana analityka i dowód wydajności
 
-**Imię i nazwisko:** _______________________________________
+**Imię i nazwisko:** Marek Małek, Mateusz Lampert
 
-**Grupa:** _____________________
+**Grupa:** 4
 
 ---
 
@@ -25,13 +25,13 @@ Laboratorium ma celowo prostą strukturę: **zadania 1–3 to analityka w ClickH
 
 ### Której bazy używamy i kiedy
 
-| Zadanie                | Baza danych                       |
-| ---------------------- | --------------------------------- |
-| 0. Gotowość            | obie — sprawdzasz środowisko      |
-| 1. Lejek konwersji     | `ClickHouse`                      |
-| 2. Funkcje okna        | Jedna baza do wyboru              |
-| 3. Segmentacja RFM     | Do wyboru ale ClickHouse lepiej   |
-| 4. Benchmark i wnioski | obie — porównanie obowiązkowe     |
+| Zadanie                | Baza danych                     |
+| ---------------------- | ------------------------------- |
+| 0. Gotowość            | obie — sprawdzasz środowisko    |
+| 1. Lejek konwersji     | `ClickHouse`                    |
+| 2. Funkcje okna        | Jedna baza do wyboru            |
+| 3. Segmentacja RFM     | Do wyboru ale ClickHouse lepiej |
+| 4. Benchmark i wnioski | obie — porównanie obowiązkowe   |
 
 W tym laboratorium ClickHouse jest bazą wiodącą. PostgreSQL pojawia się w zadaniu 4 jako punkt odniesienia — po to, żeby różnicę wydajności zmierzyć, nie zakładać.
 
@@ -99,7 +99,7 @@ WITH session_flags AS (
     SELECT
         session_id,
         countIf(event_type = 'view')     > 0 AS has_view,
-        countIf(event_type = 'cart')     > 0 AS has_cart,
+        countIf(event_type = 'add_to_cart')     > 0 AS has_cart,
         countIf(event_type = 'purchase') > 0 AS has_purchase
     FROM events
     GROUP BY session_id
@@ -122,6 +122,46 @@ Zbuduj analogicznie wersję z `GROUP BY device`.
 - Na którym etapie lejka odpływ jest największy i co to oznacza dla biznesu — gdzie sklep traci klientów?
 - Czy lejek różni się między urządzeniami? Jeśli tak, co może być tego przyczyną?
 - `countIf` zastępuje klasyczny wzorzec `MAX(CASE WHEN ... THEN 1 ELSE 0 END)` ze standardowego SQL. W 2–3 zdaniach wyjaśnij, na czym polega różnica w podejściu i dlaczego wersja ClickHouse jest krótsza.
+
+### Rozwiązanie
+
+Grupowanie po `device`:`
+
+```sql
+WITH session_flags AS (SELECT session_id,
+                              device,
+                              countIf(event_type = 'view') > 0        AS has_view,
+                              countIf(event_type = 'add_to_cart') > 0 AS has_cart,
+                              countIf(event_type = 'purchase') > 0    AS has_purchase
+                       FROM events
+                       GROUP BY device, session_id)
+
+SELECT device,
+       countIf(has_view)                                    AS view_sessions,
+       countIf(has_cart)                                    AS cart_sessions,
+       countIf(has_purchase)                                AS purchase_sessions,
+       countIf(has_cart) / nullIf(countIf(has_view), 0)     AS cart_per_view,
+       countIf(has_purchase) / nullIf(countIf(has_cart), 0) AS purchase_per_cart,
+       countIf(has_purchase) / nullIf(countIf(has_view), 0) AS purchase_per_view
+FROM session_flags
+GROUP BY device
+```
+
+Wyniki zapytań:
+
+- Lejek ogólny:
+
+![alt text](media/ex1-1.png)
+
+- Lejek w przekroju urządzeń:
+
+![alt text](media/ex1-2.png)
+
+Komentarz:
+
+- największy procentowo odpływ jest między etapami view a cart, tylko 7% klientów, którzy zobaczyli produkt, dodali go do koszyka. To oznacza, że sklep traci większość potencjalnych klientów na etapie zainteresowania produktem - być może strona produktu nie jest wystarczająco przekonująca, brakuje informacji, zdjęć, recenzji, albo ceny są zbyt wysokie.
+- lejek nieznacznie różni się między urządzeniami, ale ogólnie jest taki sam. Na desktopie jest najmniej sesji cart (4917 vs 5028, 5068). Na mobile jest najwięcej sesji purchase (1718 vs 1677, 1675).
+- `countIf` to funkcja agregująca, która zlicza tylko te wiersze, które spełniają warunek. W klasycznym SQL musielibyśmy użyć `CASE WHEN` do stworzenia flagi 0/1, a następnie zliczyć sumę tych flag. `countIf` pozwala zrobić to bezpośrednio, co skraca i upraszcza zapytanie.
 
 ---
 
@@ -155,11 +195,11 @@ Wynik powinien zawierać kolumny: day, daily_revenue, cumulative_revenue, prev_d
 
 ### Wskazówki składniowe
 
-| Element            | PostgreSQL                          | ClickHouse                                                                    |
-| ------------------ | ----------------------------------- | ----------------------------------------------------------------------------- |
-| Data               | `DATE(event_time)`                  | `toDate(event_time)`                                                          |
-| Suma narastająca   | `SUM(x) OVER (ORDER BY day)`        | `sum(x) OVER (ORDER BY day ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)` |
-| Poprzednia wartość | `LAG(x, 1) OVER (ORDER BY day)`     | `lagInFrame(x, 1) OVER (ORDER BY day ROWS ...)`                               |
+| Element            | PostgreSQL                      | ClickHouse                                                                    |
+| ------------------ | ------------------------------- | ----------------------------------------------------------------------------- |
+| Data               | `DATE(event_time)`              | `toDate(event_time)`                                                          |
+| Suma narastająca   | `SUM(x) OVER (ORDER BY day)`    | `sum(x) OVER (ORDER BY day ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)` |
+| Poprzednia wartość | `LAG(x, 1) OVER (ORDER BY day)` | `lagInFrame(x, 1) OVER (ORDER BY day ROWS ...)`                               |
 
 **Wskazówka:** zbuduj zapytanie w dwóch krokach - najpierw CTE z dziennym przychodem (GROUP BY day), a dopiero do niego dołącz funkcje okna.
 
@@ -186,6 +226,8 @@ Na tej podstawie dzielisz klientów na segmenty: najlepszych nagradzasz, uśpion
 ### Wybierz jedną bazę i wykonaj zadanie w niej
 
 Zaznacz w sprawozdaniu, którą bazę wybrałeś.
+
+**Użyta baza: PostgreSQL**
 
 ### Krok 1 — oblicz R, F, M dla każdego użytkownika
 
@@ -217,6 +259,8 @@ CROSS JOIN ref
 ORDER BY monetary DESC;
 ```
 
+![alt text](media/ex3-1.png)
+
 Zanim przejdziesz dalej — sprawdź zakres wartości, żeby świadomie dobrać progi:
 
 ```sql
@@ -239,6 +283,8 @@ SELECT
     MAX(frequency)  AS max_f
 FROM purchases;
 ```
+
+![alt text](media/ex3-2.png)
 
 ### Krok 2 — podział użytkowników na segmenty
 
@@ -266,6 +312,47 @@ Dla każdego segmentu policz:
 - Czy mała grupa użytkowników generuje dużą część przychodu - jaki procent użytkowników i jaki procent przychodu?
 - Czy widzisz coś zbliżonego do zasady Pareto?
 - Co wyniki mówią o lojalności klientów tego sklepu?
+
+#### Wyniki:
+
+Segmentacja z procentowym udziałem w przychodzie:
+
+```sql
+
+WITH user_rfm AS (SELECT user_id,
+                         COUNT(*)              AS frequency,
+                         SUM(price * quantity) AS monetary,
+                         MAX(event_time)       AS last_purchase_time
+                  FROM events
+                  WHERE event_type = 'purchase'
+                  GROUP BY user_id),
+     segmentation AS (SELECT user_id,
+                             monetary,
+                             CASE
+                                 WHEN percent_rank() OVER (ORDER BY monetary) >= 0.90 THEN 'premium'
+                                 WHEN percent_rank() OVER (ORDER BY monetary) >= 0.50 THEN 'standard'
+                                 ELSE 'okazjonalny'
+                                 END AS segment
+                      FROM user_rfm),
+     totals AS (SELECT SUM(monetary) AS total_revenue
+                FROM user_rfm)
+SELECT s.segment,
+       COUNT(*)                                                            AS users_count,
+       ROUND(SUM(s.monetary))                                              AS segment_revenue,
+       ROUND(SUM(s.monetary) * 100.0 / (SELECT total_revenue FROM totals)) AS revenue_share_pct
+FROM segmentation s
+GROUP BY s.segment
+ORDER BY segment_revenue DESC;
+```
+
+![alt text](media/ex3-3.png)
+
+Komentarz:
+
+- progi do segmentów zostały dobrane na podstawie percentyla - 90% dla premium, 50% dla standard. To pozwala na dynamiczny podział bez konieczności ręcznego ustalania progów kwotowych
+- mała grupa użytkowników generuje dużą część przychodu - 10% użytkowników (segment premium) generuje 34% przychodu, podczas gdy 40% użytkowników (segment standard) generuje 45% przychodu, a pozostałe 50% użytkowników (segment okazjonalny) generuje 21% przychodu.
+- nie ma ściśle zasady Pareto 80/20, jest to bardziej rozmyte, ale widać, że niewielka grupa użytkowników (premium) generuje znaczący procent przychodu.
+- klienci sklepu raczej nie są lojalni - większość należy do segmentu okazjonalnego (50%), a tylko niewielka część to klienci premium. Sklep powinien skupić się na strategiach retencji i zwiększania wartości klientów standardowych, aby przesunąć ich do segmentu premium.
 
 ---
 
@@ -302,11 +389,11 @@ Użyj zapytań, które już napisałeś w zadaniach 1–3. Nie pisz nowych, benc
 
 Wypełnij poniższą tabelę. Czasy podaj w milisekundach.
 
-| Zapytanie     | Charakt. | PG p.1 | PG p.2 | PG p.3 | PG śr. | CH p.1 | CH p.2 | CH p.3 | CH śr. |
-| ------------- | -------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| B1 — proste   |          |        |        |        |        |        |        |        |        |
-| B2 — średnie  |          |        |        |        |        |        |        |        |        |
-| B3 — złożone  |          |        |        |        |        |        |        |        |        |
+| Zapytanie    | Charakt. | PG p.1 | PG p.2 | PG p.3 | PG śr. | CH p.1 | CH p.2 | CH p.3 | CH śr. |
+| ------------ | -------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+| B1 — proste  |          |        |        |        |        |        |        |        |        |
+| B2 — średnie |          |        |        |        |        |        |        |        |        |
+| B3 — złożone |          |        |        |        |        |        |        |        |        |
 
 W kolumnie „Charakterystyka" wpisz jednym zdaniem, co zapytanie robi: ile kolumn czyta czy używa `GROUP BY`, `COUNT(DISTINCT)`, funkcji okna, CTE.
 
