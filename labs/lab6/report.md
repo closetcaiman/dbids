@@ -628,16 +628,6 @@ Prawdopodobnie wybrałbym PostgreSQL jako główną bazę transakcyjną do obsł
 
 ---
 
-### Tabela wyników
-
-Wypełnij poniższą tabelę. Czasy podaj w milisekundach.
-
-| Zapytanie    | Charakt.                                         | PG p.1 | PG p.2 | PG p.3 | PG śr.  | CH p.1 | CH p.2 | CH p.3 | CH śr.  |
-| ------------ | ------------------------------------------------ | ------ | ------ | ------ | ------- | ------ | ------ | ------ | ------- |
-| B1 — proste  | group by + sum()                                 | 11ms   | 13ms   | 12ms   | 12ms    | 9ms    | 10ms   | 10ms   | 9.66ms  |
-| B2 — średnie | CTE + group by + wielokrotne zliczanie warunkowe | 58ms   | 56ms   | 61ms   | 58.33ms | 20ms   | 19ms   | 24ms   | 21ms    |
-| B3 — złożone | CTE + funkcje okna + group by                    | 11ms   | 17ms   | 12ms   | 13.33ms | 19ms   | 22ms   | 23ms   | 21.33ms |
-
 ## Co jest oceniane
 
 | Element                                                                     | Punkty |
