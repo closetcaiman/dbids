@@ -9,7 +9,7 @@ services:
       - clickhouse_data:/var/lib/clickhouse
       - ./common/sql/events/clickhouse/01_users.sql:/docker-entrypoint-initdb.d/users.sql
       - ./common/sql/events/clickhouse/10_clickhouse_events.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./common/data/events:/var/lib/clickhouse/user_files/events
+      - ./common/data/events:/var/lib/clickhouse/user_files/events:ro
     restart: unless-stopped
 
   postgres:
@@ -24,7 +24,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./common/sql/events/postgres/10_postgres_events.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./common/data/events:/data/events
+      - ./common/data/events:/data/events:ro
     restart: unless-stopped
 
 volumes:
