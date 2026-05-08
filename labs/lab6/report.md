@@ -2,9 +2,9 @@
 
 ## Zaawansowana analityka i dowód wydajności
 
-**Imię i nazwisko:** ********\*\*********\_\_\_********\*\*********
+**Imię i nazwisko:** Marek Małek, Mateusz Lampert
 
-**Grupa:** ****\*\*****\_****\*\*****
+**Grupa:** 4
 
 ---
 
