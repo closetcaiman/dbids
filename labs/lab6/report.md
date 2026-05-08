@@ -2,9 +2,9 @@
 
 ## Zaawansowana analityka i dowód wydajności
 
-**Imię i nazwisko:** Marek Małek, Mateusz Lampert
+**Imię i nazwisko:** ********\*\*********\_\_\_********\*\*********
 
-**Grupa:** 4
+**Grupa:** ****\*\*****\_****\*\*****
 
 ---
 
@@ -208,6 +208,62 @@ Wynik powinien zawierać kolumny: day, daily_revenue, cumulative_revenue, prev_d
 - Czy suma narastająca rośnie równomiernie czy skokowo?
 - Czy widać konkretny dzień z wyraźną zmianą - ile wyniósł wzrost lub spadek w procentach?
 - Co było dla Ciebie nowe w funkcjach okna i co sprawiło największą trudność?
+
+### Rozwiązanie
+
+W rozwiązaniu wykorzystana została baza Clickhouse.
+
+#### Zadanie 2a)
+
+**Zapytanie:**
+
+```sql
+select
+    country,
+    sum(price * quantity) as revenue,
+    rank() over (order by sum(price * quantity) desc ) as rank_no
+from events
+where event_type = 'purchase'
+group by country
+order by rank_no;
+```
+
+**Wyniki:**
+
+![alt text](media/task-2a.png)
+
+**Komentarz:**
+
+- krajem o najwyższym łącznym przychodzie okazała się Wielka Brytania, natomiast krajem o najniższym łącznym przychodzie Szwecja.
+- w tym konkretnym zastosowaniu nie ma znaczenia czy wykorzystaliśmy `rank()`/`denserank()`, ponieważ nie występują remisy.
+
+#### Zadanie 2b)
+
+**Zapytanie:**
+
+```sql
+with daily as (
+    select toDate(event_time) AS day, sum(price * quantity) AS daily_revenue
+    from events
+    where event_type = 'purchase'
+    group by day
+)
+select day, daily_revenue,
+    sum(daily_revenue) over (order by day rows between unbounded preceding and current row) as cumulative_revenue,
+    lagInFrame(toNullable(daily_revenue), 1, null) over (order by day rows between unbounded preceding and current row) as prev_day_revenue,
+    round((daily_revenue - prev_day_revenue) / prev_day_revenue * 100, 2) as pct_change
+from daily;
+```
+
+**Wyniki:**
+
+![alt text](media/task-2b.png)
+
+**Komentarz:**
+
+- suma narastająca rośnie mniej więcej równomiernie - choć obserwujemy pewne odstające dni, w których przychód wynosi np. ~4 tysiące lub ~20 tysięcy, co generalny trend jest raczej stabilny (w większości dni wartości rosną o ~8-12 tysięcy). Co istotne, nawet po wystąpieniu przychodu dziennego w wysokości ~20k, wartości przychodu w kolejnych dniach wracają do normy.
+- obswerwujemy kilka dni z wyraźną zmianą, przykładowo `15.01.2025` nastąpił wzrost dobowy o 168%, `19.03.2025` nastąpił wzrost o ~148%, a `05.06.2025` nastąpił spadek o ~65%.
+- funckje okna były nam już znane wcześniej, ponieważ były one już przerabiane na poprzednich laboratoriach. Z tego względu nie sprawiły one większym problemów.
 
 ---
 
