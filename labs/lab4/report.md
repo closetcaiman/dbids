@@ -468,11 +468,11 @@ where date >= '2001-01-01' and date <= '2001-01-31'
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1c-d-1.png)
+![alt text](media/ex1d-1.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1c-d-2.png)
+![alt text](media/ex1d-2.png)
 
 Komentarz:
 
@@ -488,11 +488,11 @@ where year(date) = 2001 and month(date) = 1
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1c-d-3.png)
+![alt text](media/ex1d-3.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1c-d-4.png)
+![alt text](media/ex1d-4.png)
 
 Komentarz:
 
@@ -507,11 +507,11 @@ where date >= '2001-01-01' and date <= '2001-12-31'
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1c-d-5.png)
+![alt text](media/ex1d-5.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1c-d-6.png)
+![alt text](media/ex1d-6.png)
 
 Komentarz:
 
@@ -528,11 +528,11 @@ where year(date) = 2001
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1c-d-7.png)
+![alt text](media/ex1d-7.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1c-d-8.png)
+![alt text](media/ex1d-8.png)
 
 Komentarz:
 
