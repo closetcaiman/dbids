@@ -209,6 +209,62 @@ Wynik powinien zawierać kolumny: day, daily_revenue, cumulative_revenue, prev_d
 - Czy widać konkretny dzień z wyraźną zmianą - ile wyniósł wzrost lub spadek w procentach?
 - Co było dla Ciebie nowe w funkcjach okna i co sprawiło największą trudność?
 
+### Rozwiązanie
+
+W rozwiązaniu wykorzystana została baza Clickhouse.
+
+#### Zadanie 2a)
+
+**Zapytanie:**
+
+```sql
+select
+    country,
+    sum(price * quantity) as revenue,
+    rank() over (order by sum(price * quantity) desc ) as rank_no
+from events
+where event_type = 'purchase'
+group by country
+order by rank_no;
+```
+
+**Wyniki:**
+
+![alt text](media/task-2a.png)
+
+**Komentarz:**
+
+- krajem o najwyższym łącznym przychodzie okazała się Wielka Brytania, natomiast krajem o najniższym łącznym przychodzie Szwecja.
+- w tym konkretnym zastosowaniu nie ma znaczenia czy wykorzystaliśmy `rank()`/`denserank()`, ponieważ nie występują remisy.
+
+#### Zadanie 2b)
+
+**Zapytanie:**
+
+```sql
+with daily as (
+    select toDate(event_time) AS day, sum(price * quantity) AS daily_revenue
+    from events
+    where event_type = 'purchase'
+    group by day
+)
+select day, daily_revenue,
+    sum(daily_revenue) over (order by day rows between unbounded preceding and current row) as cumulative_revenue,
+    lagInFrame(toNullable(daily_revenue), 1, null) over (order by day rows between unbounded preceding and current row) as prev_day_revenue,
+    round((daily_revenue - prev_day_revenue) / prev_day_revenue * 100, 2) as pct_change
+from daily;
+```
+
+**Wyniki:**
+
+![alt text](media/task-2b.png)
+
+**Komentarz:**
+
+- suma narastająca rośnie mniej więcej równomiernie - choć obserwujemy pewne odstające dni, w których przychód wynosi np. ~4 tysiące lub ~20 tysięcy, co generalny trend jest raczej stabilny (w większości dni wartości rosną o ~8-12 tysięcy). Co istotne, nawet po wystąpieniu przychodu dziennego w wysokości ~20k, wartości przychodu w kolejnych dniach wracają do normy.
+- obswerwujemy kilka dni z wyraźną zmianą, przykładowo `15.01.2025` nastąpił wzrost dobowy o 168%, `19.03.2025` nastąpił wzrost o ~148%, a `05.06.2025` nastąpił spadek o ~65%.
+- funckje okna były nam już znane wcześniej, ponieważ były one już przerabiane na poprzednich laboratoriach. Z tego względu nie sprawiły one większym problemów.
+
 ---
 
 ## 3. Segmentacja użytkowników - metoda RFM - 2 pkt
@@ -385,15 +441,109 @@ Użyj zapytań, które już napisałeś w zadaniach 1–3. Nie pisz nowych, benc
 
 **Uwaga:** jeśli zadania 2 lub 3 pisałeś tylko w ClickHouse, dostosuj zapytanie B3 do PostgreSQL przed pomiarem. Różnice składniowe znajdziesz w ściądze. To jest celowe zobaczysz, że logika jest taka sama, zmienia się tylko dialekt.
 
+**Zapytania:**
+
+```sql
+-- Clickhouse
+
+-- B1 - proste
+set use_query_cache = 0;
+
+select country, sum(price * quantity)
+from events
+group by country
+
+-- B2 - srednie
+
+set use_query_cache = 0;
+
+with session_flags as (select session_id,
+                              device,
+                              countIf(event_type = 'view') > 0        as has_view,
+                              countIf(event_type = 'add_to_cart') > 0 as has_cart,
+                              countIf(event_type = 'purchase') > 0    as has_purchase
+                       from events
+                       group by device, session_id)
+
+select device,
+       countIf(has_view)                                    as view_sessions,
+       countIf(has_cart)                                    as cart_sessions,
+       countIf(has_purchase)                                as purchase_sessions,
+       countIf(has_cart) / nullIf(countIf(has_view), 0)     as cart_per_view,
+       countIf(has_purchase) / nullIf(countIf(has_cart), 0) as purchase_per_cart,
+       countIf(has_purchase) / nullIf(countIf(has_view), 0) as purchase_per_view
+from session_flags
+group by device;
+
+-- B3 - zlozone
+
+set use_query_cache = 0;
+
+with user_rfm as (select user_id,
+                         count(*)              as frequency,
+                         sum(price * quantity) as monetary,
+                         max(event_time)       as last_purchase_time
+                  from events
+                  where event_type = 'purchase'
+                  group by user_id),
+     segmentation as (select user_id,
+                             monetary,
+                             case
+                                 when percent_rank() over (order by monetary) >= 0.90 then 'premium'
+                                 when percent_rank() over (order by monetary) >= 0.50 then 'standard'
+                                 else 'okazjonalny'
+                                 end as segment
+                      from user_rfm),
+     totals AS (select SUM(monetary) AS total_revenue
+                from user_rfm)
+select s.segment,
+       count(*)                                                            as users_count,
+       round(sum(s.monetary))                                              as segment_revenue,
+       round(SUM(s.monetary) * 100.0 / (select total_revenue from totals)) as revenue_share_pct
+from segmentation s
+group by s.segment
+order by segment_revenue desc;
+
+-- Postgres
+
+-- B1 - proste
+-- takie samo jak w clickhouse tylko bez "set use_query_cache = 0;"
+
+-- B2 - srednie
+with session_flags as (
+    select
+        session_id,
+        device,
+        (sum(case when event_type = 'view' then 1 else 0 end) > 0)::int        AS has_view,
+        (sum(case when event_type = 'add_to_cart' then 1 else 0 end) > 0)::int AS has_cart,
+        (sum(case when event_type = 'purchase' then 1 else 0 end) > 0)::int    AS has_purchase
+    from events
+    group by device, session_id
+)
+select
+    device,
+    sum(has_view)     AS view_sessions,
+    sum(has_cart)     AS cart_sessions,
+    sum(has_purchase) AS purchase_sessions,
+    1.0 * sum(has_cart) / sum(has_view)     AS cart_per_view,
+    1.0 * sum(has_purchase) / sum(has_cart) AS purchase_per_cart,
+    1.0 * sum(has_purchase) / sum(has_view) AS purchase_per_view
+from session_flags
+group by device;
+
+-- B3 - zlozone
+-- takie samo jak w clickhouse tylko bez "set use_query_cache = 0;"
+```
+
 ### Tabela wyników
 
 Wypełnij poniższą tabelę. Czasy podaj w milisekundach.
 
-| Zapytanie    | Charakt. | PG p.1 | PG p.2 | PG p.3 | PG śr. | CH p.1 | CH p.2 | CH p.3 | CH śr. |
-| ------------ | -------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| B1 — proste  |          |        |        |        |        |        |        |        |        |
-| B2 — średnie |          |        |        |        |        |        |        |        |        |
-| B3 — złożone |          |        |        |        |        |        |        |        |        |
+| Zapytanie    | Charakt.                                         | PG p.1 | PG p.2 | PG p.3 | PG śr.  | CH p.1 | CH p.2 | CH p.3 | CH śr.  |
+| ------------ | ------------------------------------------------ | ------ | ------ | ------ | ------- | ------ | ------ | ------ | ------- |
+| B1 — proste  | group by + sum()                                 | 11ms   | 13ms   | 12ms   | 12ms    | 9ms    | 10ms   | 10ms   | 9.66ms  |
+| B2 — średnie | CTE + group by + wielokrotne zliczanie warunkowe | 58ms   | 56ms   | 61ms   | 58.33ms | 20ms   | 19ms   | 24ms   | 21ms    |
+| B3 — złożone | CTE + funkcje okna + group by                    | 11ms   | 17ms   | 12ms   | 13.33ms | 19ms   | 22ms   | 23ms   | 21.33ms |
 
 W kolumnie „Charakterystyka" wpisz jednym zdaniem, co zapytanie robi: ile kolumn czyta czy używa `GROUP BY`, `COUNT(DISTINCT)`, funkcji okna, CTE.
 
@@ -415,28 +565,66 @@ Nie jest wymagana pełna analiza techniczna. Napisz po **2–3 zdania** dla każ
 - czy plan B3 jest wyraźnie bardziej rozbudowany niż B1,
 - czym plan ClickHouse różni się od planu PostgreSQL - na co zwróciłeś uwagę.
 
+#### Rezultaty - plany wykonania
+
+**Postgres - plan wykonania B1**
+
+![alt text](media/task-4-image.png)
+
+- plan zapytania składa się z jednego pełnego skanu tabeli i kroku agregującego
+- postgres zdecydował nie sortować danych na potrzeby grupowania.
+
+**Postgres - plan wykonania B3**
+
+![alt text](media/task-4-image-1.png)
+
+- plan zapytania B3 jest zdecydowanie bardziej rozbudowany niż B1 i składa się z wielu etapów
+- plan uwzględnia etap sortowania (konieczne przy wykorzystaniu funkcji okna) oraz wielokrotne skanowanie CTE
+- pomimo zdecydowanie bardziej rozbudowanego zapytania koszt zapytania jest porównywalny z zapytaniem B1
+
+**Clickhouse - plan wykonania B1**
+
+![alt text](media/task-4-image-2.png)
+![alt text](media/task-4-image-4.png)
+
+- bardzo prosty plan zapytania, opiera się głównie na odczycie kolumnowym poprzez operację `ReadFromMergeTree`, która pobiera z dysku wyłącznie niezbędne kolumny
+- w przypadku tego zapytania Clickhouse również nie wykorzystuje sortowania, zamiast tego dane trafiają bezpośrednio do kroku `Aggregating`
+
+**Clickhouse - plan wykonania B3**
+
+![alt text](media/task-4-image-3.png)
+![alt text](media/task-4-image-5.png)
+
+- plan zapytania B3 jest zdecydowanie bardziej rozbudowany niż w przypadku zapytania B1 i składa się z wielu etapów
+- Clickhouse traktuje całe zapytanie jako ciąg/pipeline wielu transformacji, tym samym nie tworząc tymczasowych struktur na dysku
+- w planie zapytania widać wyraźny etap sortowania (`Sorting`), który jest konieczny ze względu na wykorzystanie funkcji okna
+
+**Komentarz:**
+
+Kluczowa różnica to sposób pobierania danych - w przypadku Postgresa skanowane są całe wiersze tabeli `Seq Scan`, podczas gdy w Clickhousie dane odczytywane są kolumnowo (`ReadFromMergeTree`, odczytywane są tylko potrzebne atrybuty). Inną istotną różnicą jest podejście do wieloetapowego przetwarzania - Postgres wyraźnie wyodrębnia pracę na strukturach tymczasowych (`CTE Scan`), podczas gdy Clickhouse buduje jeden długi, strumieniowy ciąg operacji w pamięci operacyjnej.
+
 ### Refleksja końcowa – obowiązkowa
 
 Na podstawie pomiarów i planów napisz **5–8 zdań** odpowiadając na poniższe pytania. To jest najważniejszy element całego laboratorium.
 
-- Czy różnica czasu między bazami rosła wraz ze złożonością zapytania?
-- Przy którym zapytaniu przewaga ClickHouse była największa i jak to tłumaczysz?
-- Co plany wykonania mówią o tym, dlaczego ClickHouse jest szybszy dla tego rodzaju zapytań?
-- Gdybyś był architektem systemu danych w firmie e-commerce obsługującej miliony zdarzeń dziennie - dla jakich zadań wybrałbyś ClickHouse, a dla jakich PostgreSQL? Uzasadnij konkretnie.
+**Czy różnica czasu między bazami rosła wraz ze złożonością zapytania?**
 
-**Refleksja jest oceniana jako osobny punkt (1 pkt).** Oczekujemy własnego rozumowania opartego na zmierzonych danych - nie powtórzenia treści instrukcji.
+Różnica czasu między bazami niekoniecznie rosła wraz ze złożonością zapytania - w przypadku zapytania B2 Postgres okazał się ~3 razy wolniejszy, natomiast dla zapytania B3 zapytanie w Postgres było ~1.5 raza szybsze. Różnica ta wynika z charakteru poszczególnych zapytań - przykładowo, w przypadku zapytania B2 konieczne było wielokrotne zliczanie warunkowe, co w przypadku Postgresa oznaczało wielokrotne pełne skanowanie tabeli, podczas gdy Clickhouse mógł w wydajny sposób odczytać wyłącznie potrzebne kolumny.
 
----
+**Przy którym zapytaniu przewaga ClickHouse była największa i jak to tłumaczysz?**
 
-## Zadanie dodatkowe — dla chętnych (bez dodatkowych punktów)
+Przewaga ClickHouse była największa w przypadku zapytania B2, gdzie Postgres okazał się ~3 razy wolniejszy. Wynika to z faktu, że zapytanie to opiera się na agregacji wielu zdarzeń do poziomu sesji oraz wielokrotnego zliczania warunkowego, co idealnie wpasowuje się w silnik analityczny Clickhouse'a, który jest w stanie efektywnie sumować warunki logiczne z wybranych kolumn bez konieczności wczytywania pozostałych atrybutów.
 
-Jeżeli skończyłeś wcześniej, wybierz jedną z poniższych opcji.
+**Co plany wykonania mówią o tym, dlaczego ClickHouse jest szybszy dla tego rodzaju zapytań?**
 
-**Opcja A — agregacja tygodniowa** - przepisz zapytanie z zadania 2 tak, aby grupowało dane tygodniowo. W ClickHouse użyj toStartOfWeek, w PostgreSQL DATE_TRUNC('week', ...). Czy wyniki są identyczne? Czy jest różnica w składni?
+Plany wykonania pokazują 2 kluczowe różnice pomiędzy Clickhousem oraz Postgresem:
 
-**Opcja B — uniq vs uniqExact** - w ClickHouse policz liczbę unikalnych użytkowników per dzień używając najpierw uniqExact, potem uniq. Zmierz czas obu wersji. O ile uniq jest szybsze i jak duży jest błąd przybliżenia? Kiedy w prawdziwym projekcie zaakceptowałbyś wynik przybliżony?
+- Postgres musi zawsze skanować (i wczytywać) pełne wiersze (`Seq Scan`), podczas gdy ClickHouse ładuje z dysku wyłącznie niezbędne atrybuty (`ReadFromMergeTree`)
+- Clickhouse przetwarza dane w jednym, ciągłym potoku operacji wykonywanych w pamięci, jednoczeie unikając kosztownego zapisywania wyników pośrednich (co ma miejsce w przypadku zapytań w Postgresie (`CTE Scan`))
 
-**Opcja C — własne pytanie analityczne** - zadaj sobie pytanie dotyczące tabeli events, którego jeszcze nie badałeś, i odpowiedz na nie zapytaniem SQL. Napisz, skąd wziął się pomysł, jak podszedłeś do problemu i co odkryłeś.
+**Gdybyś był architektem systemu danych w firmie e-commerce obsługującej miliony zdarzeń dziennie - dla jakich zadań wybrałbyś ClickHouse, a dla jakich PostgreSQL? Uzasadnij konkretnie.**
+
+Prawdopodobnie wybrałbym PostgreSQL jako główną bazę transakcyjną do obsługi bieżących operacji dotyczących produktów i klientów, w której przechowywałbym wszystkie informacje o klientach, produktach i transakcjach/zamówieniach. Clickhouse'a użyłbym natomiast np. do przetrzymywania wszystkich danych odnośnie zdarzeń w aplikacji/systemie, dzięki czemu możliwe byłyby bardzo wydajne tworzenie raportów oraz analiza lejków konwersji (jednocześnie operacje te nie obciążałyby głównej bazy Postgres). W celu przeprowadzania dokładnych analiza dotyczących sprzedaży, rozważyłbym także cykliczne kopiowanie danych dotyczących zamówień (np. tych już zrealizowanych) z Postgresa do Clickhouse'a - dzięki temu mamy główne źródło prawdy w Postgresie, ale możemy w wydajny sposób tworzyć raporty na podstawie danych w Clickhousie.
 
 ---
 
