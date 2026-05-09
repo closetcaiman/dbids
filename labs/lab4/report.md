@@ -179,8 +179,10 @@ where id = 1000000
 Komentarz:
 
 - execution plan wskazuje, że największy koszt jest związany ze skanowaniem tabeli, dodatkowo `mssql` włączył parallelism, co znacząco zredukowało czas (CPU time = 224 ms, elapsed time = 17 ms.)
-- z analizy XML planu, wiemy, że przez paralelilzm odczytanych stron było 25266 (~ 1500 na wątek), podobnie skany tabeli - 17, (1 na wątek + 1 główny (tylko jest governerem, nie ma odczytów - też XML planu))
+- odczytanych stron było 25266 (~ 1500 na wątek)
+- skanów tabeli było 17 (przez parallelism, 1 na wątek)
 - `mssql` zasygnalizowal brak indeksu na kolumnie `id` z dużym `Impact` (~99.9%)
+- "gruba strzałka" na planie wskazuje, że skanowanie tabeli jest najbardziej kosztowną operacją w planie zapytania
 
 ```sql
 select count(*) from product_history
@@ -238,7 +240,7 @@ where id = 1000000
 
 Komentarz:
 
-- wnioski są podobne do pierwszego zapytania z podpunktu a), z tą różnicą, że w planie zapytnia nie ma operatora `Stream Aggregate` i `Compute Scalar`, co jest związane z tym, że zapytanie zwraca wszystkie kolumny, a nie tylko ich liczbe
+- wnioski są podobne do pierwszego zapytania z podpunktu a), z tą różnicą, że w planie zapytnia nie ma operatora `Stream Aggregate` i `Compute Scalar`, co jest związane z tym, że zapytanie zwraca wszystkie kolumny, a nie tylko ich liczbę
 
 ```sql
 select * from product_history
@@ -285,9 +287,9 @@ po zakończeniu pozostaw indeks klastrowy
 
 #### Wyniki
 
-##### Indeks klastrowy
+##### a1)
 
-###### a1)
+###### Indeks klastrowy
 
 - plan zapytania i koszt:
 
@@ -303,7 +305,23 @@ Komentarz:
 - liczba czytanych stron drastycznie spadła z ~25000 do 3, podobnie skanów z 17 do 1. (co też jest związane z brakiem paralelizmu)
 - w planie wykonywany jest `Index Seek`, który błyskawicznie znajduje pożądany rekord
 
-###### a2)
+###### Indeks nieklastrowy
+
+- plan zapytania i koszt:
+
+![alt text](image-20.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-21.png)
+
+Komentarz:
+
+- rezultaty są praktycznie takie same jak przy indeksie klastrowym, prawdopodobnie przez to, że agregacja `count()` nie potrzebuje odczytywać dodatkowych kolumn, a tylko istnienie rekordu, więc indeks nieklastrowy jest wystarczający do szybkiego znalezienia rekordu
+
+##### a2)
+
+###### Indeks klastrowy
 
 - plan zapytania i koszt:
 
@@ -318,7 +336,24 @@ Komentarz:
 - liczba czytanych stron również spadła ale do 14802, co jest spowodowane, że te 1 mln rekordów musiało zostać przeczytanych, jednak mimo to warto zwrócić uwagę, że teraz liczba czytanych stron jest proporcjonalna do zwracanego zakresu
 - czas spadł nieznacznie o 3ms
 
-###### b1)
+###### Indeks nieklastrowy
+
+- plan zapytania i koszt:
+
+![alt text](image-22.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-23.png)
+
+Komentarz
+
+- w przypadku indeksu nieklastrowego liczba odczytywanych stron została zredukowana jeszcze bardziej, co jest związane z tym, że indeks klastrowy jest mniejszą strukturą danych (ma tylko pointery do danych), zmniejszyło to liczbę odczytywanych stron do 2938
+- `elapsed time` jest większy, co prawdopodbnie jest związane z brakiem paralelizmu (czasy CPU są praktycznie identyczne), prawdopodobnie optimizer nie włączył paralelizmu przez małą liczbę stron do odczytania, można też sprawdzić parametr `Degree of Parallelism` = 1, a `mssql` włącza paralelism, jeśli jest wynosi on co najmniej 5 by default (properties serwera -> Advanced -> Cost Threshold for Parallelism).
+
+##### b1)
+
+###### Indeks klastrowy
 
 - plan zapytania i koszt:
 
@@ -334,7 +369,25 @@ Komentarz:
 - liczba czytanych stron spadła z ~25000 do 3, podobnie skanów z 17 do 1. (co też jest związane z brakim paralelizmu)
 - w planie wykonywany jest `Index Seek`, który błyskawnie znajduje pożądany rekord
 
-###### b2)
+###### Indeks nieklastrowy
+
+- plan zapytania i koszt:
+
+![alt text](image-24.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-25.png)
+
+Komentarz:
+
+- czas jest praktycznie zerowy (0ms)
+- warto zwrócić uwagę na różnice w planach, z uwagi na strukturę indeksu nieklastrtowego, `mssql` dodał krok `RID Lookup` (RID, bo tabela nie ma indeksu klastrowego, więc jest Heapem), który musi odczytać dane z tablei, a następnie wykonuje inner join z indeksem, aby zwrócić pełny rekord
+- liczba czytanych stron jest większa o 1 niż w przypadku indeksu klastrowego (3 vs 4)
+
+##### b2)
+
+###### Indeks klastrowy
 
 - plan zapytania i koszt:
 
@@ -347,18 +400,24 @@ Komentarz:
 Komentarz:
 
 - liczba czytanych stron również spadła ale do 14802, co jest spowodowane, że te 1 mln rekordów musiało zostać przeczytanych, podobnie jak w przypadku a2) liczba czytanych stron jest proporcjonalna do zwracanego zakresu
-- czas (elapsed time) nie zmienił się drastycznie (CPU time = 598 ms, elapsed time = 4449 ms.), co może być spowodowanie bottleneckiem `SSMS` (przetworzenie i prezentacja ~1 mln pełnych rekordów), ale czas CPU spadł drastycznie z 6480ms do 615ms, co jest związane z tym, że teraz `mssql` nie musi skanować całej tabeli, a może od razu znaleźć pożądany rekord i zwrócić zakres do końca
+- czas (elapsed time) nie zmienił się drastycznie (CPU time = 615 ms, elapsed time = 4390 ms.), co może być spowodowanie bottleneckiem `SSMS` (przetworzenie i prezentacja ~1 mln pełnych rekordów), ale czas CPU spadł drastycznie z 6480ms do 615ms, co jest związane z tym, że teraz `mssql` nie musi skanować całej tabeli, a może od razu znaleźć pożądany rekord i zwrócić zakres do końca
 - nie ma tu też paralelizmu
 
-##### Indeks nieklastrowy
+###### Indeks nieklastrowy
 
-###### a1)
+- plan zapytania i koszt:
 
-###### a2)
+![alt text](image-26.png)
 
-###### b1)
+- czas i liczba odczytywanych stron:
 
-###### b2)
+![alt text](image-27.png)
+
+Komentarz:
+
+- w tym wypadku liczba czytanych stron zwiększyła się do 25841 (z 25266) w porównaniu do zapytania bez indeksu
+- `mssql` zalecił dodanie indeksu klastrowego, tak samo jak w przypadku zapytania bez indeksu
+- co najważniejsze sam indeks nieklastrowy został zignorowany, co jest związane z tym, że zapytanie zwraca duży zakres danych, więc dodanie kroków `Index Seek` + `RID Lookup` dla każdego rekordu byłoby bardzo kosztowne (tzw. Tipping Point), więc `mssql` zdecydował się na skanowanie całej tabeli, co jest szybsze w tym przypadku
 
 ### d)
 
@@ -401,6 +460,86 @@ podczas analiz sprawdzaj jak zachowują się zapytania, zwróć uwagę na
 
 spróbuj skomentować wyniki tych analiz, dlaczego tak się dzieje
 
+```sql
+select id, productid, productname, date
+from product_history
+where date >= '2001-01-01' and date <= '2001-01-31'
+```
+
+- plan zapytania i koszt:
+
+![alt text](image-28.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-29.png)
+
+Komentarz:
+
+- elapsed time jest niski (6ms), liczba odczytanych stron to 7327, nie ma paralelizmu.
+- samo zapytanie wykonuje `Index Seek`, aby znaleźć dane z zakresu, ale musi zrobić `Key Lookup` (bez RID, bo tabela ma już indeks klastrowy po kolumnie `id`), aby odczytać pełne rekordy i później `Inner Join`.
+- `mssql` zasygnalizował aby stworzyć index na `date` z włączeniem kolumn `productid` i `productname` (z `Impact` ~53%), aby wyeliminować `Key Lookup`
+
+```sql
+select id, productid, productname, date
+from product_history
+where year(date) = 2001 and month(date) = 1
+```
+
+- plan zapytania i koszt:
+
+![alt text](image-30.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-31.png)
+
+Komentarz:
+
+- o wiele większa liczba odczytywanych stron 26081, 17 skanów (+ paralelizm), czas również większy (CPU time = 364 ms, elapsed time = 31 ms)
+- użycie funkcji `year()` i `month()` na kolumnie `date` sprawia, że indeks nie może być użyty, więc `mssql` musi przeskanować całą tabelę, aby znaleźć pasujące rekordy, jest to tzw. Non-SARGable query
+
+```sql
+select id, productid, productname, date
+from product_history
+where date >= '2001-01-01' and date <= '2001-12-31'
+```
+
+- plan zapytania i koszt:
+
+![alt text](image-32.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-33.png)
+
+Komentarz:
+
+- liczba odczytanych stron jest większa niż w przypadku pierwszego zapytania(7327 vs 26081), co jest związane z tym, że zakres jest większy (cały rok vs styczeń)
+- czas jest również większy (CPU time = 133 ms, elapsed time = 19 ms)
+- w planie zapytania widać, że `mssql` zdecydował się na skanowanie indeksu zamiast `Index Seek`, prawdopodobnie został przekroczony tzw. Tipping Point
+- dodatkowo `mssql` zasygnalizował, że dla tego zapytania warto byłoby stworzyć indeks na `date` z włączeniem kolumn `productid` i `productname` (z `Impact` ~82%)
+
+```sql
+select id, productid, productname, date
+from product_history
+where year(date) = 2001
+```
+
+- plan zapytania i koszt:
+
+![alt text](image-34.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-35.png)
+
+Komentarz:
+
+- liczba stron jest taka sama jak w poprzednim zapytaniu 26081, ale czas jest większy (CPU time = 368 ms, elapsed time = 38 ms), bo też procesor musiał wykonać funkcję `year()` dla każdego rekordu
+- podobnie jak w poprzednim zapytaniu z funkcjami `year()` i `month()` indeks nie może być użyty, więc `mssql` musi przeskanować całą tabelę (`Clustered Index Scan`)
+- w tym wypadku `mssql` nie zasugerował założenie indeksu z włączeniem kolumn
+
 ### e)
 
 powtórz eksperymenty z pkt d) , ale tym razem użyj indeksu zawierającego dodatkowe kolumny
@@ -414,6 +553,92 @@ drop index product_history_date_incl_idx on product_history
 ```
 
 co się zmieniło?
+
+```sql
+select id, productid, productname, date
+from product_history
+where date >= '2001-01-01' and date <= '2001-01-31'
+```
+
+- plan zapytania i koszt:
+
+![alt text](image-36.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-37.png)
+
+Komentarz:
+
+- czas spadł (CPU time = 0 ms, elapsed time = 1 ms), liczba odczytanych stron spadła do 16, a w planie zapytania widać, że `mssql` używa teraz `Index Seek` bezpośrednio na indeksie z włączeniem kolumn, więc nie ma potrzeby wykonywania `Key Lookup`, co znacząco poprawia wydajność
+
+```sql
+select id, productid, productname, date
+from product_history
+where year(date) = 2001 and month(date) = 1
+```
+
+- plan zapytania i koszt:
+
+![alt text](image-38.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-39.png)
+
+Komentarz:
+
+- liczba stron po włączeniu do indeksu kolumn `productid` i `productname` spadła do 11424, bo teraz `mssql` wykonuje `Index Scan` na indeksie z włączeniem kolumn:
+
+```xml
+
+ <IndexScan ...>
+   ...
+  <Object ... Table="[product_history]" Index="[product_history_date_incl_idx]" IndexKind="NonClustered"  />
+  ...
+</IndexScan>
+```
+
+- czasy są bardzo podobne (CPU time = 339 ms, elapsed time = 34 ms. vs CPU time = 364 ms, elapsed time = 31 ms), co jest związane z tym, że zapytanie nadal jest Non-SARGable, więc `mssql` musi przeskanować cały indeks i wykonać funkcję `year()` i `month()` dla każdego rekordu
+
+```sql
+select id, productid, productname, date
+from product_history
+where date >= '2001-01-01' and date <= '2001-12-31'
+```
+
+- plan zapytania i koszt:
+
+![alt text](image-41.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-42.png)
+
+Komentarz:
+
+- liczba stron bardzo spadła z 26081 do 143, a czas również spadł (CPU time = 133 ms, elapsed time = 19 ms. vs CPU time = 9 ms, elapsed time = 9 ms.), co jest związane z tym, że teraz `mssql` może użyć `Index Seek` na indeksie z włączeniem kolumn, zamiast skanować używać `Clustered Index Scan` na całej tabeli, więc teraz zapytanie jest bardzo szybkie
+- nie ma paralelizmu
+
+```sql
+select id, productid, productname, date
+from product_history
+where year(date) = 2001
+```
+
+- plan zapytania i koszt:
+
+![alt text](image-43.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-44.png)
+
+Komentarz:
+
+- liczba stron spadła z 26091 do 11424, ale czasy są bardzo podobne (CPU time = 368 ms, elapsed time = 38 ms. vs CPU time = 365 ms, elapsed time = 36 ms)
+- podobnie jak w przypadku zapytania z funkcjami `year()` i `month()`, indeks z włączeniem kolumn nie jest wystarczający, ale zmniejsza liczbę odczytywanych stron, bo teraz `mssql` wykonuje `Index Scan` na indeksie z włączeniem kolumn (non clustered)
+- włączony jest paralelizm
 
 ### f)
 
@@ -432,12 +657,43 @@ przeanalizuj polecenia
 select id, productid, productname, date 
 from product_history p
 where categoryid = 8
+```
 
+- plan zapytania i koszt:
 
+![alt text](image-45.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-46.png)
+
+Komentarz:
+
+- z analizy planu: zapytanie korzysta z dwóch indeksów jednocześnie (używając też paralelizmu), w jednej gałęzi jest `Index Seek` po `categoryid`, aby stworzyć bitmapę (Bitmap Create) w celu filtracji rekordów zanim dotrą do Joina ("eliminating rows with key values that can't produce any join records before passing rows through another operator"), a w drugiej gałęzi jest `Index Scan` (po non-clustered, aby zaoszczędzić liczbę czytanych stron), na koniec jest Join, który łączy dane z obu gałęzi i `Gather Streams`, który zbiera dane z wątków i zwraca wynik
+- obie gałęzie używają paralelizmu, więc Scan Count jest duży (34)
+- liczba odczytywanych stron wyniosła 12084, a czas: CPU time = 1418 ms, elapsed time = 470 ms.
+- `mssql` zasygnalizował, że dla tego zapytania można dodać indeks nieklastrowy na `categoryid` z włączeniem kolumn `productid`, `productname`, `date` (z `Impact` ~90%), co prawodopodobnie wyeliminowałoby dolną gałąź z `Index Scan` i pozwoliłoby na użycie `Index Seek` na indeksie z włączeniem kolumn, co znacząco poprawiłoby wydajność
+
+```sql
 select id, productid, productname, date, categoryname
 from product_history p join categories c on p.categoryid = c.categoryid
 where p.categoryid = 8
 ```
+
+- plan zapytania i koszt:
+
+![alt text](image-47.png)
+
+- czas i liczba odczytywanych stron:
+
+![alt text](image-48.png)
+
+Komentarz:
+
+- dodanie nowej tabeli do zapytania (`categories`) zwiększyło jego skomplikowanie i teraz wykorzystany jest tylko index klastrowy na `id`, więc `mssql` zdecydował się na przeskanowanie całej tabeli `product_history`, aby następnie wykonać join z tabelą `categories`
+- widać też pogrubioną strzałkę z `Clustered Index Scan` do `Nested Loops`, co oznacza, że jest najbardziej kosztowna ścieżka w planie zapytania
+- liczba odczytywanych wzrosła do 25891, a czas wyniósł CPU time = 370 ms, elapsed time = 622 ms. (brak paralelizmu - mniejsze cpu time, ale nieoptymalne zapytanie zwiękzyło czas)
+- `mssql` zasygnalizował, że dla tego zapytania można dodać indeks nieklastrowy na `categoryid` z włączeniem kolumn `productid`, `productname`, `date` (z `Impact` ~92%)
 
 ### dodatkowo
 
@@ -464,6 +720,34 @@ where i.object_id = object_id('dbo.product_history')
   and i.name = 'product_history_date_idx';
 ```
 
+Na przykładzie indeksu nieklastrowego:
+
+- `product_history_date_idx` (bez włączenia kolumn):
+
+![alt text](image-49.png)
+
+- `product_history_date_incl_idx` (z włączeniem kolumn):
+
+![alt text](image-50.png)
+
+Komentarz:
+
+- po metadanych indeksu z włączeniem kolumn można zauważyć, że liczba na poziomie 0 (leaf) jest znacznie większa niż w przypadku indeksu bez włączenia kolumn (11264 vs 3724), co jest związane z tym, że teraz indeks z włączeniem kolumn ma więcej danych do przechowywania (nie tylko klucz, ale też dodatkowe kolumny)
+
+Możemy jeszcze porównać indeksy z zadania a) dla kolumny `id`:
+
+- `product_history_clust_idx` (indeks klastrowy):
+
+![alt text](image-52.png)
+
+- `product_history_idx` (indeks nieklastrowy):
+
+![alt text](image-51.png)
+
+Komentarz:
+
+- widać, że indeks klastrowy jako, że przechowuje pełne dane, ma znacznie więcej stron na poziomie 0 (leaf) niż indeks nieklastrowy (25841 vs 5152), co jest związane z tym, że indeks klastrowy jest całą tabelą, a indeks nieklastrowy jest tylko strukturą danych z kluczami i pointerami do danych
+
 jeśli chcesz zaobserwować odczyty logiczne/fizyczne możesz zwolnić pulę buforów przed wykonaniem polecenia
 
 ```sql
@@ -476,6 +760,23 @@ i teraz porównaj liczby czytanych stron np. wykonując dwukrotnie polecenie
 ```sql
 select * from product_history
 ```
+
+- IO statistics dla pierwszego zapytania:
+
+```md
+Table 'product_history'. Scan count 1, logical reads 25891, physical reads 1, page server reads 0, read-ahead reads 25968, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+- IO statistics dla drugiego zapytania:
+
+```md
+Table 'product_history'. Scan count 1, logical reads 25891, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+Komentarz:
+
+- w pierwszym zapytaniu, po wyczyszczeniu buforów, `mssql` musiał odczytać dane z dysku, ale widząc, że zapytanie może potrzebować więcej danych z tej tabeli, `mssql` wykonał read-ahead, aby załadować kolejne strony do bufora, co jest widoczne w statystykach jako `read-ahead reads 25968`
+- w drugim zapytaniu, dane są już w buforze, więc nie ma potrzeby odczytywać z dysku, więc `physical reads` wynosi 0, a `logical reads` jest taka sama jak w pierwszym zapytaniu, bo teraz dane są odczytywane z bufora, a nie z dysku
 
 # Zadanie 2
 
