@@ -64,6 +64,10 @@ Oddaj jako PDF albo Markdown. Dla każdego zadania dołącz:
 
 ---
 
+```{=typst}
+#pagebreak()
+```
+
 ## 0. Gotowość do zajęć — warunek konieczny (0 pkt)
 
 Pokaż, że środowisko działa: kontenery `postgres` i `clickhouse` mają status `Up`, tabela `events` jest widoczna w obu bazach, połączenie z klienta SQL działa.
@@ -72,15 +76,15 @@ Pokaż, że środowisko działa: kontenery `postgres` i `clickhouse` mają statu
 
 Status kontenerów:
 
-![alt text](media/ex0-1.png)
+![alt text](media/ex0-1.png){height=200px}
 
 Status tabeli w ClickHouse:
 
-![alt text](media/ex0-2.png)
+![alt text](media/ex0-2.png){height=300px}
 
 Status tabeli w PostgreSQL:
 
-![alt text](media/ex0-3.png)
+![alt text](media/ex0-3.png){height=300px}
 
 ---
 
@@ -157,6 +161,10 @@ SELECT device,
        countIf(has_purchase) / nullIf(countIf(has_view), 0) AS purchase_per_view
 FROM session_flags
 GROUP BY device
+```
+
+```{=typst}
+#pagebreak()
 ```
 
 Wyniki zapytań:
@@ -249,6 +257,10 @@ order by rank_no;
 - krajem o najwyższym łącznym przychodzie okazała się Wielka Brytania, natomiast krajem o najniższym łącznym przychodzie Szwecja.
 - w tym konkretnym zastosowaniu nie ma znaczenia czy wykorzystaliśmy `rank()`/`denserank()`, ponieważ nie występują remisy.
 
+```{=typst}
+#pagebreak()
+```
+
 #### Zadanie 2b)
 
 **Zapytanie:**
@@ -295,6 +307,10 @@ Na tej podstawie dzielisz klientów na segmenty: najlepszych nagradzasz, uśpion
 
 Zaznacz w sprawozdaniu, którą bazę wybrałeś.
 
+```{=typst}
+#pagebreak()
+```
+
 **Użyta baza: PostgreSQL**
 
 ### Krok 1 — oblicz R, F, M dla każdego użytkownika
@@ -327,7 +343,7 @@ CROSS JOIN ref
 ORDER BY monetary DESC;
 ```
 
-![alt text](media/ex3-1.png)
+![alt text](media/ex3-1.png){height=300px}
 
 Zanim przejdziesz dalej — sprawdź zakres wartości, żeby świadomie dobrać progi:
 
@@ -453,6 +469,10 @@ Użyj zapytań, które już napisałeś w zadaniach 1–3. Nie pisz nowych, benc
 
 **Uwaga:** jeśli zadania 2 lub 3 pisałeś tylko w ClickHouse, dostosuj zapytanie B3 do PostgreSQL przed pomiarem. Różnice składniowe znajdziesz w ściądze. To jest celowe zobaczysz, że logika jest taka sama, zmienia się tylko dialekt.
 
+```{=typst}
+#pagebreak()
+```
+
 **Zapytania:**
 
 ```sql
@@ -515,7 +535,13 @@ select s.segment,
 from segmentation s
 group by s.segment
 order by segment_revenue desc;
+```
 
+```{=typst}
+#pagebreak()
+```
+
+```sql
 -- Postgres
 
 -- B1 - proste
@@ -586,6 +612,10 @@ Nie jest wymagana pełna analiza techniczna. Napisz po **2–3 zdania** dla każ
 - plan zapytania składa się z jednego pełnego skanu tabeli i kroku agregującego
 - postgres zdecydował nie sortować danych na potrzeby grupowania.
 
+```{=typst}
+#pagebreak()
+```
+
 **Postgres - plan wykonania B3**
 
 ![alt text](media/ex4-2.png)
@@ -601,6 +631,10 @@ Nie jest wymagana pełna analiza techniczna. Napisz po **2–3 zdania** dla każ
 
 - bardzo prosty plan zapytania, opiera się głównie na odczycie kolumnowym poprzez operację `ReadFromMergeTree`, która pobiera z dysku wyłącznie niezbędne kolumny
 - w przypadku tego zapytania Clickhouse również nie wykorzystuje sortowania, zamiast tego dane trafiają bezpośrednio do kroku `Aggregating`
+
+```{=typst}
+#pagebreak()
+```
 
 **Clickhouse - plan wykonania B3**
 
@@ -626,6 +660,10 @@ Różnica czasu między bazami niekoniecznie rosła wraz ze złożonością zapy
 **Przy którym zapytaniu przewaga ClickHouse była największa i jak to tłumaczysz?**
 
 Przewaga ClickHouse była największa w przypadku zapytania B2, gdzie Postgres okazał się ~3 razy wolniejszy. Wynika to z faktu, że zapytanie to opiera się na agregacji wielu zdarzeń do poziomu sesji oraz wielokrotnego zliczania warunkowego, co idealnie wpasowuje się w silnik analityczny Clickhouse'a, który jest w stanie efektywnie sumować warunki logiczne z wybranych kolumn bez konieczności wczytywania pozostałych atrybutów.
+
+```{=typst}
+#pagebreak()
+```
 
 **Co plany wykonania mówią o tym, dlaczego ClickHouse jest szybszy dla tego rodzaju zapytań?**
 
