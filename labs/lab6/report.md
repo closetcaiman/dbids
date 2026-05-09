@@ -4,7 +4,7 @@
 
 **Imię i nazwisko:** Marek Małek, Mateusz Lampert
 
-**Grupa:** 4
+**Grupa:** 4, piątek 15:00-16:30
 
 ---
 
@@ -70,6 +70,18 @@ Pokaż, że środowisko działa: kontenery `postgres` i `clickhouse` mają statu
 
 **Brak gotowości środowiska** uniemożliwia wykonanie dalszych zadań.
 
+Status kontenerów:
+
+![alt text](media/ex0-1.png)
+
+Status tabeli w ClickHouse:
+
+![alt text](media/ex0-2.png)
+
+Status tabeli w PostgreSQL:
+
+![alt text](media/ex0-3.png)
+
 ---
 
 ## 1. Lejek konwersji — 2 pkt
@@ -125,7 +137,7 @@ Zbuduj analogicznie wersję z `GROUP BY device`.
 
 ### Rozwiązanie
 
-Grupowanie po `device`:`
+Grupowanie po `device`:
 
 ```sql
 WITH session_flags AS (SELECT session_id,
@@ -230,7 +242,7 @@ order by rank_no;
 
 **Wyniki:**
 
-![alt text](media/task-2a.png)
+![alt text](media/ex2-1.png)
 
 **Komentarz:**
 
@@ -257,7 +269,7 @@ from daily;
 
 **Wyniki:**
 
-![alt text](media/task-2b.png)
+![alt text](media/ex2-2.png)
 
 **Komentarz:**
 
@@ -408,7 +420,7 @@ Komentarz:
 - progi do segmentów zostały dobrane na podstawie percentyla - 90% dla premium, 50% dla standard. To pozwala na dynamiczny podział bez konieczności ręcznego ustalania progów kwotowych
 - mała grupa użytkowników generuje dużą część przychodu - 10% użytkowników (segment premium) generuje 34% przychodu, podczas gdy 40% użytkowników (segment standard) generuje 45% przychodu, a pozostałe 50% użytkowników (segment okazjonalny) generuje 21% przychodu.
 - nie ma ściśle zasady Pareto 80/20, jest to bardziej rozmyte, ale widać, że niewielka grupa użytkowników (premium) generuje znaczący procent przychodu.
-- klienci sklepu raczej nie są lojalni - większość należy do segmentu okazjonalnego (50%), a tylko niewielka część to klienci premium. Sklep powinien skupić się na strategiach retencji i zwiększania wartości klientów standardowych, aby przesunąć ich do segmentu premium.
+- klienci sklepu raczej nie są lojalni - większość należy do segmentu okazjonalnego (50%), a tylko niewielka część to klienci premium. Sklep powinien skupić się na strategiach retencji klientów.
 
 ---
 
@@ -569,14 +581,14 @@ Nie jest wymagana pełna analiza techniczna. Napisz po **2–3 zdania** dla każ
 
 **Postgres - plan wykonania B1**
 
-![alt text](media/task-4-image.png)
+![alt text](media/ex4-1.png)
 
 - plan zapytania składa się z jednego pełnego skanu tabeli i kroku agregującego
 - postgres zdecydował nie sortować danych na potrzeby grupowania.
 
 **Postgres - plan wykonania B3**
 
-![alt text](media/task-4-image-1.png)
+![alt text](media/ex4-2.png)
 
 - plan zapytania B3 jest zdecydowanie bardziej rozbudowany niż B1 i składa się z wielu etapów
 - plan uwzględnia etap sortowania (konieczne przy wykorzystaniu funkcji okna) oraz wielokrotne skanowanie CTE
@@ -584,16 +596,16 @@ Nie jest wymagana pełna analiza techniczna. Napisz po **2–3 zdania** dla każ
 
 **Clickhouse - plan wykonania B1**
 
-![alt text](media/task-4-image-2.png)
-![alt text](media/task-4-image-4.png)
+![alt text](media/ex4-3.png)
+![alt text](media/ex4-4.png)
 
 - bardzo prosty plan zapytania, opiera się głównie na odczycie kolumnowym poprzez operację `ReadFromMergeTree`, która pobiera z dysku wyłącznie niezbędne kolumny
 - w przypadku tego zapytania Clickhouse również nie wykorzystuje sortowania, zamiast tego dane trafiają bezpośrednio do kroku `Aggregating`
 
 **Clickhouse - plan wykonania B3**
 
-![alt text](media/task-4-image-3.png)
-![alt text](media/task-4-image-5.png)
+![alt text](media/ex4-5.png)
+![alt text](media/ex4-6.png)
 
 - plan zapytania B3 jest zdecydowanie bardziej rozbudowany niż w przypadku zapytania B1 i składa się z wielu etapów
 - Clickhouse traktuje całe zapytanie jako ciąg/pipeline wielu transformacji, tym samym nie tworząc tymczasowych struktur na dysku
