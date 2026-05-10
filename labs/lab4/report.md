@@ -894,6 +894,84 @@ Co to są indeksy colums store? Jak działają? (poszukaj materiałów w interne
 
 UWAGA: ciekawsze efekty możesz zaobserwować dla jeszcze większych tabel (jeśli twój komp na to pozwala możesz zwiększyć wolumen generowanych danych)
 
+**Rezultaty:**
+
+Liczba wierszy w tabeli:
+![alt text](media/task2-image-5.png)
+
+Istniejące indeksy:
+![alt text](media/task2-image-4.png)
+
+Jak widać na załączonym obrazku, w tabeli został automatycznie stworzy indeks klastrowany dla klucza głównego `id` - indeks ten nie zawiera żadnych innych kolumn.
+
+- zapytanie bez indeksu kolumnowego (istnieje wyłącznie domyślny indeks na kluczu głównym):
+
+```sql
+-- zapytanie 2a
+select productid, sum(unitprice), avg(unitprice), sum(orderqty), avg(orderqty)
+from saleshistory
+group by productid
+order by productid;
+```
+
+```
+Table 'saleshistory'. Scan count 9, logical reads 158276, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+SQL Server Execution Times:
+  CPU time = 1967 ms,  elapsed time = 260 ms.
+```
+
+![alt text](media/task2-image.png)
+![alt text](media/task2-image-1.png)
+
+- zapytanie z indeksem kolumnowym na `saleshistory(unitprice, orderqty, productid)`:
+
+```sql
+-- zapytanie 2b
+create nonclustered columnstore index saleshistory_columnstore
+	on saleshistory(unitprice, orderqty, productid)
+
+select productid, sum(unitprice), avg(unitprice), sum(orderqty), avg(orderqty)
+from saleshistory
+group by productid
+order by productid;
+
+drop index saleshistory_columnstore on saleshistory;
+```
+
+```
+Table 'saleshistory'. Scan count 16, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 12405, lob physical reads 4, lob page server reads 0, lob read-ahead reads 46383, lob page server read-ahead reads 0.
+Table 'saleshistory'. Segment reads 19, segment skipped 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+SQL Server Execution Times:
+  CPU time = 141 ms,  elapsed time = 42 ms.
+```
+
+![alt text](media/task2-image-2.png)
+![alt text](media/task2-image-3.png)
+
+**Obserwacje:**
+
+- plany zapytań wyglądają co do zasady identycznie, jedyną różnicą jest indeks, z którego korzysta operacja `Index Scan` (`Clustered Index Scan` vs. `Columnstore Index Scan`)
+- koszt zapytania korzystającego z indeksu kolumnowego jest około 20-krotnie niższy (~1.92 vs ~119.99)
+- przewagę indeksu kolumnowego obserwujemy także w czasach wykonania zapytań - `CPU time` spadło około 14-krotnie (1967ms do 141ms), podczas gdy `Elapsed time` spadło około 6-krotnie (260ms do 42ms)
+- ilość czytanych stron nie jest w pełni porównywalna, ponieważ w zależności od indeksu, dane przechowywane są w inny sposób - indeks klastrowany używa standardowych stron (`logical reads 158276`), podczas gdy indeks kolumnowy przechowuje dane jako skompresowane segmenty binarne (`LOB`), stąd zamiast `logical reads` pojawiają się `lob logical reads 12405` oraz `segment reads 19`. Oznacza to że SQL Server odczytał tylko 19 segmentów zawierających kolumny productid, unitprice i orderqty — pozostałe kolumny tabeli zostały całkowicie pominięte
+- columnstore nie potrzebował paralelizmu do osiągnięcia lepszych wyników niż row store z 9 równoległymi wątkami
+
+**Komentarz:**
+
+> _Co to są indeksy colums store? Jak działają?_
+
+Indeksy columnstore to typ indeksu zaprojektowany z myślą o zapytaniach analitycznych na dużych zbiorach danych. W przeciwieństwie do tradycyjnych indeksów, które przechowują dane wierszami, indeksy kolumnowe przechowują dane kolumnami w skompresowanych segmentach. Kluczowe cechy indeksów kolumnowych:
+
+- korzystając z indeksu kolumnowego, możemy czytać wyłącznie te kolumny których potrzebuje zapytanie, resztę całkowicie pomija
+- dane tej samej kolumny są do siebie podobne, co pozwala na znacznie lepszą kompresję niż w row store gdzie różne typy danych są przeplatane
+- dane przetwarzane są w partiach naraz zamiast wiersz po wierszu, co pozwala procesorowi wykorzystać wydaje operacje wektorowe do obliczania agregatów na wielu wartościach jednocześnie
+
+Z tego powodu indeksy kolumnowe są idealnym rozwiązaniem w momencie gdy potrzebujemy wykonywać wiele zapytań korzystających z funkcji agregujących (np. raporty analityczne korzystające z `sum(), avg(), count()`), natomiast będą gorszym wyborem w przypadku zapytań wykonujących punktowe wyszukiwanie oraz w przypadku tabel z częstymi modyfikacjami danych.
+
 # Zadanie 3 – własne eksperymenty
 
 Należy zaprojektować/zaimplementować tabelę w bazie danych, lub wybrać dowolny schemat/bazę/tabelę (poza używanymi na zajęciach), a następnie wypełnić ją danymi w taki sposób, przetestować/przeanalizować działanie indeksów różnego typu. Warto wygenerować sobie tabele o większym rozmiarze.
@@ -927,9 +1005,401 @@ Proszę przygotować zestaw zapytań do danych, które:
 
 > Wyniki:
 
+#### Przygotowanie tabeli oraz danych, podstawowa charakterystyka oraz wstępna analiza
+
+W celu analizy działania indeksów różnego typu, zdecydowaliśmy się pozostać przy silniku MSSQL, ale zaprojektować własną tabelę w bazie danych, która obrazuje całkiem realny scenariusz. W tabeli `sensorReadings` znajdują się dane dotyczące pomiarów 100 czujników, które zbierają dane odnośnie temperatury oraz wilgotności w pewnym zakładzie produkcyjnym. Wszystkie wiersze zawierają także informacje o czasie odczytu, poziomie baterii czujnika oraz statusie pomiaru (informacja o tym czy pomiar jest ok, czy też pomiar jest zły i raportowane jest ostrzeżenie/sytuacja krytyczna). Dokładna definicja tabeli wygląda następująco:
+
 ```sql
---  ...
+create table sensorReadings (
+    readingId UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL,
+    sensorId INT NOT NULL,
+    readingTime DATETIME NOT NULL,
+    temperature DECIMAL(5,2) NOT NULL,
+    humidity INT NOT NULL,
+    batteryLevel INT NOT NULL,
+    alertStatus VARCHAR(15) NOT NULL,
+    CONSTRAINT PK_SensorReadings PRIMARY KEY NONCLUSTERED (readingId)
+);
 ```
+
+W celu przeprowadzenia miarodajnych eksperymentów, wygenerowanych zostało 1,000,000 wierszy. Do wygenerowania danych wykorzystany został następujący kod:
+
+```sql
+;WITH
+L0 AS (SELECT c FROM (VALUES(1),(1),(1),(1),(1),(1),(1),(1),(1),(1)) AS Test(c)),  -- 10
+L1 AS (SELECT 1 AS c FROM L0 AS A CROSS JOIN L0 AS B),                             -- 100
+L2 AS (SELECT 1 AS c FROM L1 AS A CROSS JOIN L1 AS B),                             -- 10 000
+L3 AS (SELECT 1 AS c FROM L2 AS A CROSS JOIN L1 AS B),                             -- 1 000 000
+numbers AS (SELECT ROW_NUMBER() OVER(ORDER BY (SELECT NULL)) AS n FROM L3)
+
+INSERT INTO sensorReadings (sensorId, readingTime, temperature, humidity, batteryLevel, alertStatus)
+SELECT
+    (n % 100) + 1,
+    DATEADD(MINUTE, -(n / 100) * 30, GETDATE()),
+    CAST(20 + (ABS(CHECKSUM(NEWID())) % 6000) / 100.0 AS DECIMAL(5,2)),
+    30 + (ABS(CHECKSUM(NEWID())) % 61),
+    ABS(CHECKSUM(NEWID())) % 101,
+    CASE
+        WHEN ABS(CHECKSUM(NEWID())) % 100 < 95 THEN 'OK'
+        WHEN ABS(CHECKSUM(NEWID())) % 100 < 99 THEN 'WARNING'
+        ELSE 'CRITICAL'
+    END
+FROM numbers;
+```
+
+Powyższy sposób stanowi wydajną alternatywę dla generowania danych wiersz po wierszu w pętli `WHILE` - dzięki zastosowaniu `JOIN-ów`, wygenerowanie 1,000,000 wierszy danych wykonało się błyskawicznie. Krótka charakterystyka wygenerowanych danych:
+
+- `readingId (uniqueidentifier)` - ID odczytu, klucz główny tabeli `sensorReadings`
+- `sensorId (int)` - liczba całkowita 1-100, identyfikator sensora
+- `readingTime (datetime)` - czas odczytu, w wygenerowanych danych odczyty wykonywane są na wszystkich sensorach co 30 minut (co daje około 8 miesięcy historii)
+- `temperature (decimal)` - odczytana temperatura, liczba zmiennoprzecinkowana z zakresu 20-80 (°C)
+- `humidity (int)` - odczytana wilogotność powietrza, liczba całkowita z zakresu 30-90 (%)
+- `batteryLevel (int)` - stan baterii czujnika, liczba całkowita z zakresu 0-100 (%)
+- `alertStatus (varchar)` - informacja o tym, czy należy odczyt jest alarmujący - może przyjmować jedną z wartości: `OK` (wszystko w porządku), `WARNING` (ostrzeżenie) lub `CRITICAL` (krytyczna sytuacja). Około 95% rekordów to odczyty prawidłowe, ze statusem `OK`.
+
+Podstawowe statystki opisowe:
+
+```sql
+select
+    count(*)                        as total_rows,
+    count(distinct sensorId)        as unique_sensors,
+    min(readingTime)                as earliest,
+    max(readingTime)                as latest,
+    round(avg(temperature), 2)      as avg_temp,
+    min(temperature)                as min_temp,
+    max(temperature)                as max_temp,
+    round(avg(cast(humidity as float)), 2) as avg_humidity,
+    round(avg(cast(batteryLevel as float)), 2) as avg_battery
+from sensorReadings;
+```
+
+![alt text](media/task3-image-20.png)
+
+Rozkład wartości w kolumnie `alertStatus`:
+
+```sql
+select
+    alertStatus,
+    count(*) as cnt
+from sensorReadings
+group by alertStatus
+order by cnt desc;
+```
+
+![alt text](media/task3-image-21.png)
+
+Rozmiar danych w tabeli `sensorReadings`:
+
+```sql
+select
+    row_count,
+    (reserved_page_count * 8) / 1024.0 as reserved_mb,
+    (used_page_count * 8) / 1024.0 as used_mb
+from sys.dm_db_partition_stats
+where object_id = object_id('sensorReadings')
+  and index_id in (0, 1);
+```
+
+![alt text](media/task3-image-22.png)
+
+### Eksperymenty
+
+#### Zapytanie o wszystkie odczyty w zadanym oknie czasu - indeks klastrowany vs indeks nieklastrowany vs brak indeksu
+
+Zapytanie dotyczy okresu od `01.04.2026 - 30.04.2026` i zwraca:
+
+- id sensora
+- czas odczytu
+- odczytaną temperaturę
+- odczytaną wilgotność
+
+```sql
+-- 1. brak indeksu
+SELECT sensorId, readingTime, temperature, humidity
+FROM sensorReadings
+WHERE readingTime >= '2026-04-01' AND readingTime < '2026-04-30';
+
+-- 2. indeks nieklastrowany
+CREATE INDEX ix_readingTime
+ON sensorReadings(readingTime);
+
+SELECT sensorId, readingTime, temperature, humidity
+FROM sensorReadings
+WHERE readingTime >= '2026-04-01' AND readingTime < '2026-04-30';
+
+-- 3. wymuszenie użycia indeksu nieklastrowanego (bez INCLUDE)
+
+SELECT sensorId, readingTime, temperature, humidity
+FROM sensorReadings WITH (INDEX(ix_readingTime))
+WHERE readingTime >= '2026-04-01' AND readingTime < '2026-04-30';
+
+-- 4. indeks nieklastrowany + INCLUDE
+DROP INDEX ix_readingTime ON sensorReadings;
+
+CREATE INDEX ix_readingTime_incl
+ON sensorReadings(readingTime)
+INCLUDE(sensorId, temperature, humidity);
+
+SELECT sensorId, readingTime, temperature, humidity
+FROM sensorReadings
+WHERE readingTime >= '2026-04-01' AND readingTime < '2026-04-30';
+
+-- 5. indeks klastrowany
+DROP INDEX ix_readingTime_incl ON sensorReadings;
+
+CREATE CLUSTERED INDEX cx_readingTime
+ON sensorReadings(readingTime);
+
+SELECT sensorId, readingTime, temperature, humidity
+FROM sensorReadings
+WHERE readingTime >= '2026-04-01' AND readingTime < '2026-04-30';
+```
+
+**Wyniki:**
+
+- zapytanie bez indeksu:
+
+```
+Table 'sensorReadings'. Scan count 9, logical reads 6973, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+![alt text](media/task3-image-23.png)
+
+- zapytanie z indeksem nieklastrowanym:
+
+```
+Table 'sensorReadings'. Scan count 9, logical reads 6973, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+![alt text](media/task3-image-24.png)
+![alt text](media/task3-image-25.png)
+
+- zapytanie z wymuszonym użyciem indeksu nieklastrowanego (bez `INCLUDE`):
+
+```
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'sensorReadings'. Scan count 9, logical reads 426769, physical reads 0, page server reads 0, read-ahead reads 6, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+![alt text](media/task3-image-30.png)
+![alt text](media/task3-image-31.png)
+
+- zapytanie z indeksem nieklastrowanym + `INCLUDE`:
+
+```
+Table 'sensorReadings'. Scan count 1, logical reads 610, physical reads 0, page server reads 0, read-ahead reads 5, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+![alt text](media/task3-image-26.png)
+![alt text](media/task3-image-27.png)
+
+- zapytanie z indeksem klastrowanym:
+
+```
+Table 'sensorReadings'. Scan count 1, logical reads 1080, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+![alt text](media/task3-image-28.png)
+![alt text](media/task3-image-29.png)
+
+**Obserwacje:**
+
+- ze względu na szeroki zakres dat oraz wiele rekordów w zadanym zakresie (139200 rekordów), w przypadku indeksu nieklastrowanego bez klauzuli `INCLUDE` optymalizator stwierdził, że szybciej będzie wykonać pełne skanowanie tabeli, niż skorzystać z indeksu, a następnie dla każdego identyfikatora wykonywać `Key Lookup` - w związku z tym zapytanie `2.` jest redukowane do zapytania `1.`, a ich koszt oraz ilość odczytywanych stron są praktycznie identyczne (odpowiednio ~5.85 oraz 6973). Potwierdzenie tej tezy znajdujemy w zapytaniu `3.`, gdzie po wymuszeniu użycia indeksu nieklastrowanego (bez `include`) koszt zapytania rośnie do ~46.74, a ilość odczytywanych stron do 426769 (co pokazuje, że nie zawsze warto korzystać z indeksu), co wynika z konieczności wielokrotnego wykonywania operacji `Key Lookup`
+- zdecydowanie najbardziej wydajne jest zapytanie `4.`, które wykorzystuje indeks nieklastrowany z klauzulą `include(sensorId, temperature, humidity);` (tzn. że dane te uwzględnione są w liściach indeksu i nie ma konieczności wykonywania `Key Lookup`, jeśli potrzebujemy tylko tych kolumn) - koszt dla tego zapytania jest prawie 10-krotnie niższy w porównaniu do skanowania całej tabeli, a ilość czytanych stron wynosi jedynie 610
+- choć zapytanie z indeksem klastrowanym (zapytanie `5.`) jest nieznacznie mniej wydajne niż zapytanie `4.`, to nadal prezentuje bardzo dobre i obiecujące wyniki - charakteryzuje się około 6-krotnie niższym kosztem zapytania oraz około 7-krotnie mniejszą liczbą odczytywanych stron w porównaniu do pełnego skanowania tabeli.
+
+#### Zapytanie o wszystkie odczyty ze statusem krytycznym
+
+Zapytanie dotyczy wszystkich odczytów `alertStatus = 'CRITICAL'` i zwraca:
+
+- id sensora
+- czas odczytu
+- odczytaną temperaturę
+- odczytaną wilgotność
+- status ostrzeżenia
+
+**Zapytanie:**
+
+```sql
+-- filtered index tylko na ostrzezenia i krytyczne alerty
+CREATE INDEX ix_alerts_filtered
+ON sensorReadings(alertStatus, sensorId, readingTime, temperature, humidity)
+WHERE alertStatus IN ('WARNING', 'CRITICAL');
+
+-- zapytanie o CRITICAL z indeksem filtrowanym
+SELECT sensorId, readingTime, alertStatus, temperature, humidity
+FROM sensorReadings
+WHERE alertStatus = 'CRITICAL'
+
+-- zapytanie o OK z indeksem filtrowanym
+SELECT sensorId, readingTime, alertStatus, temperature, humidity
+FROM sensorReadings
+WHERE alertStatus = 'OK';
+
+-- zapytanie o CRITICAL bez indeksu filtrowanego
+
+SELECT sensorId, readingTime, alertStatus, temperature, humidity
+FROM sensorReadings WITH (INDEX(0))
+WHERE alertStatus = 'CRITICAL'
+```
+
+Dodatkowo, w celu porównania rozmiaru indeksu filtrowanego względem indeksu założonego na wszystkie statusy wykorzystane zostało zapytanie:
+
+```sql
+CREATE INDEX ix_alerts_full
+ON sensorReadings(alertStatus, sensorId, readingTime);
+
+SELECT
+    i.name,
+    i.type_desc,
+    i.filter_definition,
+    ips.page_count,
+    ips.record_count
+FROM sys.indexes i
+CROSS APPLY sys.dm_db_index_physical_stats(
+    DB_ID(), i.object_id, i.index_id, null, 'sampled'
+) ips
+WHERE i.object_id = OBJECT_ID('sensorReadings')
+  AND i.name IS NOT NULL
+ORDER BY ips.page_count DESC;
+```
+
+**Wyniki:**
+
+- zapytanie o status `CRITICAL` z indeksem filtrowanym:
+
+```
+Table 'sensorReadings'. Scan count 1, logical reads 6, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+![alt text](media/task3-image-32.png)
+![alt text](media/task3-image-33.png)
+
+- zapytanie o status `OK` z indeksem filtrowanym:
+
+```
+Table 'sensorReadings'. Scan count 1, logical reads 7709, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+![alt text](media/task3-image-34.png)
+![alt text](media/task3-image-35.png)
+
+- zapytanie o status `CRITICAL` bez indeksu filtrowanego:
+
+```
+Table 'sensorReadings'. Scan count 9, logical reads 7709, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+![alt text](media/task3-image-36.png)
+![alt text](media/task3-image-37.png)
+
+- porównanie rozmiarów poszczególnych indeksów:
+
+![alt text](media/task3-image-38.png)
+
+**Obserwacje:**
+
+- zapytanie o status `CRITICAL` korzysta z indeksu filtrowanego, ze względu na fakt, że wszystkie potrzebne atrybuty są zawarte w indeksie klauzulą nie ma konieczności wykonywania dodatkowych operacji `Key Lookup`. Ze względu na wykorzystanie indeksu zapytanie to jest bardzo wydajne - koszt zapytania to ~0.0038, a liczba czytanych stron wynosi 6.
+- zapytanie o status `OK` nie korzysta z obecnego w bazie indeksu, ponieważ status `OK` celowo nie został uwzględniony w indeksie filtrowanym. W związku z tym zapytanie `2.` nie korzysta z indeksu, wykonuje pełne skanowanie tabeli, koszt zapytania wynosi ~6.81, a liczba czytanych stron wynosi 7709.
+- w celu porównania wydajności na tym samym zapytaniu, wykonujemy zapytanie `3.`, które daje takie same rezultaty jak zapytanie `1.`, ale nie korzysta z indeksu (został on ręcznie wyłączony) - koszt tego zapytania jest bardzo zbliżony do zapytania `2.` - charakteryzuje sie ono około 2000 razy większym kosztem oraz wymaga przeczytania aż 7709 stron.
+- rozmiar indeksu filtrowanego (założonego jedynie na statusy `WARNING` i `CRITICAL`) jest około 20-krotnie mniejszy niż indeks założony na wszystkie statusy, co stanowi istotną zaletę indeksu filtrowanego. Dzięki temu nadaje się on idealnie do sytuacji, w których musimy śledzić pewne sytuacje, które występują stosunkowo rzadko, ale są dla nas kluczowe z perspektywy biznesowej (często nie interesują nas wszystkie "standardowe" odczyty (u nas: status `OK`), a raczej skupiamy się na tych, które są krytyczne (u nas: status `WARNING/CRITICAL` - np. pewna awaria)). Dzięki wykorzystaniu indeksu filtrowanego możemy zaoszczędzić dużo zasobów.
+
+#### Zapytanie o zagregowane statystki odnośnie temperatury, wilgotności, stanu baterii i statusu z odczytu
+
+**Zapytanie:**
+
+```sql
+-- bez indeksu
+SELECT
+    sensorId,
+    AVG(temperature)                 as avg_temp,
+    MAX(temperature)                 as max_temp,
+    MIN(temperature)                 as min_temp,
+    AVG(CAST(humidity as float))     as avg_humidity,
+    AVG(CAST(batteryLevel as float)) as avg_battery,
+    COUNT(*)                         as total_readings,
+    SUM(CASE WHEN alertStatus != 'OK' THEN 1 ELSE 0 END) as alert_count
+FROM sensorReadings
+GROUP BY sensorId
+ORDER BY sensorId;
+
+-- columnstore index
+CREATE NONCLUSTERED COLUMNSTORE INDEX csx_analytics
+ON sensorReadings(temperature, humidity, batteryLevel, sensorId, alertStatus);
+
+SELECT
+    sensorId,
+    AVG(temperature)                 as avg_temp,
+    MAX(temperature)                 as max_temp,
+    MIN(temperature)                 as min_temp,
+    AVG(CAST(humidity as float))     as avg_humidity,
+    AVG(CAST(batteryLevel as float)) as avg_battery,
+    COUNT(*)                         as total_readings,
+    SUM(CASE WHEN alertStatus != 'OK' THEN 1 ELSE 0 END) as alert_count
+FROM sensorReadings
+GROUP BY sensorId
+ORDER BY sensorId;
+
+DROP INDEX csx_analytics ON sensorReadings;
+
+-- standardowy nonclustered
+
+CREATE INDEX ix_analytics_incl
+ON sensorReadings(sensorId)
+INCLUDE(temperature, humidity, batteryLevel, alertStatus);
+
+SELECT
+    sensorId,
+    AVG(temperature)                 as avg_temp,
+    MAX(temperature)                 as max_temp,
+    MIN(temperature)                 as min_temp,
+    AVG(CAST(humidity as float))     as avg_humidity,
+    AVG(CAST(batteryLevel as float)) as avg_battery,
+    COUNT(*)                         as total_readings,
+    SUM(CASE WHEN alertStatus != 'OK' THEN 1 ELSE 0 END) as alert_count
+FROM sensorReadings
+GROUP BY sensorId
+ORDER BY sensorId;
+
+DROP INDEX ix_analytics_incl ON sensorReadings;
+```
+
+**Rezultaty:**
+
+- zapytanie bez indeksu:
+
+```
+Table 'sensorReadings'. Scan count 9, logical reads 7709, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+![alt text](media/task3-image-39.png)
+![alt text](media/task3-image-40.png)
+
+- zapytanie z indeksem kolumnowym:
+
+```
+Table 'sensorReadings'. Scan count 2, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 1986, lob physical reads 1, lob page server reads 0, lob read-ahead reads 6487, lob page server read-ahead reads 0.
+Table 'sensorReadings'. Segment reads 1, segment skipped 0.
+```
+
+![alt text](media/task3-image-41.png)
+![alt text](media/task3-image-42.png)
+
+- zapytanie z indeksem nieklastrowanym uwzględniającym wszystkie konieczne kolumny:
+
+```
+Table 'sensorReadings'. Scan count 9, logical reads 4696, physical reads 0, page server reads 0, read-ahead reads 35, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+```
+
+![alt text](media/task3-image-43.png)
+![alt text](media/task3-image-44.png)
+
+**Obserwacje:**
+
+- zapytanie z indeksem kolumnowym (`2.`) poradziło sobie najlepiej - koszt tego zapytania to jedynie ~0.69 (w porównaniu do ~6.15 oraz ~3.93 dla odpowiednio zapytań `1.` (bez indeksu) oraz `3.` (z indeksem nieklastrowanym uwzględniającym wszystkie niezbędne kolumny))
+- indeks kolumnowy charakteryzuje się innym sposobem przechowywania danych, w związku z czym dla zapytania `2.` raportujemy 1986 operacji `lob logical read` oraz 0 operacji `logical read` - `lob logical read` to odczyty "stron LOB" (LOB - typ danych przeznaczony do przechowywania dużych, nieustrukturyzowanych wolumenów danych), na których znajdują się skompresowane dane z oryginalnej tabeli. Liczby te nie są bezpośrednio porównywalne.
+- zapytanie `1.` (bez indeksu) wykonuje operację `Table Scan` (czyta całą tabelę), buduje tymczasową tablicę hashową do agregacji (`Hash Match`) oraz wykorzystuje `Parallelizm` (9 wątków); zapytanie `2.` nie korzysta z paralalizmu - optymalizator stwierdził, że jeden wątek jest wystarczający, korzysta z operacji `Columnstore Index Scan`; zapytanie `3.` korzysta z `Index Scan` zamiast `Table Scan` (ale nadal skanuje cały indeks), a dzięki temu, że dane z indeksu są posortowane po `sensorId` wykorzystywane jest `Stream Aggregate` zamiast `Hash Match` - dzięki temu nie ma konieczności budowania nowej struktury dla celów agregacji. Zapytanie `3.` również korzysta z paralelizmu.
+- powyższe wyniki idealnie obrazują, że indeks kolumnowy idealnie nadaje się dla danych, dla których będziemy często wykonywać tego typu analityczne zapytania, w których konieczne jest agregowanie dużych wolumentów danych - dzięki kompresji oraz odpowiedniemu uporządkowaniu danych indeks kolumnowy pozwala na znaczne przyspieszenie zapytań tego typu.
 
 |         |                                                                          |     |
 | ------- | ------------------------------------------------------------------------ | --- |
