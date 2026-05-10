@@ -1,3 +1,15 @@
+use master
+go
+
+if not exists (select * from sys.databases where name = 'northwind')
+begin
+    create database northwind;
+end
+go
+
+use northwind
+go
+
 
 create table region
 (

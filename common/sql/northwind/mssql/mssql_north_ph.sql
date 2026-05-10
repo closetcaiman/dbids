@@ -1,3 +1,6 @@
+use northwind
+go
+
 create table product_history(
    id int identity(1,1) not null,
    productid int,

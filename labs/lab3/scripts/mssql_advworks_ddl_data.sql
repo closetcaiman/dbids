@@ -1,13 +1,13 @@
 USE master;
 GO
 
-IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'adventureworksStripped')
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'adventureworks')
 BEGIN
-    CREATE DATABASE adventureworksStripped;
+    CREATE DATABASE adventureworks;
 END
 GO
 
-USE adventureworksStripped;
+USE adventureworks;
 GO
 
 DROP TABLE IF EXISTS salesorderheader;

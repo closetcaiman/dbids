@@ -9,9 +9,10 @@ services:
       - "1433:1433"
     volumes:
       - mssql_data:/var/opt/mssql
-      - ./common/sql/adventure-works/:/data/sql
+      - ./common/sql/adventure-works/mssql_restore_db.sql:/data/sql/mssql_restore_db.sql
       - ./common/backups/:/data/backups
       - ./labs/lab3/scripts/setup-mssql.sh:/data/setup-mssql.sh
+      - ./labs/lab3/scripts/mssql_advworks_ddl_data.sql:/data/sql/mssql_advworks_ddl_data.sql
     entrypoint: /bin/bash /data/setup-mssql.sh
 volumes:
   mssql_data:
