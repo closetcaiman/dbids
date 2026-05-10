@@ -15,6 +15,7 @@
 ---
 
 **Imiona i nazwiska:** Marek Małek, Mateusz Lampert
+**Grupa:** 4, piątek 15:00-16:30
 
 ---
 
@@ -97,6 +98,10 @@ select count(*) from product_history
 
 ![Liczba wierszy tabeli `product_history`](./media/ex1-1.png)
 
+```{=typst}
+#pagebreak()
+```
+
 Sprawdź jakie indeksy istnieją dla tej tabeli
 
 ```sql
@@ -157,6 +162,10 @@ select count(*) from product_history
 where id between 999000 and 10000000
 ```
 
+```{=typst}
+#pagebreak()
+```
+
 #### Wyniki
 
 ```sql
@@ -170,11 +179,11 @@ where id = 1000000
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1a-2.png)
+![alt text](media/ex1a-2.png){height=200px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1a-3.png)
+![alt text](media/ex1a-3.png){height=350px}
 
 Komentarz:
 
@@ -183,6 +192,10 @@ Komentarz:
 - skanów tabeli było 17 (przez parallelism, 1 na wątek)
 - `mssql` zasygnalizowal brak indeksu na kolumnie `id` z dużym `Impact` (~99.9%)
 - "gruba strzałka" na planie wskazuje, że skanowanie tabeli jest najbardziej kosztowną operacją w planie zapytania
+
+```{=typst}
+#pagebreak()
+```
 
 ```sql
 select count(*) from product_history
@@ -195,11 +208,11 @@ where id between 999000 and 10000000
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1a-5.png)
+![alt text](media/ex1a-5.png){height=200px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1a-6.png)
+![alt text](media/ex1a-6.png){height=350px}
 
 Komentarz:
 
@@ -232,15 +245,19 @@ where id = 1000000
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1b-2.png)
+![alt text](media/ex1b-2.png){height=200px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1b-3.png)
+![alt text](media/ex1b-3.png){height=350px}
 
 Komentarz:
 
 - wnioski są podobne do pierwszego zapytania z podpunktu a), z tą różnicą, że w planie zapytnia nie ma operatora `Stream Aggregate` i `Compute Scalar`, co jest związane z tym, że zapytanie zwraca wszystkie kolumny, a nie tylko ich liczbę
+
+```{=typst}
+#pagebreak()
+```
 
 ```sql
 select * from product_history
@@ -249,15 +266,15 @@ where id between 999000 and 10000000
 
 - wynik zapytania:
 
-![alt text](media/ex1b-4.png)
+![alt text](media/ex1b-4.png){height=200px}
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1b-5.png)
+![alt text](media/ex1b-5.png){height=200px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1b-6.png)
+![alt text](media/ex1b-6.png){height=350px}
 
 Komentarz:
 
@@ -293,11 +310,11 @@ po zakończeniu pozostaw indeks klastrowy
 
 - plan zapytania i koszt:
 
-  ![alt text](media/ex1c-a1-1.png)
+  ![alt text](media/ex1c-a1-1.png){height=200px}
 
 - czas i liczba odczytywanych stron:
 
-  ![alt text](media/ex1c-a1-2.png)
+  ![alt text](media/ex1c-a1-2.png){height=300px}
 
 Komentarz:
 
@@ -305,19 +322,27 @@ Komentarz:
 - liczba czytanych stron drastycznie spadła z ~25000 do 3, podobnie skanów z 17 do 1. (co też jest związane z brakiem paralelizmu)
 - w planie wykonywany jest `Index Seek`, który błyskawicznie znajduje pożądany rekord
 
+```{=typst}
+#pagebreak()
+```
+
 ###### Indeks nieklastrowy
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1c-a1-3.png)
+![alt text](media/ex1c-a1-3.png){height=300px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1c-a1-4.png)
+![alt text](media/ex1c-a1-4.png){height=350px}
 
 Komentarz:
 
 - rezultaty są praktycznie takie same jak przy indeksie klastrowym, prawdopodobnie przez to, że agregacja `count()` nie potrzebuje odczytywać dodatkowych kolumn, a tylko istnienie rekordu, więc indeks nieklastrowy jest wystarczający do szybkiego znalezienia rekordu
+
+```{=typst}
+#pagebreak()
+```
 
 ##### a2)
 
@@ -336,6 +361,10 @@ Komentarz:
 - liczba czytanych stron również spadła ale do 14802, co jest spowodowane, że te 1 mln rekordów musiało zostać przeczytanych, jednak mimo to warto zwrócić uwagę, że teraz liczba czytanych stron jest proporcjonalna do zwracanego zakresu
 - czas spadł nieznacznie o 3ms
 
+```{=typst}
+#pagebreak()
+```
+
 ###### Indeks nieklastrowy
 
 - plan zapytania i koszt:
@@ -344,12 +373,16 @@ Komentarz:
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1c-a2-4.png)
+![alt text](media/ex1c-a2-4.png){height=350px}
 
 Komentarz
 
 - w przypadku indeksu nieklastrowego liczba odczytywanych stron została zredukowana jeszcze bardziej, co jest związane z tym, że indeks klastrowy jest mniejszą strukturą danych (ma tylko pointery do danych), zmniejszyło to liczbę odczytywanych stron do 2938
 - `elapsed time` jest większy, co prawdopodbnie jest związane z brakiem paralelizmu (czasy CPU są praktycznie identyczne), prawdopodobnie optimizer nie włączył paralelizmu przez małą liczbę stron do odczytania, można też sprawdzić parametr `Degree of Parallelism` = 1, a `mssql` włącza paralelism, jeśli jest wynosi on co najmniej 5 by default (properties serwera -> Advanced -> Cost Threshold for Parallelism).
+
+```{=typst}
+#pagebreak()
+```
 
 ##### b1)
 
@@ -369,6 +402,10 @@ Komentarz:
 - liczba czytanych stron spadła z ~25000 do 3, podobnie skanów z 17 do 1. (co też jest związane z brakim paralelizmu)
 - w planie wykonywany jest `Index Seek`, który błyskawnie znajduje pożądany rekord
 
+```{=typst}
+#pagebreak()
+```
+
 ###### Indeks nieklastrowy
 
 - plan zapytania i koszt:
@@ -377,13 +414,17 @@ Komentarz:
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1c-b1-4.png)
+![alt text](media/ex1c-b1-4.png){height=350px}
 
 Komentarz:
 
 - czas jest praktycznie zerowy (0ms)
 - warto zwrócić uwagę na różnice w planach, z uwagi na strukturę indeksu nieklastrtowego, `mssql` dodał krok `RID Lookup` (RID, bo tabela nie ma indeksu klastrowego, więc jest Heapem), który musi odczytać dane z tablei, a następnie wykonuje inner join z indeksem, aby zwrócić pełny rekord
 - liczba czytanych stron jest większa o 1 niż w przypadku indeksu klastrowego (3 vs 4)
+
+```{=typst}
+#pagebreak()
+```
 
 ##### b2)
 
@@ -403,6 +444,10 @@ Komentarz:
 - czas (elapsed time) nie zmienił się drastycznie (CPU time = 615 ms, elapsed time = 4390 ms.), co może być spowodowanie bottleneckiem `SSMS` (przetworzenie i prezentacja ~1 mln pełnych rekordów), ale czas CPU spadł drastycznie z 6480ms do 615ms, co jest związane z tym, że teraz `mssql` nie musi skanować całej tabeli, a może od razu znaleźć pożądany rekord i zwrócić zakres do końca
 - nie ma tu też paralelizmu
 
+```{=typst}
+#pagebreak()
+```
+
 ###### Indeks nieklastrowy
 
 - plan zapytania i koszt:
@@ -418,6 +463,10 @@ Komentarz:
 - w tym wypadku liczba czytanych stron zwiększyła się do 25841 (z 25266) w porównaniu do zapytania bez indeksu
 - `mssql` zalecił dodanie indeksu klastrowego, tak samo jak w przypadku zapytania bez indeksu
 - co najważniejsze sam indeks nieklastrowy został zignorowany, co jest związane z tym, że zapytanie zwraca duży zakres danych, więc dodanie kroków `Index Seek` + `RID Lookup` dla każdego rekordu byłoby bardzo kosztowne (tzw. Tipping Point), więc `mssql` zdecydował się na skanowanie całej tabeli, co jest szybsze w tym przypadku
+
+```{=typst}
+#pagebreak()
+```
 
 ### d)
 
@@ -460,6 +509,10 @@ podczas analiz sprawdzaj jak zachowują się zapytania, zwróć uwagę na
 
 spróbuj skomentować wyniki tych analiz, dlaczego tak się dzieje
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 select id, productid, productname, date
 from product_history
@@ -472,13 +525,17 @@ where date >= '2001-01-01' and date <= '2001-01-31'
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1d-2.png)
+![alt text](media/ex1d-2.png){height=350px}
 
 Komentarz:
 
 - elapsed time jest niski (6ms), liczba odczytanych stron to 7327, nie ma paralelizmu.
 - samo zapytanie wykonuje `Index Seek`, aby znaleźć dane z zakresu, ale musi zrobić `Key Lookup` (bez RID, bo tabela ma już indeks klastrowy po kolumnie `id`), aby odczytać pełne rekordy i później `Inner Join`.
 - `mssql` zasygnalizował aby stworzyć index na `date` z włączeniem kolumn `productid` i `productname` (z `Impact` ~53%), aby wyeliminować `Key Lookup`
+
+```{=typst}
+#pagebreak()
+```
 
 ```sql
 select id, productid, productname, date
@@ -492,12 +549,16 @@ where year(date) = 2001 and month(date) = 1
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1d-4.png)
+![alt text](media/ex1d-4.png){height=350px}
 
 Komentarz:
 
 - o wiele większa liczba odczytywanych stron 26081, 17 skanów (+ paralelizm), czas również większy (CPU time = 364 ms, elapsed time = 31 ms)
 - użycie funkcji `year()` i `month()` na kolumnie `date` sprawia, że indeks nie może być użyty, więc `mssql` musi przeskanować całą tabelę, aby znaleźć pasujące rekordy, jest to tzw. Non-SARGable query
+
+```{=typst}
+#pagebreak()
+```
 
 ```sql
 select id, productid, productname, date
@@ -520,6 +581,10 @@ Komentarz:
 - w planie zapytania widać, że `mssql` zdecydował się na skanowanie indeksu zamiast `Index Seek`, prawdopodobnie został przekroczony tzw. Tipping Point
 - dodatkowo `mssql` zasygnalizował, że dla tego zapytania warto byłoby stworzyć indeks na `date` z włączeniem kolumn `productid` i `productname` (z `Impact` ~82%)
 
+```{=typst}
+#pagebreak()
+```
+
 ```sql
 select id, productid, productname, date
 from product_history
@@ -539,6 +604,10 @@ Komentarz:
 - liczba stron jest taka sama jak w poprzednim zapytaniu 26081, ale czas jest większy (CPU time = 368 ms, elapsed time = 38 ms), bo też procesor musiał wykonać funkcję `year()` dla każdego rekordu
 - podobnie jak w poprzednim zapytaniu z funkcjami `year()` i `month()` indeks nie może być użyty, więc `mssql` musi przeskanować całą tabelę (`Clustered Index Scan`)
 - w tym wypadku `mssql` nie zasugerował założenie indeksu z włączeniem kolumn
+
+```{=typst}
+#pagebreak()
+```
 
 ### e)
 
@@ -566,11 +635,15 @@ where date >= '2001-01-01' and date <= '2001-01-31'
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1e-2.png)
+![alt text](media/ex1e-2.png){height=350px}
 
 Komentarz:
 
 - czas spadł (CPU time = 0 ms, elapsed time = 1 ms), liczba odczytanych stron spadła do 16, a w planie zapytania widać, że `mssql` używa teraz `Index Seek` bezpośrednio na indeksie z włączeniem kolumn, więc nie ma potrzeby wykonywania `Key Lookup`, co znacząco poprawia wydajność
+
+```{=typst}
+#pagebreak()
+```
 
 ```sql
 select id, productid, productname, date
@@ -584,7 +657,7 @@ where year(date) = 2001 and month(date) = 1
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1e-4.png)
+![alt text](media/ex1e-4.png){height=350px}
 
 Komentarz:
 
@@ -600,6 +673,10 @@ Komentarz:
 ```
 
 - czasy są bardzo podobne (CPU time = 339 ms, elapsed time = 34 ms. vs CPU time = 364 ms, elapsed time = 31 ms), co jest związane z tym, że zapytanie nadal jest Non-SARGable, więc `mssql` musi przeskanować cały indeks i wykonać funkcję `year()` i `month()` dla każdego rekordu
+
+```{=typst}
+#pagebreak()
+```
 
 ```sql
 select id, productid, productname, date
@@ -661,11 +738,11 @@ where categoryid = 8
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1f-1.png)
+![alt text](media/ex1f-1.png){height=350px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1f-2.png)
+![alt text](media/ex1f-2.png){height=280px}
 
 Komentarz:
 
@@ -686,7 +763,7 @@ where p.categoryid = 8
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1f-4.png)
+![alt text](media/ex1f-4.png){height=350px}
 
 Komentarz:
 
@@ -694,6 +771,10 @@ Komentarz:
 - widać też pogrubioną strzałkę z `Clustered Index Scan` do `Nested Loops`, co oznacza, że jest najbardziej kosztowna ścieżka w planie zapytania
 - liczba odczytywanych wzrosła do 25891, a czas wyniósł CPU time = 370 ms, elapsed time = 622 ms. (brak paralelizmu - mniejsze cpu time, ale nieoptymalne zapytanie zwiękzyło czas)
 - `mssql` zasygnalizował, że dla tego zapytania można dodać indeks nieklastrowy na `categoryid` z włączeniem kolumn `productid`, `productname`, `date` (z `Impact` ~92%)
+
+```{=typst}
+#pagebreak()
+```
 
 ### dodatkowo
 
@@ -733,6 +814,10 @@ Na przykładzie indeksu nieklastrowego:
 Komentarz:
 
 - po metadanych indeksu z włączeniem kolumn można zauważyć, że liczba na poziomie 0 (leaf) jest znacznie większa niż w przypadku indeksu bez włączenia kolumn (11264 vs 3724), co jest związane z tym, że teraz indeks z włączeniem kolumn ma więcej danych do przechowywania (nie tylko klucz, ale też dodatkowe kolumny)
+
+```{=typst}
+#pagebreak()
+```
 
 Możemy jeszcze porównać indeksy z zadania a) dla kolumny `id`:
 
@@ -777,6 +862,10 @@ Komentarz:
 
 - w pierwszym zapytaniu, po wyczyszczeniu buforów, `mssql` musiał odczytać dane z dysku, ale widząc, że zapytanie może potrzebować więcej danych z tej tabeli, `mssql` wykonał read-ahead, aby załadować kolejne strony do bufora, co jest widoczne w statystykach jako `read-ahead reads 25968`
 - w drugim zapytaniu, dane są już w buforze, więc nie ma potrzeby odczytywać z dysku, więc `physical reads` wynosi 0, a `logical reads` jest taka sama jak w pierwszym zapytaniu, bo teraz dane są odczytywane z bufora, a nie z dysku
+
+```{=typst}
+#pagebreak()
+```
 
 # Zadanie 2
 
@@ -868,6 +957,10 @@ SET STATISTICS IO ON
 SET STATISTICS TIME ON;
 ```
 
+```{=typst}
+#pagebreak()
+```
+
 Sprawdź jak zachowa się zapytanie
 
 - sprawdź plan
@@ -897,12 +990,18 @@ UWAGA: ciekawsze efekty możesz zaobserwować dla jeszcze większych tabel (jeś
 **Rezultaty:**
 
 Liczba wierszy w tabeli:
+
 ![alt text](media/task2-image-5.png)
 
 Istniejące indeksy:
+
 ![alt text](media/task2-image-4.png)
 
 Jak widać na załączonym obrazku, w tabeli został automatycznie stworzy indeks klastrowany dla klucza głównego `id` - indeks ten nie zawiera żadnych innych kolumn.
+
+```{=typst}
+#pagebreak()
+```
 
 - zapytanie bez indeksu kolumnowego (istnieje wyłącznie domyślny indeks na kluczu głównym):
 
@@ -924,6 +1023,10 @@ SQL Server Execution Times:
 
 ![alt text](media/task2-image.png)
 ![alt text](media/task2-image-1.png)
+
+```{=typst}
+#pagebreak()
+```
 
 - zapytanie z indeksem kolumnowym na `saleshistory(unitprice, orderqty, productid)`:
 
@@ -971,6 +1074,10 @@ Indeksy columnstore to typ indeksu zaprojektowany z myślą o zapytaniach analit
 - dane przetwarzane są w partiach naraz zamiast wiersz po wierszu, co pozwala procesorowi wykorzystać wydaje operacje wektorowe do obliczania agregatów na wielu wartościach jednocześnie
 
 Z tego powodu indeksy kolumnowe są idealnym rozwiązaniem w momencie gdy potrzebujemy wykonywać wiele zapytań korzystających z funkcji agregujących (np. raporty analityczne korzystające z `sum(), avg(), count()`), natomiast będą gorszym wyborem w przypadku zapytań wykonujących punktowe wyszukiwanie oraz w przypadku tabel z częstymi modyfikacjami danych.
+
+```{=typst}
+#pagebreak()
+```
 
 # Zadanie 3 – własne eksperymenty
 
@@ -1088,6 +1195,10 @@ order by cnt desc;
 
 ![alt text](media/task3-image-21.png)
 
+```{=typst}
+#pagebreak()
+```
+
 Rozmiar danych w tabeli `sensorReadings`:
 
 ```sql
@@ -1155,6 +1266,10 @@ FROM sensorReadings
 WHERE readingTime >= '2026-04-01' AND readingTime < '2026-04-30';
 ```
 
+```{=typst}
+#pagebreak()
+```
+
 **Wyniki:**
 
 - zapytanie bez indeksu:
@@ -1184,6 +1299,10 @@ Table 'sensorReadings'. Scan count 9, logical reads 426769, physical reads 0, pa
 ![alt text](media/task3-image-30.png)
 ![alt text](media/task3-image-31.png)
 
+```{=typst}
+#pagebreak()
+```
+
 - zapytanie z indeksem nieklastrowanym + `INCLUDE`:
 
 ```
@@ -1207,6 +1326,10 @@ Table 'sensorReadings'. Scan count 1, logical reads 1080, physical reads 0, page
 - ze względu na szeroki zakres dat oraz wiele rekordów w zadanym zakresie (139200 rekordów), w przypadku indeksu nieklastrowanego bez klauzuli `INCLUDE` optymalizator stwierdził, że szybciej będzie wykonać pełne skanowanie tabeli, niż skorzystać z indeksu, a następnie dla każdego identyfikatora wykonywać `Key Lookup` - w związku z tym zapytanie `2.` jest redukowane do zapytania `1.`, a ich koszt oraz ilość odczytywanych stron są praktycznie identyczne (odpowiednio ~5.85 oraz 6973). Potwierdzenie tej tezy znajdujemy w zapytaniu `3.`, gdzie po wymuszeniu użycia indeksu nieklastrowanego (bez `include`) koszt zapytania rośnie do ~46.74, a ilość odczytywanych stron do 426769 (co pokazuje, że nie zawsze warto korzystać z indeksu), co wynika z konieczności wielokrotnego wykonywania operacji `Key Lookup`
 - zdecydowanie najbardziej wydajne jest zapytanie `4.`, które wykorzystuje indeks nieklastrowany z klauzulą `include(sensorId, temperature, humidity);` (tzn. że dane te uwzględnione są w liściach indeksu i nie ma konieczności wykonywania `Key Lookup`, jeśli potrzebujemy tylko tych kolumn) - koszt dla tego zapytania jest prawie 10-krotnie niższy w porównaniu do skanowania całej tabeli, a ilość czytanych stron wynosi jedynie 610
 - choć zapytanie z indeksem klastrowanym (zapytanie `5.`) jest nieznacznie mniej wydajne niż zapytanie `4.`, to nadal prezentuje bardzo dobre i obiecujące wyniki - charakteryzuje się około 6-krotnie niższym kosztem zapytania oraz około 7-krotnie mniejszą liczbą odczytywanych stron w porównaniu do pełnego skanowania tabeli.
+
+```{=typst}
+#pagebreak()
+```
 
 #### Zapytanie o wszystkie odczyty ze statusem krytycznym
 
@@ -1304,6 +1427,10 @@ Table 'sensorReadings'. Scan count 9, logical reads 7709, physical reads 0, page
 - w celu porównania wydajności na tym samym zapytaniu, wykonujemy zapytanie `3.`, które daje takie same rezultaty jak zapytanie `1.`, ale nie korzysta z indeksu (został on ręcznie wyłączony) - koszt tego zapytania jest bardzo zbliżony do zapytania `2.` - charakteryzuje sie ono około 2000 razy większym kosztem oraz wymaga przeczytania aż 7709 stron.
 - rozmiar indeksu filtrowanego (założonego jedynie na statusy `WARNING` i `CRITICAL`) jest około 20-krotnie mniejszy niż indeks założony na wszystkie statusy, co stanowi istotną zaletę indeksu filtrowanego. Dzięki temu nadaje się on idealnie do sytuacji, w których musimy śledzić pewne sytuacje, które występują stosunkowo rzadko, ale są dla nas kluczowe z perspektywy biznesowej (często nie interesują nas wszystkie "standardowe" odczyty (u nas: status `OK`), a raczej skupiamy się na tych, które są krytyczne (u nas: status `WARNING/CRITICAL` - np. pewna awaria)). Dzięki wykorzystaniu indeksu filtrowanego możemy zaoszczędzić dużo zasobów.
 
+```{=typst}
+#pagebreak()
+```
+
 #### Zapytanie o zagregowane statystki odnośnie temperatury, wilgotności, stanu baterii i statusu z odczytu
 
 **Zapytanie:**
@@ -1362,6 +1489,10 @@ GROUP BY sensorId
 ORDER BY sensorId;
 
 DROP INDEX ix_analytics_incl ON sensorReadings;
+```
+
+```{=typst}
+#pagebreak()
 ```
 
 **Rezultaty:**
