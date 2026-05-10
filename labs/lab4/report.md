@@ -894,6 +894,84 @@ Co to są indeksy colums store? Jak działają? (poszukaj materiałów w interne
 
 UWAGA: ciekawsze efekty możesz zaobserwować dla jeszcze większych tabel (jeśli twój komp na to pozwala możesz zwiększyć wolumen generowanych danych)
 
+**Rezultaty:**
+
+Liczba wierszy w tabeli:
+![alt text](media/task2-image-5.png)
+
+Istniejące indeksy:
+![alt text](media/task2-image-4.png)
+
+Jak widać na załączonym obrazku, w tabeli został automatycznie stworzy indeks klastrowany dla klucza głównego `id` - indeks ten nie zawiera żadnych innych kolumn.
+
+- zapytanie bez indeksu kolumnowego (istnieje wyłącznie domyślny indeks na kluczu głównym):
+
+```sql
+-- zapytanie 2a
+select productid, sum(unitprice), avg(unitprice), sum(orderqty), avg(orderqty)
+from saleshistory
+group by productid
+order by productid;
+```
+
+```
+Table 'saleshistory'. Scan count 9, logical reads 158276, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+SQL Server Execution Times:
+  CPU time = 1967 ms,  elapsed time = 260 ms.
+```
+
+![alt text](media/task2-image.png)
+![alt text](media/task2-image-1.png)
+
+- zapytanie z indeksem kolumnowym na `saleshistory(unitprice, orderqty, productid)`:
+
+```sql
+-- zapytanie 2b
+create nonclustered columnstore index saleshistory_columnstore
+	on saleshistory(unitprice, orderqty, productid)
+
+select productid, sum(unitprice), avg(unitprice), sum(orderqty), avg(orderqty)
+from saleshistory
+group by productid
+order by productid;
+
+drop index saleshistory_columnstore on saleshistory;
+```
+
+```
+Table 'saleshistory'. Scan count 16, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 12405, lob physical reads 4, lob page server reads 0, lob read-ahead reads 46383, lob page server read-ahead reads 0.
+Table 'saleshistory'. Segment reads 19, segment skipped 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+SQL Server Execution Times:
+  CPU time = 141 ms,  elapsed time = 42 ms.
+```
+
+![alt text](media/task2-image-2.png)
+![alt text](media/task2-image-3.png)
+
+**Obserwacje:**
+
+- plany zapytań wyglądają co do zasady identycznie, jedyną różnicą jest indeks, z którego korzysta operacja `Index Scan` (`Clustered Index Scan` vs. `Columnstore Index Scan`)
+- koszt zapytania korzystającego z indeksu kolumnowego jest około 20-krotnie niższy (~1.92 vs ~119.99)
+- przewagę indeksu kolumnowego obserwujemy także w czasach wykonania zapytań - `CPU time` spadło około 14-krotnie (1967ms do 141ms), podczas gdy `Elapsed time` spadło około 6-krotnie (260ms do 42ms)
+- ilość czytanych stron nie jest w pełni porównywalna, ponieważ w zależności od indeksu, dane przechowywane są w inny sposób - indeks klastrowany używa standardowych stron (`logical reads 158276`), podczas gdy indeks kolumnowy przechowuje dane jako skompresowane segmenty binarne (`LOB`), stąd zamiast `logical reads` pojawiają się `lob logical reads 12405` oraz `segment reads 19`. Oznacza to że SQL Server odczytał tylko 19 segmentów zawierających kolumny productid, unitprice i orderqty — pozostałe kolumny tabeli zostały całkowicie pominięte
+- columnstore nie potrzebował paralelizmu do osiągnięcia lepszych wyników niż row store z 9 równoległymi wątkami
+
+**Komentarz:**
+
+> _Co to są indeksy colums store? Jak działają?_
+
+Indeksy columnstore to typ indeksu zaprojektowany z myślą o zapytaniach analitycznych na dużych zbiorach danych. W przeciwieństwie do tradycyjnych indeksów, które przechowują dane wierszami, indeksy kolumnowe przechowują dane kolumnami w skompresowanych segmentach. Kluczowe cechy indeksów kolumnowych:
+
+- korzystając z indeksu kolumnowego, możemy czytać wyłącznie te kolumny których potrzebuje zapytanie, resztę całkowicie pomija
+- dane tej samej kolumny są do siebie podobne, co pozwala na znacznie lepszą kompresję niż w row store gdzie różne typy danych są przeplatane
+- dane przetwarzane są w partiach naraz zamiast wiersz po wierszu, co pozwala procesorowi wykorzystać wydaje operacje wektorowe do obliczania agregatów na wielu wartościach jednocześnie
+
+Z tego powodu indeksy kolumnowe są idealnym rozwiązaniem w momencie gdy potrzebujemy wykonywać wiele zapytań korzystających z funkcji agregujących (np. raporty analityczne korzystające z `sum(), avg(), count()`), natomiast będą gorszym wyborem w przypadku zapytań wykonujących punktowe wyszukiwanie oraz w przypadku tabel z częstymi modyfikacjami danych.
+
 # Zadanie 3 – własne eksperymenty
 
 Należy zaprojektować/zaimplementować tabelę w bazie danych, lub wybrać dowolny schemat/bazę/tabelę (poza używanymi na zajęciach), a następnie wypełnić ją danymi w taki sposób, przetestować/przeanalizować działanie indeksów różnego typu. Warto wygenerować sobie tabele o większym rozmiarze.
