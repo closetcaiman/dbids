@@ -1,0 +1,20 @@
+[
+  {
+    "_id": { "$oid": "63a05e60bb3b972d6f4e0aba" },
+    "ShipperID": 1,
+    "CompanyName": "Speedy Express",
+    "Phone": "(503) 555-9831"
+  },
+  {
+    "_id": { "$oid": "63a05e60bb3b972d6f4e0abb" },
+    "ShipperID": 2,
+    "CompanyName": "United Package",
+    "Phone": "(503) 555-3199"
+  },
+  {
+    "_id": { "$oid": "63a05e60bb3b972d6f4e0abc" },
+    "ShipperID": 3,
+    "CompanyName": "Federal Shipping",
+    "Phone": "(503) 555-9931"
+  }
+]
