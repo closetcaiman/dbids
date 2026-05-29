@@ -234,6 +234,8 @@ ORDER BY customers_count DESC;
 
 W świeżo uruchomionym środowisku zapytanie powinno zakończyć się błędem informującym o braku indeksu. Jeżeli zapytanie działa od razu, oznacza to najczęściej, że w środowisku pozostał wcześniej utworzony indeks.
 
+![Brak indeksu](./media/ex2-1.png)
+
 ### Część B – primary index
 
 Utwórz primary index:
@@ -243,7 +245,11 @@ CREATE PRIMARY INDEX idx_customers_primary
 ON `northwind`._default.customers;
 ```
 
+![Utworzony primary index](./media/ex2-2.png)
+
 Powtórz zapytanie z części A.
+
+![Zapytanie z primary index](./media/ex2-3.png)
 
 ### Część C – indeks celowy
 
@@ -254,12 +260,16 @@ DROP INDEX idx_customers_primary
 ON `northwind`._default.customers;
 ```
 
+![Usunięty primary index](./media/ex2-4.png)
+
 Utwórz indeks celowy na polu `Country`:
 
 ```sql
 CREATE INDEX idx_customers_country
 ON `northwind`._default.customers(Country);
 ```
+
+![Utworzony indeks celowy](./media/ex2-5.png)
 
 Wykonaj zapytanie z warunkiem indeksowym:
 
@@ -273,12 +283,25 @@ GROUP BY c.Country
 ORDER BY customers_count DESC;
 ```
 
+![Zapytanie z indeksem celowym](./media/ex2-6.png)
+
 ### W komentarzu napisz
 
 - Co się stało przy próbie wykonania zapytania bez indeksu?
+
+> Zapytanie zakończyło się błędem, ponieważ Couchbase wymaga indeksu do wykonania zapytania.
+
 - Czym różni się `primary index` od indeksu celowego?
+
+> Primary index jest ogólnym indeksem, który pozwala na skanowanie wszystkich dokumentów w kolekcji, ale jest nieefektywny do większości zapytań. Indeks celowy jest zdefiniowany na konkretnych polach i umożliwia szybkie wyszukiwanie i agregację na tych polach.
+
 - Dlaczego w zapytaniu po utworzeniu indeksu celowego dodano warunek `WHERE c.Country IS NOT MISSING`?
+
+> Warunek `WHERE c.Country IS NOT MISSING` jest potrzebny, aby zapytanie mogło skorzystać z indeksu celowego, który został utworzony na polu `Country`. Bez tego warunku Couchbase nie mógłby użyć indeksu i musiałby wykonać pełne skanowanie kolekcji, co jest nieefektywne.
+
 - Dlaczego w środowisku produkcyjnym nie powinno się traktować primary index jako rozwiązania docelowego?
+
+> Primary index jest nieefektywny, ponieważ pozwala na skanowanie wszystkich dokumentów w kolekcji, co może prowadzić do długiego czasu odpowiedzi i dużego obciążenia bazy. W środowisku produkcyjnym powinno się tworzyć indeksy celowe na polach, które są często używane w zapytaniach, aby zapewnić szybkie i efektywne działanie aplikacji.
 
 ---
 
