@@ -13,7 +13,7 @@ else
     PROFILE_FLAGS :=
 endif
 
-.PHONY: help up down restart clean status pdf
+.PHONY: help up down restart clean status pdf check fmt setup
 
 help:
 	@echo "Databases in data science"
@@ -24,7 +24,10 @@ help:
 	@echo "  restart  - Restart the services for the specified lab"
 	@echo "  clean    - Stop the services and remove volumes for the specified lab"
 	@echo "  status   - Show the status of the services for the specified lab"
-	@echo "  pdf      - Convert a markdown file to PDF (usage: make pdf FILE=path/to/file.md)"
+	@echo "  pdf      - Convert a markdown file to PDF (usage: make pdf LAB=lab-name)"
+	@echo "  check    - Lint all markdown files"
+	@echo "  fmt      - Auto-fix markdown lint violations"
+	@echo "  setup    - Install uv dependencies and register git hooks via lefthook"
 
 
 up:
@@ -72,3 +75,13 @@ status:
 pdf:
 	@$(SCRIPTS_DIR)/convert-md-to-pdf.sh $(LABS_DIR)/$(LAB)/report.md
 
+check:
+	$(SCRIPTS_DIR)/markdown-lint.sh "**/*.md"
+
+fmt:
+	$(SCRIPTS_DIR)/markdown-lint.sh --fix "**/*.md"
+
+setup:
+	@command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
+	uv sync --group dev
+	uv run lefthook install

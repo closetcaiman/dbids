@@ -12,3 +12,8 @@ dependencies = [
     "ruff>=0.15.12",
     "seaborn>=0.13.2",
 ]
+
+[dependency-groups]
+dev = [
+    "lefthook>=1.6",
+]
