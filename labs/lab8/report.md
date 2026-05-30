@@ -21,15 +21,15 @@
 Po wykonaniu laboratorium student powinien umieć:
 
 1. uruchomić i zweryfikować środowisko Couchbase,
-2. poruszać się po panelu Couchbase i korzystać z Query Workbench,
-3. rozumieć strukturę `bucket → scope → collection`,
-4. wykonać podstawowe zapytania SQL++ / N1QL na dokumentach JSON,
-5. wyjaśnić, dlaczego Couchbase wymaga indeksów do wykonywania zapytań,
-6. odróżnić `primary index` od indeksu celowego,
-7. wykonać `JOIN` między kolekcjami dokumentów,
-8. porównać model niezagnieżdżony z modelem zagnieżdżonym,
-9. użyć `UNNEST` do rozbijania tablicy zagnieżdżonej w dokumencie,
-10. wykorzystać `EXPLAIN` do podstawowej interpretacji planu zapytania.
+1. poruszać się po panelu Couchbase i korzystać z Query Workbench,
+1. rozumieć strukturę `bucket → scope → collection`,
+1. wykonać podstawowe zapytania SQL++ / N1QL na dokumentach JSON,
+1. wyjaśnić, dlaczego Couchbase wymaga indeksów do wykonywania zapytań,
+1. odróżnić `primary index` od indeksu celowego,
+1. wykonać `JOIN` między kolekcjami dokumentów,
+1. porównać model niezagnieżdżony z modelem zagnieżdżonym,
+1. użyć `UNNEST` do rozbijania tablicy zagnieżdżonej w dokumencie,
+1. wykorzystać `EXPLAIN` do podstawowej interpretacji planu zapytania.
 
 ---
 
@@ -118,20 +118,20 @@ docker ps
 
 3. Wejdź do panelu Couchbase:
 
-```
+```text
 http://localhost:8091
 ```
 
 4. Zaloguj się:
 
-```
+```text
 Login: student
 Hasło: student
 ```
 
 5. Sprawdź, czy widzisz bucket:
 
-```
+```text
 northwind
 ```
 
@@ -159,7 +159,7 @@ Poznaj podstawową strukturę danych w Couchbase i sprawdź, jakie kolekcje są 
 
 1. W panelu Couchbase za pomocą zakładek w menu bocznym np. 'Buckets', 'Documents', 'Query' zbadaj strukturę:
 
-```
+```text
 bucket → scope → collection
 ```
 
@@ -182,7 +182,7 @@ W poprawnie zainicjalizowanym środowisku powinieneś otrzymać orientacyjnie:
 | `orders_nested` | 83?               |
 
 3. Podejrzyj kilka dokumentów z kolekcji `orders`.
-4. Podejrzyj jeden dokument z kolekcji `orders_nested`.
+1. Podejrzyj jeden dokument z kolekcji `orders_nested`.
 
 ### Wskazówki
 
@@ -353,7 +353,7 @@ Wykorzystaj kolekcje:
 
 Policz wartość zamówienia według wzoru:
 
-```
+```text
 wartość pozycji = UnitPrice * Quantity * (1 - Discount)
 ```
 
@@ -386,7 +386,7 @@ Pokaż 10 zamówień o najwyższej wartości.
 Porównaj dwa sposoby modelowania tych samych danych:
 
 1. model niezagnieżdżony: `orders` + `orderdetails`,
-2. model zagnieżdżony: `orders_nested`, gdzie pozycje zamówienia są tablicą `items`.
+1. model zagnieżdżony: `orders_nested`, gdzie pozycje zamówienia są tablicą `items`.
 
 ### Część A – obejrzyj dokument zagnieżdżony
 
@@ -394,7 +394,7 @@ Podejrzyj dokument zamówienia o numerze `10248` z kolekcji `orders_nested`.
 
 Zwróć uwagę na pole:
 
-```
+```text
 items
 ```
 
@@ -600,7 +600,7 @@ Wynik:
 >   "TotalUnitsSold": 24
 > }
 > ```
-
+>
 > B:
 >
 > ```json
@@ -656,7 +656,7 @@ order by TotalOrderValue desc
 limit 10;
 ```
 
-![Plan dla zapytania z `JOIN`](media/ex6-1.png)
+![Plan dla zapytania z ](media/ex6-1.png)
 
 ### Część B – plan dla zapytania z `UNNEST`
 
@@ -677,7 +677,7 @@ order by TotalOrderValue desc
 limit 10;
 ```
 
-![Plan dla zapytania z `UNNEST`](media/ex6-2.png)
+![Plan dla zapytania z ](media/ex6-2.png)
 
 ### Część C – porównanie
 

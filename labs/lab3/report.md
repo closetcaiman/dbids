@@ -12,17 +12,17 @@
   }
 </style>  -->
 
----
+______________________________________________________________________
 
 **Imiona i nazwiska:** Marek Małek, Mateusz Lampert
 
----
+______________________________________________________________________
 
 Celem ćwiczenia jest zapoznanie się z planami wykonania zapytań (execution plans), oraz z budową i możliwością wykorzystaniem indeksów.
 
 Swoje odpowiedzi wpisuj w miejsca oznaczone jako:
 
----
+______________________________________________________________________
 
 ## Wyniki:
 
@@ -30,7 +30,7 @@ Swoje odpowiedzi wpisuj w miejsca oznaczone jako:
 --  ...
 ```
 
----
+______________________________________________________________________
 
 Ważne/wymagane są komentarze.
 
@@ -157,7 +157,7 @@ Włącz dwie opcje: **Include Actual Execution Plan** oraz **Include Live Query 
 
 Teraz wykonaj poszczególne zapytania (najlepiej każde analizuj oddzielnie). Co można o nich powiedzieć? Co sprawdzają? Jak można je zoptymalizować?
 
----
+______________________________________________________________________
 
 ```{=typst}
 #pagebreak()
@@ -360,7 +360,7 @@ Zaznacz wszystkie zapytania, i uruchom je w **Database Engine Tuning Advisor**:
 
 Sprawdź zakładkę **Tuning Options**, co tam można skonfigurować?
 
----
+______________________________________________________________________
 
 ## Wyniki:
 
@@ -395,7 +395,7 @@ Uruchom zapisany skrypt w Management Studio.
 
 Opisz, dlaczego dane indeksy zostały zaproponowane do zapytań:
 
----
+______________________________________________________________________
 
 ```{=typst}
 #pagebreak()
@@ -415,11 +415,11 @@ Raporty:
 #pagebreak()
 ```
 
----
+______________________________________________________________________
 
 Sprawdź jak zmieniły się Execution Plany. Opisz zmiany:
 
----
+______________________________________________________________________
 
 ## Wyniki:
 
@@ -534,7 +534,7 @@ Wnioski:
 - zamiast `Table Scan` serwer wykorzystuje `Index Seek` do wyszukania rekordów z określonymi `carriertrackingnumber`, co jest dużo szybsze niż skanowanie całej tabeli
 - są błędy estymacji, ale nie są one duże, aby znacząco wpłynąć na plan zapytania
 
----
+______________________________________________________________________
 
 # Część 2
 
@@ -567,7 +567,7 @@ select * from customer where storeid between 594 and 610
 
 Zanotuj czas zapytania oraz jego koszt koszt:
 
----
+______________________________________________________________________
 
 ## Wyniki:
 
@@ -599,7 +599,7 @@ create  index customer_store_cls_idx on customer(storeid)
 
 Jak zmienił się plan i czas? Czy jest możliwość optymalizacji?
 
----
+______________________________________________________________________
 
 ## Wyniki:
 
@@ -641,7 +641,7 @@ create clustered index customer_store_cls_idx on customer(storeid)
 
 Czy zmienił się plan/koszt/czas? Skomentuj dwa podejścia w wyszukiwaniu krotek.
 
----
+______________________________________________________________________
 
 ## Wyniki:
 
@@ -809,7 +809,7 @@ into person
 from adventureworks2017.person.person
 ```
 
----
+______________________________________________________________________
 
 Wykonaj analizę planu dla trzech zapytań:
 
@@ -823,7 +823,7 @@ select * from [person] where firstname = 'Osarumwense'
 
 Co można o nich powiedzieć?
 
----
+______________________________________________________________________
 
 ## Wyniki:
 
@@ -842,7 +842,7 @@ on person(lastname, firstname)
 
 Sprawdź plan zapytania. Co się zmieniło?
 
----
+______________________________________________________________________
 
 ## Wyniki:
 
@@ -862,7 +862,7 @@ Przeprowadź ponownie analizę zapytań tym razem dla parametrów: `FirstName = 
 
 Czym różni się ten plan od zapytania o `'Osarumwense Agbonile'` . Dlaczego tak jest?
 
----
+______________________________________________________________________
 
 ## Wyniki:
 
@@ -872,7 +872,7 @@ Komentarz:
 
 W przypadku zapytań 1. oraz 3. (odpowiednio tylko z warunkiem `where lastname="..."` oraz `where firstname="..."`), ze względu na ilość osób o odpowiedniu zadanym nazwisku lub imieniu, MSSQL zdecydował że skorzystanie z indeksu (a następnie pobieranie brakujących w indeksie danych ze znalezionych adresów) będzie mniej wydajne niż przeszukiwanie całej tabeli (`Table Scan`). W przypadku warunku `FirstName = ‘Angela’` `LastName = ‘Price’` indeks jest wykorzystywany.
 
----
+______________________________________________________________________
 
 Punktacja:
 
