@@ -440,6 +440,21 @@ Użyj `UNNEST`.
 
 Pokaż 10 zamówień o najwyższej wartości.
 
+<!-- mozesz to zmienic jak chcesz -->
+
+```sql
+select n.OrderID,
+       n.CustomerID,
+       sum(item.UnitPrice * item.Quantity * (1 - ifmissingornull(item.Discount, 0))) as TotalOrderValue,
+       count(1)                                                                      as ItemsCount
+from `northwind`._default.orders_nested as n
+         unnest n.items as item
+where n.OrderID is not missing
+group by n.OrderID, n.CustomerID
+order by TotalOrderValue desc
+limit 10;
+```
+
 ### Część D – porównaj wynik z modelem niezagnieżdżonym
 
 Porównaj wynik z części C z wynikiem otrzymanym wcześniej przez `JOIN` na `orders` i `orderdetails` (zadanie 3C).
@@ -494,6 +509,33 @@ ON `northwind`._default.orderdetails(ProductID);
 
 Jeżeli indeks już istnieje, Couchbase zwróci komunikat o istniejącym indeksie — to nie jest błąd.
 
+#### Rozwiązanie
+
+##### Dodanie indeksu
+
+![Dodanie indeksu](media/ex5-1.png)
+
+##### Zapytanie
+
+```sql
+select p.ProductID,
+       p.ProductName,
+       count(*)                                                             as TotalUnitsSold,
+       sum(o.UnitPrice * o.Quantity * (1 - ifmissingornull(o.Discount, 0))) as TotalOrderValue
+from `northwind`._default.products as p
+         join `northwind`._default.orderdetails as o
+              on p.ProductID = o.ProductID
+where p.ProductID is not missing
+  and o.ProductID is not missing
+group by p.ProductID, p.ProductName
+order by TotalOrderValue desc
+limit 10;
+```
+
+Wynik:
+
+![Wynik zapytania](media/ex5-2.png)
+
 ### Wariant B – top 10 klientów po wartości zakupów
 
 Dla klientów policz:
@@ -509,11 +551,74 @@ Wykorzystaj kolekcje:
 - `orderdetails`,
 - `customers`.
 
+#### Rozwiązanie
+
+##### Dodanie indeksu
+
+```sql
+CREATE INDEX idx_orders_customerid
+ON `northwind`._default.orders(CustomerID);
+
+CREATE INDEX idx_customers_customerid
+ON `northwind`._default.customers(CustomerID);
+```
+
+![Dodanie indeksu](media/ex5-3.png)
+
+##### Zapytanie
+
+```sql
+select c.CustomerID,
+       c.CompanyName,
+       count(distinct o.OrderID) as                                            TotalOrderCount,
+       sum(od.UnitPrice * od.Quantity * (1 - ifmissingornull(od.Discount, 0))) TotalOrderValue
+from `northwind`._default.customers as c
+         join `northwind`._default.orders as o
+              on o.CustomerID = c.CustomerID
+         join `northwind`._default.orderdetails as od
+              on od.OrderID = o.OrderID
+group by c.CustomerID, c.CompanyName
+order by TotalOrderValue desc
+limit 10;
+```
+
+Wynik:
+
+![Wynik zapytania](media/ex5-4.png)
+
 ### W komentarzu napisz
 
 - Który produkt albo klient ma najwyższą wartość sprzedaży?
+
+> A:
+>
+> ```json
+> {
+>   "ProductID": 38,
+>   "ProductName": "Côte de Blaye",
+>   "TotalOrderValue": 141396.73490344844,
+>   "TotalUnitsSold": 24
+> }
+> ```
+
+> B:
+>
+> ```json
+> {
+>   "CompanyName": "QUICK-Stop",
+>   "CustomerID": "QUICK",
+>   "TotalOrderCount": 28,
+>   "TotalOrderValue": 110277.3048835089
+> }
+> ```
+
 - Czy wynik jest łatwy do biznesowej interpretacji?
+
+> Tak, wynik jest łatwy do interpretacji, ponieważ pokazuje konkretne produkty i klientów wraz z ich łączną wartością sprzedaży i liczbą sprzedanych jednostek, co pozwala na szybkie zidentyfikowanie najbardziej wartościowych produktów i klientów.
+
 - Czy zapytanie bardziej przypomina klasyczny SQL/BI, czy pracę z dokumentami JSON?
+
+> Zapytanie bardziej przypomina klasyczny SQL/BI, ponieważ wykonuje typowe operacje agregacji, grupowania i sortowania, ale używa też funkcji specyficznych dla Couchbase, takich jak `IFMISSINGORNULL`, aby radzić sobie z potencjalnie brakującymi danymi w dokumentach JSON.
 
 ---
 
@@ -534,9 +639,45 @@ EXPLAIN
 SELECT ...
 ```
 
+##### Zapytanie 5B:
+
+```sql
+select c.CustomerID,
+       c.CompanyName,
+       count(distinct o.OrderID) as                                            TotalOrderCount,
+       sum(od.UnitPrice * od.Quantity * (1 - ifmissingornull(od.Discount, 0))) TotalOrderValue
+from `northwind`._default.customers as c
+         join `northwind`._default.orders as o
+              on o.CustomerID = c.CustomerID
+         join `northwind`._default.orderdetails as od
+              on od.OrderID = o.OrderID
+group by c.CustomerID, c.CompanyName
+order by TotalOrderValue desc
+limit 10;
+```
+
+![Plan dla zapytania z `JOIN`](media/ex6-1.png)
+
 ### Część B – plan dla zapytania z `UNNEST`
 
 Wybierz zapytanie z zadania 4 i uruchom je z `EXPLAIN`.
+
+##### Zapytanie 4C:
+
+```sql
+select n.OrderID,
+       n.CustomerID,
+       sum(item.UnitPrice * item.Quantity * (1 - ifmissingornull(item.Discount, 0))) as TotalOrderValue,
+       count(1)                                                                      as ItemsCount
+from `northwind`._default.orders_nested as n
+         unnest n.items as item
+where n.OrderID is not missing
+group by n.OrderID, n.CustomerID
+order by TotalOrderValue desc
+limit 10;
+```
+
+![Plan dla zapytania z `UNNEST`](media/ex6-2.png)
 
 ### Część C – porównanie
 
@@ -554,15 +695,36 @@ Wskaż elementy typu:
 - `Order`,
 - `Limit`.
 
+Porównanie:
+
+> Zapytanie z `join` korzysta z 3 indeksów (`idx_customers_customerid`, `idx_orders_customerid`, `idx_orderdetails_orderid`) w celu `IndexScan` na kolekcjach `customers`, `orders` i `orderdetails`, a następnie łączy dane za pomocą `NestedLoopJoin`. Jest to typowe podejście dla modelu relacyjnego.
+> Zapytanie z `unnest` korzysta z tylko jednego indeksu (`idx_orders_nested_orderid`) do `IndexScan` na kolekcji `orders_nested`, a następnie rozbija tablicę `items` za pomocą `unnest`.
+> Główną różnicą jest liczba `fetch`, podejście z `join` wymusza pobranie danych z trzech kolekcji, podczas gdy `unnest` operuje na jednej kolekcji z zagnieżdżonymi danymi, co może być bardziej efektywne, ale wymaga innego modelowania danych.
+> Pozostałe elementy planu, takie jak `Group`, `Order`, `Project` i `Limit`, są takie same z dokładnością do zwracanych kolumn i warunków.
+
 ### W komentarzu końcowym napisz
 
 Odpowiedz w kilku zdaniach:
 
 - Co było największą różnicą między Couchbase a klasyczną bazą relacyjną?
+
+> Największą różnicą jest model danych oparty na dokumentach JSON, który pozwala na elastyczne przechowywanie danych bez sztywnej struktury tabel, oraz konieczność tworzenia indeksów, aby zapytania mogły być wykonywane. Ponadto, Couchbase oferuje funkcje specyficzne dla pracy z dokumentami, takie jak `UNNEST` do rozbijania tablic zagnieżdżonych w dokumentach oraz `IFMISSINGORNULL` do obsługi brakujących danych, co różni się od tradycyjnego modelu relacyjnego.
+
 - Dlaczego indeksy są tak ważne w Couchbase?
+
+> Indeksy są kluczowe w Couchbase, ponieważ bez nich zapytania nie mogą być wykonane. Couchbase wymaga indeksów, aby szybko odnaleźć dokumenty spełniające warunki zapytania. Bez indeksów baza musiałaby skanować wszystkie dokumenty w kolekcji, co jest nieefektywne i może prowadzić do długiego czasu odpowiedzi.
+
 - Co pokazało porównanie `JOIN` i `UNNEST`?
+
+> Porównanie `JOIN` i `UNNEST` pokazało, że oba podejścia mogą być używane do osiągnięcia tego samego celu biznesowego, ale różnią się sposobem modelowania danych i wykonywania zapytań. `JOIN` jest bardziej zbliżony do tradycyjnego modelu relacyjnego, podczas gdy `UNNEST` pozwala na pracę z danymi zagnieżdżonymi w dokumentach JSON, co może być bardziej efektywne w niektórych przypadkach, ale wymaga innego podejścia do projektowania bazy danych.
+
 - Czy dokumentowy model danych wyklucza analizę i raportowanie?
+
+> Nie, ale praca z dokumentami JSON wymaga innego podejścia do modelowania danych i zapytań, zwłaszcza gdy dane są zagnieżdżone.
+
 - Gdybyś projektował system zamówień, kiedy rozważyłbyś zagnieżdżenie pozycji zamówienia w dokumencie zamówienia?
+
+> W przypadku, gdy zamówienie składa się z wielu elementów, które są ściśle powiązane i często pobierane razem. Jest to wtedy wygodne, bo dokument zamówienia zawiera wszystkie informacje o zamówieniu, a `UNNEST` pozwala łatwo rozbić pozycje na osobne rekordy do analizy.
 
 ---
 
