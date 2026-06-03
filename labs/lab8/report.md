@@ -385,6 +385,23 @@ Wykorzystaj kolekcje:
 
 **Uwaga:** indeksy `idx_orders_orderid` oraz `idx_orderdetails_orderid` zostały utworzone automatycznie podczas inicjalizacji środowiska. Nie trzeba ich zakładać ręcznie. Jeżeli mimo to spróbujesz je utworzyć, Couchbase poinformuje, że indeks już istnieje – to nie jest błąd.
 
+**Rozwiązanie:**
+
+```sql
+SELECT o.OrderID,
+       o.CustomerID,
+       od.ProductID,
+       od.UnitPrice,
+       od.Quantity,
+       od.Discount
+FROM orders AS o
+    JOIN orderdetails AS od ON o.OrderID = od.OrderID
+WHERE o.OrderID IS NOT MISSING
+    AND od.OrderID IS NOT MISSING
+```
+
+![alt text](image-6.png)
+
 ### Część C – wartość zamówienia
 
 Policz wartość zamówienia według wzoru:
@@ -406,12 +423,101 @@ Dla każdego zamówienia oblicz:
 
 Pokaż 10 zamówień o najwyższej wartości.
 
+**Rozwiązanie:**
+
+```sql
+SELECT o.OrderID,
+       o.CustomerID,
+       SUM(od.UnitPrice * od.Quantity * (1 - IFMISSINGORNULL(od.Discount, 0))) AS order_value
+FROM orders AS o
+    JOIN orderdetails AS od ON o.OrderID = od.OrderID
+WHERE o.OrderID IS NOT MISSING
+    AND od.OrderID IS NOT MISSING
+GROUP BY o.OrderID,
+         o.CustomerID
+LIMIT 10;
+```
+
+```txt
+CustomerID	OrderID	order_value
+"QUICK"	10273	2037.2799984335898
+"SPECD"	10964	2052.5
+"MAGAA"	10404	1591.2499987520278
+"MAISD"	10892	2089.9999983608723
+"QUICK"	10996	560
+"OTTIK"	11020	632.3999955654144
+"TORTU"	10842	975
+"LACOR"	10858	649
+"AROUT"	10453	407.6999993249774
+"THEBI"	10992	69.6
+```
+
+![alt text](image-7.png)
+
 ### W komentarzu napisz
 
 - Czy `JOIN` w Couchbase przypomina składnię znaną z SQL?
 - Czym różni się takie łączenie od relacji w klasycznej bazie relacyjnej (np. czy baza wymusza klucze obce i spójność relacji tak jak w typowym modelu relacyjnym)?
 - Dlaczego indeks po stronie dołączanej kolekcji jest ważny?
 - Czy największe zamówienia mają zawsze największą liczbę pozycji?
+
+> Czy `JOIN` w Couchbase przypomina składnię znaną z SQL?
+
+Składnia `JOIN` z Couchbase jest de facto identyczna w porównaniu do składni znanej z SQL.
+
+> Czym różni się takie łączenie od relacji w klasycznej bazie relacyjnej (np. czy baza wymusza klucze obce i spójność relacji tak jak w typowym modelu relacyjnym)?
+
+W klasycznej bazie relacyjnej baza danych wymusza klucze obce oraz ich integralność. W przypadku Couchbase'a baza nie przechowuje żadnych informacji o relacjach pomiędzy kolekcjami i nie waliduje spójności przy zapisie. Odpowiedzialność za integralność danych leży całkowicie po stronie aplikacji i programisty.
+
+> Dlaczego indeks po stronie dołączanej kolekcji jest ważny?
+
+W przypadku braku indeksu konieczne pełne przeskanowanie kolekcji, czyli w przypadku sprawdzenie każdego dokumentu w tabeli `orderdetails` dla każdego wiersza z `orders`. Indeks na kolumnie, po której łączymy kolekcje pozwala silnikowi bezpośrednio zlokalizować pasujące dokumenty bez przeglądania całej kolekcji.
+
+W przypadku próby połączenia kolekcj po kluczu, na który nie jest założony indeks, zapytanie kończy się błędem:
+
+```txt
+[
+  {
+    "code": 4330,
+    "msg": "No index available for ANSI join term od",
+    "query": "SELECT o.OrderID,\n       o.ProductID,\n       SUM(od.UnitPrice * od.Quantity * (1 - IFMISSINGORNULL(od.Discount, 0))) AS order_value,\n       COUNT(*) AS positions\nFROM orders AS o\n    JOIN orderdetails AS od ON o.OrderID = od.ProductID\nWHERE o.OrderID IS NOT MISSING\n    AND od.ProductID IS NOT MISSING\nGROUP BY o.OrderID,\n         o.ProductID\nORDER BY order_value DESC, positions DESC\nLIMIT 10;"
+  }
+]
+```
+
+> Czy największe zamówienia mają zawsze największą liczbę pozycji?
+
+W celu zweryfikowania tego stwierdzenia, do poprzedniego zapytania dodane zostało zliczanie liczby pozycji w zamówieniu:
+
+```sql
+SELECT o.OrderID,
+       o.CustomerID,
+       SUM(od.UnitPrice * od.Quantity * (1 - IFMISSINGORNULL(od.Discount, 0))) AS order_value,
+       COUNT(*) AS positions
+FROM orders AS o
+    JOIN orderdetails AS od ON o.OrderID = od.OrderID
+WHERE o.OrderID IS NOT MISSING
+    AND od.OrderID IS NOT MISSING
+GROUP BY o.OrderID,
+         o.CustomerID
+ORDER BY order_value DESC, positions DESC;
+```
+
+```txt
+CustomerID	OrderID	order_value	positions
+"QUICK"	10865	16387.49998714775	2
+"HANAR"	10981	15810	1
+"SAVEA"	11030	12615.05	4
+"RATTC"	10889	11380	2
+"SIMOB"	10417	11188.4	4
+"KOENE"	10817	10952.844978627563	4
+"HUNGO"	10897	10835.240000000002	2
+"RATTC"	10479	10495.6	4
+"QUICK"	10540	10191.7	4
+"QUICK"	10691	10164.8	5
+```
+
+Zgodnie z otrzymanymi wynikami (top 10 rezultatów w zadanej kolejności), największe zamówienia niekoniecznie zawsze mają największą liczbę pozycji. Zamówienie o największej wartości ma wyłącznie 2 pozycje, drugie w kolejności zamówienie ma 1 pozycję, gdzie np. zamówienie o 10. w kolejności wartości ma aż 5 pozycji.
 
 ---
 
