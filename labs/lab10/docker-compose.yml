@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     image: retail_lab_generator
     container_name: retail_lab_generator
+    user: "${UID}:${GID}"
     volumes:
       - ./labs/lab10/data:/data
     command: ["python", "generate_data.py", "--output", "/data"]
@@ -15,6 +16,7 @@ services:
       dockerfile: Dockerfile
     image: retail_lab_sqlite_loader
     container_name: retail_lab_sqlite
+    user: "${UID}:${GID}"
     depends_on:
       generator:
         condition: service_completed_successfully

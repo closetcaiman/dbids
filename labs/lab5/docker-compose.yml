@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     image: events_generator
     container_name: events_generator_lab5
+    user: "${UID}:${GID}"
     volumes:
       - ./common/data/events:/data
     command: ["python", "generate_events.py", "--output", "/data"]
