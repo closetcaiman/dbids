@@ -182,7 +182,7 @@ W poprawnie zainicjalizowanym środowisku powinieneś otrzymać orientacyjnie:
 | `orders_nested` | 83?               |
 
 3. Podejrzyj kilka dokumentów z kolekcji `orders`.
-1. Podejrzyj jeden dokument z kolekcji `orders_nested`.
+4. Podejrzyj jeden dokument z kolekcji `orders_nested`.
 
 ### Wskazówki
 
@@ -211,6 +211,152 @@ LIMIT 3;
 
 **Rozwiązanie:**
 
+Przykładowe dokumenty z kolekcji `orders`:
+
+```sql
+SELECT o
+FROM orders AS o
+WHERE o.OrderID IS NOT MISSING
+LIMIT 3;
+```
+
+```json
+[
+  {
+    "o": {
+      "CustomerID": "VINET",
+      "EmployeeID": 5,
+      "Freight": 32.38,
+      "OrderDate": {
+        "$date": "1996-07-04T00:00:00Z"
+      },
+      "OrderID": 10248,
+      "RequiredDate": {
+        "$date": "1996-08-01T00:00:00Z"
+      },
+      "ShipAddress": "59 rue de l'Abbaye",
+      "ShipCity": "Reims",
+      "ShipCountry": "France",
+      "ShipName": "Vins et alcools Chevalier",
+      "ShipPostalCode": "51100",
+      "ShipRegion": null,
+      "ShipVia": 3,
+      "ShippedDate": {
+        "$date": "1996-07-16T00:00:00Z"
+      },
+      "_id": {
+        "$oid": "63a060b9bb3b972d6f4e1fc6"
+      }
+    }
+  },
+  {
+    "o": {
+      "CustomerID": "TOMSP",
+      "EmployeeID": 6,
+      "Freight": 11.61,
+      "OrderDate": {
+        "$date": "1996-07-05T00:00:00Z"
+      },
+      "OrderID": 10249,
+      "RequiredDate": {
+        "$date": "1996-08-16T00:00:00Z"
+      },
+      "ShipAddress": "Luisenstr. 48",
+      "ShipCity": "Münster",
+      "ShipCountry": "Germany",
+      "ShipName": "Toms Spezialitäten",
+      "ShipPostalCode": "44087",
+      "ShipRegion": null,
+      "ShipVia": 1,
+      "ShippedDate": {
+        "$date": "1996-07-10T00:00:00Z"
+      },
+      "_id": {
+        "$oid": "63a060b9bb3b972d6f4e1fc7"
+      }
+    }
+  },
+  {
+    "o": {
+      "CustomerID": "HANAR",
+      "EmployeeID": 4,
+      "Freight": 65.83,
+      "OrderDate": {
+        "$date": "1996-07-08T00:00:00Z"
+      },
+      "OrderID": 10250,
+      "RequiredDate": {
+        "$date": "1996-08-05T00:00:00Z"
+      },
+      "ShipAddress": "Rua do Paço, 67",
+      "ShipCity": "Rio de Janeiro",
+      "ShipCountry": "Brazil",
+      "ShipName": "Hanari Carnes",
+      "ShipPostalCode": "05454-876",
+      "ShipRegion": "RJ",
+      "ShipVia": 2,
+      "ShippedDate": {
+        "$date": "1996-07-12T00:00:00Z"
+      },
+      "_id": {
+        "$oid": "63a060b9bb3b972d6f4e1fc8"
+      }
+    }
+  }
+]
+```
+
+Przykładowy dokument z kolekcji `orders_nested`:
+
+```sql
+SELECT odn
+FROM orders_nested AS odn
+WHERE odn.OrderID IS NOT MISSING
+LIMIT 1;
+```
+
+```json
+[
+  {
+    "odn": {
+      "CustomerID": "VINET",
+      "EmployeeID": 5,
+      "OrderDate": {
+        "$date": "1996-07-04T00:00:00Z"
+      },
+      "OrderID": 10248,
+      "ShipCity": "Reims",
+      "ShipCountry": "France",
+      "ShipName": "Vins et alcools Chevalier",
+      "items": [
+        {
+          "Discount": 0,
+          "LineValue": 98,
+          "ProductID": 42,
+          "Quantity": 10,
+          "UnitPrice": 9.8
+        },
+        {
+          "Discount": 0,
+          "LineValue": 168,
+          "ProductID": 11,
+          "Quantity": 12,
+          "UnitPrice": 14
+        },
+        {
+          "Discount": 0,
+          "LineValue": 174,
+          "ProductID": 72,
+          "Quantity": 5,
+          "UnitPrice": 34.8
+        }
+      ],
+      "type": "order_nested"
+    }
+  }
+]
+```
+
 > Co oznaczają pojęcia bucket, scope i collection?
 
 **Bucket** - najwyższy poziom w hierarchii organizacji danych, jest to odpowiednik całej bazy danych. W ramach `bucketu` może istnieć wiele różnych `scope`.
@@ -222,11 +368,11 @@ LIMIT 3;
 > Ile dokumentów znajduje się w kolekcjach orders, orderdetails,
 > customers, products i orders_nested?
 
-![alt text](media/ex1-1.png)
-![alt text](media/ex1-2.png)
-![alt text](media/ex1-3.png)
-![alt text](media/ex1-4.png)
-![alt text](media/ex1-5.png)
+![Liczba dokumentów w kolekcji orders](media/ex1-1.png)
+![Liczba dokumentów w kolekcji orderdetails](media/ex1-2.png)
+![Liczba dokumentów w kolekcji customers](media/ex1-3.png)
+![Liczba dokumentów w kolekcji products](media/ex1-4.png)
+![Liczba dokumentów w kolekcji orders_nested](media/ex1-5.png)
 
 | Kolekcja      | Liczba dokumentów |
 | ------------- | ----------------- |
@@ -238,7 +384,7 @@ LIMIT 3;
 
 Dodatkowo, w Couchbase dostępne jest także podsumowanie danych, dzięki czemu mamy bezpośrednią informację o liczności poszczególnych kolekcji:
 
-![alt text](media/ex1-6.png)
+![Podsumowanie kolekcji w panelu Couchbase](media/ex1-6.png)
 
 > Czym różni się dokument z kolekcji orders od dokumentu z kolekcji
 > orders_nested?
@@ -400,7 +546,7 @@ WHERE o.OrderID IS NOT MISSING
     AND od.OrderID IS NOT MISSING
 ```
 
-![alt text](media/ex3-1.png)
+![Wynik zapytania JOIN dla zamówień i pozycji zamówień](media/ex3-1.png)
 
 ### Część C – wartość zamówienia
 
@@ -493,7 +639,7 @@ LIMIT 10;
 ]
 ```
 
-![alt text](media/ex3-2.png)
+![Wynik zapytania agregującego wartość zamówień](media/ex3-2.png)
 
 ### W komentarzu napisz
 
@@ -1148,7 +1294,7 @@ order by TotalOrderValue desc
 limit 10;
 ```
 
-![Plan dla zapytania z ](media/ex6-1.png)
+![Plan wykonania dla zapytania z JOIN](media/ex6-1.png)
 
 ### Część B – plan dla zapytania z `UNNEST`
 
@@ -1169,7 +1315,7 @@ order by TotalOrderValue desc
 limit 10;
 ```
 
-![Plan dla zapytania z ](media/ex6-2.png)
+![Plan wykonania dla zapytania z UNNEST](media/ex6-2.png)
 
 ### Część C – porównanie
 
