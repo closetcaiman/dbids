@@ -217,16 +217,16 @@ LIMIT 3;
 
 **Scope** - pośredni poziom grupowania kolekcji wewnątrz `bucketa`, odpowiednik przestrzeni nazw. Pozwala na logiczne oddzielenie od siebie zestawów kolekcji (np. sprzedaż vs. magazyn). W ramach `scope` może istnieć wiele różnych kolekcji.
 
-**Colection** - zbiór dokumentów tego samego typu, jest to odpowiednik tabli w SQL, natomiast kolekcje nie narzucają konkretnej struktury, reprezentują jedynie zbiór podobnych dokumentów. W ramach kolekcji może istnieć wiele dokumentów.
+**Collection** - zbiór dokumentów tego samego typu, jest to odpowiednik tabeli w SQL, natomiast kolekcje nie narzucają konkretnej struktury, reprezentują jedynie zbiór podobnych dokumentów. W ramach kolekcji może istnieć wiele dokumentów.
 
 > Ile dokumentów znajduje się w kolekcjach orders, orderdetails,
 > customers, products i orders_nested?
 
-![alt text](media/image-4.png)
-![alt text](media/image.png)
-![alt text](media/image-1.png)
-![alt text](media/image-2.png)
-![alt text](media/image-3.png)
+![alt text](media/ex1-1.png)
+![alt text](media/ex1-2.png)
+![alt text](media/ex1-3.png)
+![alt text](media/ex1-4.png)
+![alt text](media/ex1-5.png)
 
 | Kolekcja      | Liczba dokumentów |
 | ------------- | ----------------- |
@@ -238,7 +238,7 @@ LIMIT 3;
 
 Dodatkowo, w Couchbase dostępne jest także podsumowanie danych, dzięki czemu mamy bezpośrednią informację o liczności poszczególnych kolekcji:
 
-![alt text](media/image-5.png)
+![alt text](media/ex1-6.png)
 
 > Czym różni się dokument z kolekcji orders od dokumentu z kolekcji
 > orders_nested?
@@ -400,7 +400,7 @@ WHERE o.OrderID IS NOT MISSING
     AND od.OrderID IS NOT MISSING
 ```
 
-![alt text](media/image-6.png)
+![alt text](media/ex3-1.png)
 
 ### Część C – wartość zamówienia
 
@@ -493,7 +493,7 @@ LIMIT 10;
 ]
 ```
 
-![alt text](media/image-7.png)
+![alt text](media/ex3-2.png)
 
 ### W komentarzu napisz
 
@@ -514,7 +514,7 @@ W klasycznej bazie relacyjnej baza danych wymusza klucze obce oraz ich integraln
 
 W przypadku braku indeksu konieczne pełne przeskanowanie kolekcji, czyli w przypadku sprawdzenie każdego dokumentu w tabeli `orderdetails` dla każdego wiersza z `orders`. Indeks na kolumnie, po której łączymy kolekcje pozwala silnikowi bezpośrednio zlokalizować pasujące dokumenty bez przeglądania całej kolekcji.
 
-W przypadku próby połączenia kolekcj po kluczu, na który nie jest założony indeks, zapytanie kończy się błędem:
+W przypadku próby połączenia kolekcji po kluczu, na który nie jest założony indeks, zapytanie kończy się błędem:
 
 ```json
 [
