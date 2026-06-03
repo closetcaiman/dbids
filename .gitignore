@@ -1,8 +1,17 @@
-# Database files
+# Database files (convention: every lab keeps its SQLite/db artifacts in db/)
 db/
+labs/*/db/
+
+# Generated lab datasets (produced by the generator containers)
+labs/lab9/data/
+labs/lab10/data/
+
+# Notebook-produced report artifacts
+labs/lab9/output/
+labs/lab10/output/
 
 # DataGrip files
 .idea/
 
-Python environment
+# Python environment
 .venv/

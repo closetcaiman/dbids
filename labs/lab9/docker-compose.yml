@@ -1,0 +1,59 @@
+services:
+  generator:
+    build:
+      context: ./common/dockerfiles/generator
+      dockerfile: Dockerfile
+    image: retail_lab_generator
+    container_name: retail_lab_generator
+    working_dir: /lab
+    volumes:
+      - ./common/scripts:/lab/scripts:ro
+      - ./labs/lab9/data:/lab/data
+      - ./labs/lab9/db:/lab/db
+    command: >
+      sh -c "python scripts/generate_data.py --output data &&
+             python scripts/create_sqlite_db.py --dataset medium --data-dir data --output db/northwind_plus.db"
+
+  postgres:
+    image: postgres:16
+    container_name: retail_lab_postgres
+    depends_on:
+      generator:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_USER: student
+      POSTGRES_PASSWORD: student
+      POSTGRES_DB: retail_lab
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./labs/lab9/data:/data:ro
+      - ./common/sql/retail/postgres:/docker-entrypoint-initdb.d:ro
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.3
+    container_name: retail_lab_clickhouse
+    depends_on:
+      generator:
+        condition: service_completed_successfully
+    environment:
+      CLICKHOUSE_USER: student
+      CLICKHOUSE_PASSWORD: student
+      CLICKHOUSE_DB: retail
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./labs/lab9/data:/var/lib/clickhouse/user_files/data
+      - ./common/sql/retail/clickhouse:/docker-entrypoint-initdb.d:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+volumes:
+  postgres_data:
+  clickhouse_data:
