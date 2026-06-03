@@ -1,8 +1,8 @@
 """
 Create a local SQLite database from generated CSV files.
 
-Example:
-    python scripts/create_sqlite_db.py --dataset medium --output output/northwind_plus.db
+Example (as run by the sqlite service):
+    python create_sqlite_db.py --dataset medium --data-dir /data --output /db/northwind_plus.db
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", choices=["small", "medium"], default="medium")
     parser.add_argument("--data-dir", type=Path, default=Path("data"))
-    parser.add_argument("--output", type=Path, default=Path("output/northwind_plus.db"))
+    parser.add_argument("--output", type=Path, default=Path("db/northwind_plus.db"))
     args = parser.parse_args()
 
     dataset_dir = args.data_dir / args.dataset

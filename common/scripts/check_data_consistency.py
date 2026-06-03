@@ -35,7 +35,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", choices=["small", "medium"], default="medium")
     parser.add_argument("--data-dir", type=Path, default=Path("data"))
-    parser.add_argument("--sqlite", type=Path, default=Path("output/northwind_plus.db"))
+    parser.add_argument("--sqlite", type=Path, default=Path("db/northwind_plus.db"))
     parser.add_argument("--postgres-url", default="postgresql+psycopg2://student:student@localhost:15432/retail_lab")
     parser.add_argument("--skip-postgres", action="store_true")
     args = parser.parse_args()
