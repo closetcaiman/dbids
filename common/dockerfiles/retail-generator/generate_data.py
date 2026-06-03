@@ -17,17 +17,16 @@ Outputs for each dataset size:
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import random
 import string
-from typing import Dict, List, Tuple
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 SEED = 20260509
 
-COUNTRY_CITIES: Dict[str, List[str]] = {
+COUNTRY_CITIES: dict[str, list[str]] = {
     "Poland": ["Warsaw", "Krakow", "Gdansk", "Poznan", "Wroclaw", "Lodz"],
     "Germany": ["Berlin", "Munich", "Hamburg", "Cologne", "Frankfurt"],
     "France": ["Paris", "Lyon", "Marseille", "Toulouse", "Nice"],
@@ -62,8 +61,21 @@ CATEGORY_NAMES = [
 ]
 
 PRODUCT_ADJECTIVES = [
-    "Premium", "Classic", "Organic", "Fresh", "Smoked", "Dried", "Sweet", "Salted",
-    "Traditional", "Golden", "Natural", "Imported", "Local", "Family", "Craft",
+    "Premium",
+    "Classic",
+    "Organic",
+    "Fresh",
+    "Smoked",
+    "Dried",
+    "Sweet",
+    "Salted",
+    "Traditional",
+    "Golden",
+    "Natural",
+    "Imported",
+    "Local",
+    "Family",
+    "Craft",
 ]
 
 PRODUCT_NOUNS = {
@@ -85,13 +97,43 @@ PRODUCT_NOUNS = {
 }
 
 COMPANY_PREFIXES = [
-    "Alfa", "Beta", "Gamma", "Delta", "Nova", "Prime", "Green", "Blue", "Silver", "Amber",
-    "Baltic", "Central", "Euro", "Fresh", "Urban", "Global", "Royal", "North", "East", "West",
+    "Alfa",
+    "Beta",
+    "Gamma",
+    "Delta",
+    "Nova",
+    "Prime",
+    "Green",
+    "Blue",
+    "Silver",
+    "Amber",
+    "Baltic",
+    "Central",
+    "Euro",
+    "Fresh",
+    "Urban",
+    "Global",
+    "Royal",
+    "North",
+    "East",
+    "West",
 ]
 
 COMPANY_SUFFIXES = [
-    "Foods", "Market", "Trading", "Supplies", "Gourmet", "Distribution", "Stores",
-    "Wholesale", "Cafe", "Restaurant", "Deli", "Partners", "Group", "Kitchen",
+    "Foods",
+    "Market",
+    "Trading",
+    "Supplies",
+    "Gourmet",
+    "Distribution",
+    "Stores",
+    "Wholesale",
+    "Cafe",
+    "Restaurant",
+    "Deli",
+    "Partners",
+    "Group",
+    "Kitchen",
 ]
 
 CUSTOMER_TYPES = ["retail", "wholesale", "horeca", "online", "distributor"]
@@ -120,7 +162,9 @@ def weighted_dates(
     weights *= np.where(weekdays.isin([0, 4]), 1.15, 1.0)
 
     # A few promotion/spike days for anomaly-detection exercises.
-    spike_days = pd.to_datetime(["2023-11-24", "2024-06-03", "2024-11-29", "2025-06-02", "2025-12-15"])
+    spike_days = pd.to_datetime(
+        ["2023-11-24", "2024-06-03", "2024-11-29", "2025-06-02", "2025-12-15"]
+    )
     for spike in spike_days:
         idx = np.where(days == spike)[0]
         if len(idx):
@@ -139,7 +183,9 @@ def weighted_dates(
 
 def generate_customers(rng: np.random.Generator, n_customers: int) -> pd.DataFrame:
     countries = list(COUNTRY_CITIES.keys())
-    country_weights = np.array([0.14, 0.13, 0.10, 0.12, 0.10, 0.08, 0.07, 0.06, 0.04, 0.03, 0.05, 0.04, 0.04])
+    country_weights = np.array(
+        [0.14, 0.13, 0.10, 0.12, 0.10, 0.08, 0.07, 0.06, 0.04, 0.03, 0.05, 0.04, 0.04]
+    )
     country_weights = country_weights / country_weights.sum()
 
     rows = []
@@ -150,11 +196,15 @@ def generate_customers(rng: np.random.Generator, n_customers: int) -> pd.DataFra
         country = str(rng.choice(countries, p=country_weights))
         city = str(rng.choice(COUNTRY_CITIES[country]))
         for _ in range(100):
-            name = f"{rng.choice(COMPANY_PREFIXES)} {rng.choice(COMPANY_SUFFIXES)} {i:05d}"
+            name = (
+                f"{rng.choice(COMPANY_PREFIXES)} {rng.choice(COMPANY_SUFFIXES)} {i:05d}"
+            )
             if name not in used_names:
                 used_names.add(name)
                 break
-        customer_type = str(rng.choice(CUSTOMER_TYPES, p=[0.34, 0.24, 0.18, 0.16, 0.08]))
+        customer_type = str(
+            rng.choice(CUSTOMER_TYPES, p=[0.34, 0.24, 0.18, 0.16, 0.08])
+        )
         rows.append(
             {
                 "customer_id": i,
@@ -234,18 +284,34 @@ def generate_orders(
     # Pareto-like customer weights: a smaller group orders more frequently.
     customer_ids = customers["customer_id"].to_numpy()
     customer_scores = rng.gamma(shape=1.4, scale=1.0, size=len(customer_ids))
-    type_multiplier = customers["customer_type"].map(
-        {"retail": 0.8, "wholesale": 1.6, "horeca": 1.4, "online": 1.1, "distributor": 2.0}
-    ).to_numpy()
+    type_multiplier = (
+        customers["customer_type"]
+        .map(
+            {
+                "retail": 0.8,
+                "wholesale": 1.6,
+                "horeca": 1.4,
+                "online": 1.1,
+                "distributor": 2.0,
+            }
+        )
+        .to_numpy()
+    )
     weights = customer_scores * type_multiplier
     weights = weights / weights.sum()
 
-    order_customer_ids = rng.choice(customer_ids, size=n_orders, replace=True, p=weights)
+    order_customer_ids = rng.choice(
+        customer_ids, size=n_orders, replace=True, p=weights
+    )
     order_dates = weighted_dates(rng, n_orders)
 
-    cust_lookup = customers.set_index("customer_id")[["country", "city"]].to_dict("index")
+    cust_lookup = customers.set_index("customer_id")[["country", "city"]].to_dict(
+        "index"
+    )
     rows = []
-    for i, (customer_id, order_date) in enumerate(zip(order_customer_ids, order_dates), start=100001):
+    for i, (customer_id, order_date) in enumerate(
+        zip(order_customer_ids, order_dates), start=100001
+    ):
         customer_id = int(customer_id)
         required_date = order_date + pd.Timedelta(days=int(rng.integers(3, 14)))
         if rng.random() < 0.08:
@@ -261,7 +327,9 @@ def generate_orders(
                 "customer_id": customer_id,
                 "order_date": order_date.date().isoformat(),
                 "required_date": required_date.date().isoformat(),
-                "shipped_date": "" if pd.isna(shipped_date) else shipped_date.date().isoformat(),
+                "shipped_date": ""
+                if pd.isna(shipped_date)
+                else shipped_date.date().isoformat(),
                 "ship_country": ship_country,
                 "ship_city": ship_city,
                 "shipping_cost": shipping_cost,
@@ -284,12 +352,19 @@ def generate_order_items(
     rows = []
     for order_id in orders["order_id"]:
         n_items = int(np.clip(rng.poisson(lam=2.4) + 1, 1, 8))
-        chosen_products = rng.choice(product_ids, size=n_items, replace=False, p=product_popularity)
+        chosen_products = rng.choice(
+            product_ids, size=n_items, replace=False, p=product_popularity
+        )
         for line_no, product_id in enumerate(chosen_products, start=1):
             base_price = float(price_lookup[int(product_id)])
             unit_price = round(max(0.5, base_price * float(rng.normal(1.0, 0.08))), 2)
             quantity = int(np.clip(rng.negative_binomial(n=3, p=0.48) + 1, 1, 50))
-            discount = float(rng.choice([0, 0.03, 0.05, 0.10, 0.15, 0.20], p=[0.57, 0.08, 0.15, 0.12, 0.06, 0.02]))
+            discount = float(
+                rng.choice(
+                    [0, 0.03, 0.05, 0.10, 0.15, 0.20],
+                    p=[0.57, 0.08, 0.15, 0.12, 0.06, 0.02],
+                )
+            )
             rows.append(
                 {
                     "order_id": int(order_id),
@@ -312,12 +387,22 @@ def make_fact_sales(
 ) -> pd.DataFrame:
     fact = (
         order_items.merge(orders, on="order_id", how="left")
-        .merge(customers[["customer_id", "company_name", "country", "city", "customer_type"]], on="customer_id", how="left")
+        .merge(
+            customers[
+                ["customer_id", "company_name", "country", "city", "customer_type"]
+            ],
+            on="customer_id",
+            how="left",
+        )
         .merge(products, on="product_id", how="left")
         .merge(categories, on="category_id", how="left")
     )
-    fact["line_value"] = (fact["unit_price"] * fact["quantity"] * (1 - fact["discount"])).round(2)
-    fact["order_month"] = pd.to_datetime(fact["order_date"]).dt.to_period("M").astype(str)
+    fact["line_value"] = (
+        fact["unit_price"] * fact["quantity"] * (1 - fact["discount"])
+    ).round(2)
+    fact["order_month"] = (
+        pd.to_datetime(fact["order_date"]).dt.to_period("M").astype(str)
+    )
     columns = [
         "order_id",
         "line_no",
@@ -362,7 +447,12 @@ def random_date_format(rng: np.random.Generator, date_value: str) -> str:
     if date_value == "" or pd.isna(date_value):
         return ""
     dt = pd.to_datetime(date_value)
-    fmt = str(rng.choice(["iso", "slash_dmy", "month_name", "dot_dmy", "us_mdy"], p=[0.45, 0.18, 0.12, 0.12, 0.13]))
+    fmt = str(
+        rng.choice(
+            ["iso", "slash_dmy", "month_name", "dot_dmy", "us_mdy"],
+            p=[0.45, 0.18, 0.12, 0.12, 0.13],
+        )
+    )
     if fmt == "iso":
         return dt.strftime("%Y-%m-%d")
     if fmt == "slash_dmy":
@@ -374,28 +464,47 @@ def random_date_format(rng: np.random.Generator, date_value: str) -> str:
     return dt.strftime("%m/%d/%Y")
 
 
-def make_customers_dirty(rng: np.random.Generator, customers: pd.DataFrame) -> pd.DataFrame:
+def make_customers_dirty(
+    rng: np.random.Generator, customers: pd.DataFrame
+) -> pd.DataFrame:
     dirty = customers.copy()
     dirty["country"] = [dirty_country(rng, c) for c in dirty["country"]]
-    dirty["registration_date"] = [random_date_format(rng, d) for d in dirty["registration_date"]]
+    dirty["registration_date"] = [
+        random_date_format(rng, d) for d in dirty["registration_date"]
+    ]
 
     # Missing values.
-    country_missing = rng.choice(dirty.index, size=max(1, int(0.04 * len(dirty))), replace=False)
-    phone_missing = rng.choice(dirty.index, size=max(1, int(0.08 * len(dirty))), replace=False)
+    country_missing = rng.choice(
+        dirty.index, size=max(1, int(0.04 * len(dirty))), replace=False
+    )
+    phone_missing = rng.choice(
+        dirty.index, size=max(1, int(0.08 * len(dirty))), replace=False
+    )
     dirty.loc[country_missing, "country"] = ""
     dirty.loc[phone_missing, "phone"] = ""
 
     # Add duplicate companies with new IDs and slightly altered fields.
     n_duplicates = max(5, int(0.03 * len(dirty)))
-    duplicate_rows = dirty.sample(n=n_duplicates, random_state=int(rng.integers(0, 1_000_000))).copy()
-    duplicate_rows["customer_id"] = range(int(dirty["customer_id"].max()) + 1, int(dirty["customer_id"].max()) + 1 + n_duplicates)
+    duplicate_rows = dirty.sample(
+        n=n_duplicates, random_state=int(rng.integers(0, 1_000_000))
+    ).copy()
+    duplicate_rows["customer_id"] = range(
+        int(dirty["customer_id"].max()) + 1,
+        int(dirty["customer_id"].max()) + 1 + n_duplicates,
+    )
     duplicate_rows.loc[duplicate_rows.index[: max(1, n_duplicates // 3)], "phone"] = ""
-    duplicate_rows["company_name"] = duplicate_rows["company_name"].str.replace("  ", " ", regex=False)
+    duplicate_rows["company_name"] = duplicate_rows["company_name"].str.replace(
+        "  ", " ", regex=False
+    )
     dirty = pd.concat([dirty, duplicate_rows], ignore_index=True)
 
     # A few leading/trailing spaces for string-cleaning practice.
-    sample_idx = rng.choice(dirty.index, size=max(1, int(0.05 * len(dirty))), replace=False)
-    dirty.loc[sample_idx, "company_name"] = " " + dirty.loc[sample_idx, "company_name"].astype(str) + " "
+    sample_idx = rng.choice(
+        dirty.index, size=max(1, int(0.05 * len(dirty))), replace=False
+    )
+    dirty.loc[sample_idx, "company_name"] = (
+        " " + dirty.loc[sample_idx, "company_name"].astype(str) + " "
+    )
     return dirty
 
 
@@ -405,26 +514,34 @@ def make_orders_dirty(rng: np.random.Generator, orders: pd.DataFrame) -> pd.Data
         dirty[col] = [random_date_format(rng, d) for d in dirty[col]]
 
     # Missing shipped dates.
-    ship_missing = rng.choice(dirty.index, size=max(1, int(0.07 * len(dirty))), replace=False)
+    ship_missing = rng.choice(
+        dirty.index, size=max(1, int(0.07 * len(dirty))), replace=False
+    )
     dirty.loc[ship_missing, "shipped_date"] = ""
 
     # A few impossible or suspicious dates.
-    suspicious = rng.choice(dirty.index, size=max(1, int(0.005 * len(dirty))), replace=False)
+    suspicious = rng.choice(
+        dirty.index, size=max(1, int(0.005 * len(dirty))), replace=False
+    )
     dirty.loc[suspicious[: len(suspicious) // 2], "order_date"] = "2099-01-01"
     dirty.loc[suspicious[len(suspicious) // 2 :], "order_date"] = "1900-01-01"
 
     # A few invalid shipping costs.
-    cost_bad = rng.choice(dirty.index, size=max(1, int(0.01 * len(dirty))), replace=False)
+    cost_bad = rng.choice(
+        dirty.index, size=max(1, int(0.01 * len(dirty))), replace=False
+    )
     dirty.loc[cost_bad, "shipping_cost"] = -dirty.loc[cost_bad, "shipping_cost"].abs()
 
     # Duplicate some orders to practice duplicate checks.
     n_duplicates = max(5, int(0.01 * len(dirty)))
-    duplicates = dirty.sample(n=n_duplicates, random_state=int(rng.integers(0, 1_000_000))).copy()
+    duplicates = dirty.sample(
+        n=n_duplicates, random_state=int(rng.integers(0, 1_000_000))
+    ).copy()
     dirty = pd.concat([dirty, duplicates], ignore_index=True)
     return dirty
 
 
-def generate_dataset(output_dir: Path, size_name: str, spec: Dict[str, int]) -> None:
+def generate_dataset(output_dir: Path, size_name: str, spec: dict[str, int]) -> None:
     rng = np.random.default_rng(SEED + spec["customers"] + spec["orders"])
     random.seed(SEED)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -436,7 +553,12 @@ def generate_dataset(output_dir: Path, size_name: str, spec: Dict[str, int]) -> 
     order_items = generate_order_items(rng, orders, products)
     fact_sales = make_fact_sales(customers, categories, products, orders, order_items)
     customers_dirty = make_customers_dirty(rng, customers)
-    orders_dirty = make_orders_dirty(rng, orders.sample(n=min(len(orders), 10000), random_state=SEED).sort_values("order_id"))
+    orders_dirty = make_orders_dirty(
+        rng,
+        orders.sample(n=min(len(orders), 10000), random_state=SEED).sort_values(
+            "order_id"
+        ),
+    )
 
     # Deterministic ordering.
     customers = customers.sort_values("customer_id")
@@ -475,8 +597,18 @@ def main() -> None:
     args = parser.parse_args()
 
     specs = {
-        "small": {"customers": 500, "products": 120, "categories": 12, "orders": 10_000},
-        "medium": {"customers": 3_000, "products": 250, "categories": 15, "orders": 30_000},
+        "small": {
+            "customers": 500,
+            "products": 120,
+            "categories": 12,
+            "orders": 10_000,
+        },
+        "medium": {
+            "customers": 3_000,
+            "products": 250,
+            "categories": 15,
+            "orders": 30_000,
+        },
     }
     for size_name, spec in specs.items():
         generate_dataset(args.output / size_name, size_name, spec)

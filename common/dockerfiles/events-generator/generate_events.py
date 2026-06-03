@@ -79,8 +79,12 @@ def generate(output_file: Path, n_rows: int) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", type=Path, default=Path("events"),
-                        help="Output directory; events.csv is written inside it.")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("events"),
+        help="Output directory; events.csv is written inside it.",
+    )
     parser.add_argument("--rows", type=int, default=100_000)
     args = parser.parse_args()
 

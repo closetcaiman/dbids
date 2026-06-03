@@ -11,7 +11,16 @@ from pathlib import Path
 
 import pandas as pd
 
-TABLES = ["customers", "categories", "products", "orders", "order_items", "customers_dirty", "orders_dirty", "fact_sales"]
+TABLES = [
+    "customers",
+    "categories",
+    "products",
+    "orders",
+    "order_items",
+    "customers_dirty",
+    "orders_dirty",
+    "fact_sales",
+]
 
 
 def csv_counts(dataset_dir: Path) -> dict[str, int]:
@@ -20,7 +29,12 @@ def csv_counts(dataset_dir: Path) -> dict[str, int]:
 
 def sqlite_counts(db_path: Path) -> dict[str, int]:
     with sqlite3.connect(db_path) as conn:
-        return {table: pd.read_sql_query(f"SELECT COUNT(*) AS n FROM {table}", conn)["n"].iloc[0] for table in TABLES}
+        return {
+            table: pd.read_sql_query(f"SELECT COUNT(*) AS n FROM {table}", conn)[
+                "n"
+            ].iloc[0]
+            for table in TABLES
+        }
 
 
 def postgres_counts(url: str) -> dict[str, int]:
@@ -28,7 +42,12 @@ def postgres_counts(url: str) -> dict[str, int]:
 
     engine = create_engine(url)
     with engine.connect() as conn:
-        return {table: conn.execute(text(f"SELECT COUNT(*) FROM retail.{table}")).scalar_one() for table in TABLES}
+        return {
+            table: conn.execute(
+                text(f"SELECT COUNT(*) FROM retail.{table}")
+            ).scalar_one()
+            for table in TABLES
+        }
 
 
 def main() -> None:
@@ -36,7 +55,10 @@ def main() -> None:
     parser.add_argument("--dataset", choices=["small", "medium"], default="medium")
     parser.add_argument("--data-dir", type=Path, default=Path("data"))
     parser.add_argument("--sqlite", type=Path, default=Path("db/northwind_plus.db"))
-    parser.add_argument("--postgres-url", default="postgresql+psycopg2://student:student@localhost:15432/retail_lab")
+    parser.add_argument(
+        "--postgres-url",
+        default="postgresql+psycopg2://student:student@localhost:15432/retail_lab",
+    )
     parser.add_argument("--skip-postgres", action="store_true")
     args = parser.parse_args()
 
