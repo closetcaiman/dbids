@@ -209,6 +209,42 @@ LIMIT 3;
 - Ile dokumentów znajduje się w kolekcjach `orders`, `orderdetails`, `customers`, `products` i `orders_nested`?
 - Czym różni się dokument z kolekcji `orders` od dokumentu z kolekcji `orders_nested`?
 
+**Rozwiązanie:**
+
+> Co oznaczają pojęcia bucket, scope i collection?
+
+**Bucket** - najwyższy poziom w hierarchii organizacji danych, jest to odpowiednik całej bazy danych. W ramach `bucketu` może istnieć wiele różnych `scope`.
+
+**Scope** - pośredni poziom grupowania kolekcji wewnątrz `bucketa`, odpowiednik przestrzeni nazw. Pozwala na logiczne oddzielenie od siebie zestawów kolekcji (np. sprzedaż vs. magazyn). W ramach `scope` może istnieć wiele różnych kolekcji.
+
+**Colection** - zbiór dokumentów tego samego typu, jest to odpowiednik tabli w SQL, natomiast kolekcje nie narzucają konkretnej struktury, reprezentują jedynie zbiór podobnych dokumentów. W ramach kolekcji może istnieć wiele dokumentów.
+
+> Ile dokumentów znajduje się w kolekcjach orders, orderdetails,
+> customers, products i orders_nested?
+
+![alt text](image-4.png)
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-2.png)
+![alt text](image-3.png)
+
+| Kolekcja      | Liczba dokumentów |
+| ------------- | ----------------- |
+| orders        | 830               |
+| orderdetails  | 2155              |
+| customers     | 91                |
+| products      | 77                |
+| orders_nested | 830               |
+
+Dodatkowo, w Couchbase dostępne jest także podsumowanie danych, dzięki czemu mamy bezpośrednią informację o liczności poszczególnych kolekcji:
+
+![alt text](image-5.png)
+
+> Czym różni się dokument z kolekcji orders od dokumentu z kolekcji
+> orders_nested?
+
+W kolekcji `orders` znajdują się tylko podstawowe informacje o zamówieniu, natomiast wszelkie szczegóły odnośnie kupowanych produktów znajdują się w kolekcji `orderdetails` (informacje o tym jakie produkty i w jakiej ilości były kupowane w ramach danego zamówienia). Kolekcja `orders_nested` zawiera te informacje bezpośrednio zagnieżdżone, to znaczy mamy do tych dancyh bezpośrednio, bez konieczności łączenia kolekcji (jak ma to miejsce w podejściu `orders` + `orderdetails`).
+
 ---
 
 ## 2. Indeksy: brak indeksu, primary index, secondary index – 2 pkt
