@@ -1,4 +1,0 @@
-# Dependencies for the lab10 generator container only (data + SQLite build).
-# Host/notebook dependencies live in the root pyproject.toml / uv project.
-pandas>=2.2
-numpy>=1.26

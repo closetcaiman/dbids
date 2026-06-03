@@ -1,10 +1,15 @@
-# Generator image for lab10: builds synthetic CSVs and the SQLite database.
-# Dependencies are baked in at build time so `make up` does not reinstall them
-# on every cold start. Scripts are mounted at runtime, so editing a script does
-# not require rebuilding this image (only changing requirements does).
-FROM python:3.12-slim
+# Generator image for lab9/lab10: produces the common synthetic CSV dataset
+# (shared by every engine — Postgres, ClickHouse, SQLite). Dependencies are
+# uv-locked (pyproject.toml + uv.lock) and the generator script is baked in,
+# since only this container runs it. Rebuilds only when deps or script change.
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-WORKDIR /lab
+WORKDIR /app
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PATH="/app/.venv/bin:$PATH"
 
-COPY requirements.txt /lab/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
+COPY generate_data.py ./
