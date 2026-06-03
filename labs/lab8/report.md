@@ -438,18 +438,59 @@ GROUP BY o.OrderID,
 LIMIT 10;
 ```
 
-```txt
-CustomerID	OrderID	order_value
-"QUICK"	10273	2037.2799984335898
-"SPECD"	10964	2052.5
-"MAGAA"	10404	1591.2499987520278
-"MAISD"	10892	2089.9999983608723
-"QUICK"	10996	560
-"OTTIK"	11020	632.3999955654144
-"TORTU"	10842	975
-"LACOR"	10858	649
-"AROUT"	10453	407.6999993249774
-"THEBI"	10992	69.6
+```json
+[
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10938,
+    "order_value": 2731.875
+  },
+  {
+    "CustomerID": "TRADH",
+    "OrderID": 10830,
+    "order_value": 1974
+  },
+  {
+    "CustomerID": "REGGC",
+    "OrderID": 10942,
+    "order_value": 560
+  },
+  {
+    "CustomerID": "LILAS",
+    "OrderID": 10283,
+    "order_value": 1414.8000000000002
+  },
+  {
+    "CustomerID": "OTTIK",
+    "OrderID": 10508,
+    "order_value": 240
+  },
+  {
+    "CustomerID": "OCEAN",
+    "OrderID": 10409,
+    "order_value": 319.20000000000005
+  },
+  {
+    "CustomerID": "SANTG",
+    "OrderID": 10909,
+    "order_value": 670
+  },
+  {
+    "CustomerID": "SAVEA",
+    "OrderID": 10678,
+    "order_value": 5256.5
+  },
+  {
+    "CustomerID": "REGGC",
+    "OrderID": 10908,
+    "order_value": 663.0999994799495
+  },
+  {
+    "CustomerID": "RANCH",
+    "OrderID": 10828,
+    "order_value": 932
+  }
+]
 ```
 
 ![alt text](image-7.png)
@@ -475,7 +516,7 @@ W przypadku braku indeksu konieczne pełne przeskanowanie kolekcji, czyli w przy
 
 W przypadku próby połączenia kolekcj po kluczu, na który nie jest założony indeks, zapytanie kończy się błędem:
 
-```txt
+```json
 [
   {
     "code": 4330,
@@ -503,18 +544,69 @@ GROUP BY o.OrderID,
 ORDER BY order_value DESC, positions DESC;
 ```
 
-```txt
-CustomerID	OrderID	order_value	positions
-"QUICK"	10865	16387.49998714775	2
-"HANAR"	10981	15810	1
-"SAVEA"	11030	12615.05	4
-"RATTC"	10889	11380	2
-"SIMOB"	10417	11188.4	4
-"KOENE"	10817	10952.844978627563	4
-"HUNGO"	10897	10835.240000000002	2
-"RATTC"	10479	10495.6	4
-"QUICK"	10540	10191.7	4
-"QUICK"	10691	10164.8	5
+```json
+[
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10865,
+    "order_value": 16387.49998714775,
+    "positions": 2
+  },
+  {
+    "CustomerID": "HANAR",
+    "OrderID": 10981,
+    "order_value": 15810,
+    "positions": 1
+  },
+  {
+    "CustomerID": "SAVEA",
+    "OrderID": 11030,
+    "order_value": 12615.05,
+    "positions": 4
+  },
+  {
+    "CustomerID": "RATTC",
+    "OrderID": 10889,
+    "order_value": 11380,
+    "positions": 2
+  },
+  {
+    "CustomerID": "SIMOB",
+    "OrderID": 10417,
+    "order_value": 11188.4,
+    "positions": 4
+  },
+  {
+    "CustomerID": "KOENE",
+    "OrderID": 10817,
+    "order_value": 10952.844978627563,
+    "positions": 4
+  },
+  {
+    "CustomerID": "HUNGO",
+    "OrderID": 10897,
+    "order_value": 10835.240000000002,
+    "positions": 2
+  },
+  {
+    "CustomerID": "RATTC",
+    "OrderID": 10479,
+    "order_value": 10495.6,
+    "positions": 4
+  },
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10540,
+    "order_value": 10191.7,
+    "positions": 4
+  },
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10691,
+    "order_value": 10164.8,
+    "positions": 5
+  }
+]
 ```
 
 Zgodnie z otrzymanymi wynikami (top 10 rezultatów w zadanej kolejności), największe zamówienia niekoniecznie zawsze mają największą liczbę pozycji. Zamówienie o największej wartości ma wyłącznie 2 pozycje, drugie w kolejności zamówienie ma 1 pozycję, gdzie np. zamówienie o 10. w kolejności wartości ma aż 5 pozycji.
@@ -538,6 +630,56 @@ Zwróć uwagę na pole:
 
 ```text
 items
+```
+
+**Rozwiązanie:**
+
+```sql
+select *
+from orders_nested
+where OrderID = 10248;
+```
+
+```json
+[
+  {
+    "orders_nested": {
+      "CustomerID": "VINET",
+      "EmployeeID": 5,
+      "OrderDate": {
+        "$date": "1996-07-04T00:00:00Z"
+      },
+      "OrderID": 10248,
+      "ShipCity": "Reims",
+      "ShipCountry": "France",
+      "ShipName": "Vins et alcools Chevalier",
+      "items": [
+        {
+          "Discount": 0,
+          "LineValue": 98,
+          "ProductID": 42,
+          "Quantity": 10,
+          "UnitPrice": 9.8
+        },
+        {
+          "Discount": 0,
+          "LineValue": 168,
+          "ProductID": 11,
+          "Quantity": 12,
+          "UnitPrice": 14
+        },
+        {
+          "Discount": 0,
+          "LineValue": 174,
+          "ProductID": 72,
+          "Quantity": 5,
+          "UnitPrice": 34.8
+        }
+      ],
+      "type": "order_nested"
+    }
+  }
+]
 ```
 
 ### Część B – rozbij tablicę `items` przez `UNNEST`
@@ -569,6 +711,53 @@ WHERE n.OrderID = 10248;
 
 Rozbuduj to zapytanie o pozostałe kolumny wymienione powyżej.
 
+**Rozwiązanie:**
+
+```sql
+SELECT odn.OrderID,
+       odn.CustomerID,
+       item.ProductID,
+       item.UnitPrice,
+       item.Quantity,
+       item.Discount,
+       item.LineValue
+FROM orders_nested AS odn
+UNNEST odn.items AS item
+WHERE odn.OrderID = 10248;
+```
+
+```json
+[
+  {
+    "CustomerID": "VINET",
+    "Discount": 0,
+    "LineValue": 98,
+    "OrderID": 10248,
+    "ProductID": 42,
+    "Quantity": 10,
+    "UnitPrice": 9.8
+  },
+  {
+    "CustomerID": "VINET",
+    "Discount": 0,
+    "LineValue": 168,
+    "OrderID": 10248,
+    "ProductID": 11,
+    "Quantity": 12,
+    "UnitPrice": 14
+  },
+  {
+    "CustomerID": "VINET",
+    "Discount": 0,
+    "LineValue": 174,
+    "OrderID": 10248,
+    "ProductID": 72,
+    "Quantity": 5,
+    "UnitPrice": 34.8
+  }
+]
+```
+
 ### Część C – policz wartość zamówień z modelu zagnieżdżonego
 
 Na kolekcji `orders_nested` policz:
@@ -582,19 +771,83 @@ Użyj `UNNEST`.
 
 Pokaż 10 zamówień o najwyższej wartości.
 
-<!-- mozesz to zmienic jak chcesz -->
-
 ```sql
-select n.OrderID,
+SELECT n.OrderID,
        n.CustomerID,
-       sum(item.UnitPrice * item.Quantity * (1 - ifmissingornull(item.Discount, 0))) as TotalOrderValue,
-       count(1)                                                                      as ItemsCount
-from `northwind`._default.orders_nested as n
-         unnest n.items as item
-where n.OrderID is not missing
-group by n.OrderID, n.CustomerID
-order by TotalOrderValue desc
-limit 10;
+       SUM(item.UnitPrice * item.Quantity * (1 - IFMISSINGORNULL(item.Discount, 0))) AS order_value,
+       COUNT(1) AS positions
+FROM orders_nested AS n
+UNNEST n.items AS item
+WHERE n.OrderID IS NOT MISSING
+GROUP BY n.OrderID,
+         n.CustomerID
+ORDER BY order_value DESC
+LIMIT 10;
+```
+
+```json
+[
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10865,
+    "order_value": 16387.49998714775,
+    "positions": 2
+  },
+  {
+    "CustomerID": "HANAR",
+    "OrderID": 10981,
+    "order_value": 15810,
+    "positions": 1
+  },
+  {
+    "CustomerID": "SAVEA",
+    "OrderID": 11030,
+    "order_value": 12615.05,
+    "positions": 4
+  },
+  {
+    "CustomerID": "RATTC",
+    "OrderID": 10889,
+    "order_value": 11380,
+    "positions": 2
+  },
+  {
+    "CustomerID": "SIMOB",
+    "OrderID": 10417,
+    "order_value": 11188.4,
+    "positions": 4
+  },
+  {
+    "CustomerID": "KOENE",
+    "OrderID": 10817,
+    "order_value": 10952.844978627563,
+    "positions": 4
+  },
+  {
+    "CustomerID": "HUNGO",
+    "OrderID": 10897,
+    "order_value": 10835.240000000002,
+    "positions": 2
+  },
+  {
+    "CustomerID": "RATTC",
+    "OrderID": 10479,
+    "order_value": 10495.6,
+    "positions": 4
+  },
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10540,
+    "order_value": 10191.7,
+    "positions": 4
+  },
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10691,
+    "order_value": 10164.8,
+    "positions": 5
+  }
+]
 ```
 
 ### Część D – porównaj wynik z modelem niezagnieżdżonym
@@ -605,6 +858,83 @@ Minimum: porównaj wizualnie top 10 zamówień z obu podejść i napisz, czy wyn
 
 Opcjonalnie: jeżeli chcesz potwierdzić zgodność formalnie, możesz napisać zapytanie z `WITH`, które porówna wartości zamówień z obu modeli dla wszystkich 830 zamówień.
 
+**Rozwiązanie:**
+
+Wyniki otrzymane z zapytania wykorzystującego `JOIN`:
+
+```txt
+CustomerID	OrderID	order_value	positions
+"QUICK"	10865	16387.49998714775	2
+"HANAR"	10981	15810	1
+"SAVEA"	11030	12615.05	4
+"RATTC"	10889	11380	2
+"SIMOB"	10417	11188.4	4
+"KOENE"	10817	10952.844978627563	4
+"HUNGO"	10897	10835.240000000002	2
+"RATTC"	10479	10495.6	4
+"QUICK"	10540	10191.7	4
+"QUICK"	10691	10164.8	5
+```
+
+Wyniki otrzymane z zapytania wykorzystującego model zagnieżdżony:
+
+```txt
+CustomerID	OrderID	order_value	positions
+"QUICK"	10865	16387.49998714775	2
+"HANAR"	10981	15810	1
+"SAVEA"	11030	12615.05	4
+"RATTC"	10889	11380	2
+"SIMOB"	10417	11188.4	4
+"KOENE"	10817	10952.844978627563	4
+"HUNGO"	10897	10835.240000000002	2
+"RATTC"	10479	10495.6	4
+"QUICK"	10540	10191.7	4
+"QUICK"	10691	10164.8	5
+```
+
+Wyniki otrzymane z obu zapytań są identyczne. Dodatkowo, w celu zweryfikowania, wykorzystane zostało zapytanie korzystające z klauzul `WITH` oraz `EXCEPT`, które weryfikuje czy wyniki są identyczne dla wszystkich dokumentów (dokładność `order_value` do 6 miejsc po przecinku):
+
+```sql
+WITH flat AS (
+    SELECT o.OrderID,
+           o.CustomerID,
+           ROUND(SUM(od.UnitPrice * od.Quantity * (1 - IFMISSINGORNULL(od.Discount, 0))), 6) AS order_value,
+           COUNT(*) AS positions
+    FROM orders AS o
+        JOIN orderdetails AS od ON o.OrderID = od.OrderID
+    WHERE o.OrderID IS NOT MISSING
+        AND od.OrderID IS NOT MISSING
+    GROUP BY o.OrderID,
+             o.CustomerID ),
+nested AS (
+    SELECT n.OrderID,
+           n.CustomerID,
+           ROUND(SUM(item.UnitPrice * item.Quantity * (1 - IFMISSINGORNULL(item.Discount, 0))), 6) AS order_value,
+           COUNT(1) AS positions
+    FROM orders_nested AS n
+    UNNEST n.items AS item
+    WHERE n.OrderID IS NOT MISSING
+    GROUP BY n.OrderID,
+             n.CustomerID )
+SELECT 'only_in_flat' AS source,
+       f.*
+FROM flat AS f EXCEPT ALL SELECT 'only_in_flat' AS source,
+                                         n.*
+FROM nested AS n
+UNION ALL
+SELECT 'only_in_nested' AS source,
+       n.*
+FROM nested AS n EXCEPT ALL SELECT 'only_in_nested' AS source,
+                                           f.*
+FROM flat AS f;
+```
+
+```json
+{
+  "results": []
+}
+```
+
 ### W komentarzu napisz
 
 - Na czym polega różnica między `JOIN` i `UNNEST`?
@@ -612,6 +942,26 @@ Opcjonalnie: jeżeli chcesz potwierdzić zgodność formalnie, możesz napisać 
 - Czy oba podejścia dają ten sam wynik biznesowy?
 - Kiedy zagnieżdżanie pozycji zamówienia w dokumencie może być wygodne?
 - Kiedy lepiej zostawić dane w osobnych kolekcjach?
+
+> Na czym polega różnica między `JOIN` i `UNNEST`?
+
+`JOIN` łączy dwa osobne dokumenty z dwóch kolekcji na podstawie wspólnego klucza. `UNNEST` rozpakowuje tablicę wewnątrz jednego dokumentu i traktuje każdy jej element jako osobny wiersz.
+
+> Dlaczego w modelu zagnieżdżonym nie trzeba łączyć `orders` z `orderdetails`?
+
+Ponieważ w modelu zagnieżdżonym, wszystkie dane z `orderdetails` są zawarte w kolekcji `orders_nested` pod kluczem `items` - dzięki temu mamy do nich bezpośredni dostęp (są one częścią dokumentu), a wszystko co potrzebne do wyliczenia wartości zamówienia znajduje się w jednym miejscu.
+
+> Czy oba podejścia dają ten sam wynik biznesowy?
+
+Oba podejścia dają ten sam wynik biznesowy
+
+> Kiedy zagnieżdżanie pozycji zamówienia w dokumencie może być wygodne?
+
+Zagnieżdżanie jest wygodne, gdy dane są silnie powiązane i zawsze odczytywane razem. Dzięki temu możemy uniknąć wielu kosztowych operacji `JOIN`, ponieważ mamy bezpośredni dostęp do zagnieżdżonych danych. Przykładowo, pozycje zamówienia oraz szczegóły dotyczące zamówienia rzadko mają sens bez kontekstu samego zamówienia.
+
+> Kiedy lepiej zostawić dane w osobnych kolekcjach?
+
+Osobne kolekcje sprawdzą się lepiej w sytuacji, gdy odwołujemy się do danych z wielu miejsc - przykładowo, produkt (identyfikowany przez `ProductID`) pojawia się w wielu zamówieniach i nie ma sensu duplikowanie danych każdego produktu za każdym razem, gdy jest on zagnieżdżany. Dla danych, dla których potrzebujemy niezależnych zapytań (dane nie są ściśle powiązane z innym dokumentem i ma sa odpytywanie tej kolekcji w izolacji), rozdzielenie danych na osobne kolekcje także może okazać się wygodniejsze. Dzięki rozdzieleniu zagnieżdżonych danych na osobne kolekcje możemy także uniknąć duplikacji danych, co pomaga także w aktualizacji danych (np. zmiana nazwy produktu w jednym miejscu, a nie w wielu dokumentach).
 
 ---
 
