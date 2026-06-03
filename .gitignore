@@ -5,6 +5,7 @@ labs/*/db/
 # Generated lab datasets (produced by the generator containers)
 labs/lab9/data/
 labs/lab10/data/
+common/data/events/events.csv
 
 # Notebook-produced report artifacts
 labs/lab9/output/

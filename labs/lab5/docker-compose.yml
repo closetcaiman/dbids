@@ -1,7 +1,20 @@
 services:
+  generator:
+    build:
+      context: ./common/dockerfiles/events-generator
+      dockerfile: Dockerfile
+    image: events_generator
+    container_name: events_generator_lab5
+    volumes:
+      - ./common/data/events:/data
+    command: ["python", "generate_events.py", "--output", "/data"]
+
   clickhouse:
     image: clickhouse/clickhouse-server:25.12
     container_name: clickhouse_lab5
+    depends_on:
+      generator:
+        condition: service_completed_successfully
     ports:
       - "8123:8123"
       - "9000:9000"
@@ -15,6 +28,9 @@ services:
   postgres:
     image: postgres:16
     container_name: postgres_lab5
+    depends_on:
+      generator:
+        condition: service_completed_successfully
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin

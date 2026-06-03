@@ -1,7 +1,7 @@
 services:
   generator:
     build:
-      context: ./common/dockerfiles/generator
+      context: ./common/dockerfiles/retail-generator
       dockerfile: Dockerfile
     image: retail_lab_generator
     container_name: retail_lab_generator
