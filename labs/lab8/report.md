@@ -222,11 +222,11 @@ LIMIT 3;
 > Ile dokumentów znajduje się w kolekcjach orders, orderdetails,
 > customers, products i orders_nested?
 
-![alt text](image-4.png)
-![alt text](image.png)
-![alt text](image-1.png)
-![alt text](image-2.png)
-![alt text](image-3.png)
+![alt text](media/image-4.png)
+![alt text](media/image.png)
+![alt text](media/image-1.png)
+![alt text](media/image-2.png)
+![alt text](media/image-3.png)
 
 | Kolekcja      | Liczba dokumentów |
 | ------------- | ----------------- |
@@ -238,7 +238,7 @@ LIMIT 3;
 
 Dodatkowo, w Couchbase dostępne jest także podsumowanie danych, dzięki czemu mamy bezpośrednią informację o liczności poszczególnych kolekcji:
 
-![alt text](image-5.png)
+![alt text](media/image-5.png)
 
 > Czym różni się dokument z kolekcji orders od dokumentu z kolekcji
 > orders_nested?
@@ -400,7 +400,7 @@ WHERE o.OrderID IS NOT MISSING
     AND od.OrderID IS NOT MISSING
 ```
 
-![alt text](image-6.png)
+![alt text](media/image-6.png)
 
 ### Część C – wartość zamówienia
 
@@ -493,7 +493,7 @@ LIMIT 10;
 ]
 ```
 
-![alt text](image-7.png)
+![alt text](media/image-7.png)
 
 ### W komentarzu napisz
 
