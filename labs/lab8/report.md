@@ -182,7 +182,7 @@ W poprawnie zainicjalizowanym środowisku powinieneś otrzymać orientacyjnie:
 | `orders_nested` | 83?               |
 
 3. Podejrzyj kilka dokumentów z kolekcji `orders`.
-1. Podejrzyj jeden dokument z kolekcji `orders_nested`.
+4. Podejrzyj jeden dokument z kolekcji `orders_nested`.
 
 ### Wskazówki
 
@@ -208,6 +208,188 @@ LIMIT 3;
 - Co oznaczają pojęcia `bucket`, `scope` i `collection`?
 - Ile dokumentów znajduje się w kolekcjach `orders`, `orderdetails`, `customers`, `products` i `orders_nested`?
 - Czym różni się dokument z kolekcji `orders` od dokumentu z kolekcji `orders_nested`?
+
+**Rozwiązanie:**
+
+Przykładowe dokumenty z kolekcji `orders`:
+
+```sql
+SELECT o
+FROM orders AS o
+WHERE o.OrderID IS NOT MISSING
+LIMIT 3;
+```
+
+```json
+[
+  {
+    "o": {
+      "CustomerID": "VINET",
+      "EmployeeID": 5,
+      "Freight": 32.38,
+      "OrderDate": {
+        "$date": "1996-07-04T00:00:00Z"
+      },
+      "OrderID": 10248,
+      "RequiredDate": {
+        "$date": "1996-08-01T00:00:00Z"
+      },
+      "ShipAddress": "59 rue de l'Abbaye",
+      "ShipCity": "Reims",
+      "ShipCountry": "France",
+      "ShipName": "Vins et alcools Chevalier",
+      "ShipPostalCode": "51100",
+      "ShipRegion": null,
+      "ShipVia": 3,
+      "ShippedDate": {
+        "$date": "1996-07-16T00:00:00Z"
+      },
+      "_id": {
+        "$oid": "63a060b9bb3b972d6f4e1fc6"
+      }
+    }
+  },
+  {
+    "o": {
+      "CustomerID": "TOMSP",
+      "EmployeeID": 6,
+      "Freight": 11.61,
+      "OrderDate": {
+        "$date": "1996-07-05T00:00:00Z"
+      },
+      "OrderID": 10249,
+      "RequiredDate": {
+        "$date": "1996-08-16T00:00:00Z"
+      },
+      "ShipAddress": "Luisenstr. 48",
+      "ShipCity": "Münster",
+      "ShipCountry": "Germany",
+      "ShipName": "Toms Spezialitäten",
+      "ShipPostalCode": "44087",
+      "ShipRegion": null,
+      "ShipVia": 1,
+      "ShippedDate": {
+        "$date": "1996-07-10T00:00:00Z"
+      },
+      "_id": {
+        "$oid": "63a060b9bb3b972d6f4e1fc7"
+      }
+    }
+  },
+  {
+    "o": {
+      "CustomerID": "HANAR",
+      "EmployeeID": 4,
+      "Freight": 65.83,
+      "OrderDate": {
+        "$date": "1996-07-08T00:00:00Z"
+      },
+      "OrderID": 10250,
+      "RequiredDate": {
+        "$date": "1996-08-05T00:00:00Z"
+      },
+      "ShipAddress": "Rua do Paço, 67",
+      "ShipCity": "Rio de Janeiro",
+      "ShipCountry": "Brazil",
+      "ShipName": "Hanari Carnes",
+      "ShipPostalCode": "05454-876",
+      "ShipRegion": "RJ",
+      "ShipVia": 2,
+      "ShippedDate": {
+        "$date": "1996-07-12T00:00:00Z"
+      },
+      "_id": {
+        "$oid": "63a060b9bb3b972d6f4e1fc8"
+      }
+    }
+  }
+]
+```
+
+Przykładowy dokument z kolekcji `orders_nested`:
+
+```sql
+SELECT odn
+FROM orders_nested AS odn
+WHERE odn.OrderID IS NOT MISSING
+LIMIT 1;
+```
+
+```json
+[
+  {
+    "odn": {
+      "CustomerID": "VINET",
+      "EmployeeID": 5,
+      "OrderDate": {
+        "$date": "1996-07-04T00:00:00Z"
+      },
+      "OrderID": 10248,
+      "ShipCity": "Reims",
+      "ShipCountry": "France",
+      "ShipName": "Vins et alcools Chevalier",
+      "items": [
+        {
+          "Discount": 0,
+          "LineValue": 98,
+          "ProductID": 42,
+          "Quantity": 10,
+          "UnitPrice": 9.8
+        },
+        {
+          "Discount": 0,
+          "LineValue": 168,
+          "ProductID": 11,
+          "Quantity": 12,
+          "UnitPrice": 14
+        },
+        {
+          "Discount": 0,
+          "LineValue": 174,
+          "ProductID": 72,
+          "Quantity": 5,
+          "UnitPrice": 34.8
+        }
+      ],
+      "type": "order_nested"
+    }
+  }
+]
+```
+
+> Co oznaczają pojęcia bucket, scope i collection?
+
+**Bucket** - najwyższy poziom w hierarchii organizacji danych, jest to odpowiednik całej bazy danych. W ramach `bucketu` może istnieć wiele różnych `scope`.
+
+**Scope** - pośredni poziom grupowania kolekcji wewnątrz `bucketa`, odpowiednik przestrzeni nazw. Pozwala na logiczne oddzielenie od siebie zestawów kolekcji (np. sprzedaż vs. magazyn). W ramach `scope` może istnieć wiele różnych kolekcji.
+
+**Collection** - zbiór dokumentów tego samego typu, jest to odpowiednik tabeli w SQL, natomiast kolekcje nie narzucają konkretnej struktury, reprezentują jedynie zbiór podobnych dokumentów. W ramach kolekcji może istnieć wiele dokumentów.
+
+> Ile dokumentów znajduje się w kolekcjach orders, orderdetails,
+> customers, products i orders_nested?
+
+![Liczba dokumentów w kolekcji orders](media/ex1-1.png)
+![Liczba dokumentów w kolekcji orderdetails](media/ex1-2.png)
+![Liczba dokumentów w kolekcji customers](media/ex1-3.png)
+![Liczba dokumentów w kolekcji products](media/ex1-4.png)
+![Liczba dokumentów w kolekcji orders_nested](media/ex1-5.png)
+
+| Kolekcja      | Liczba dokumentów |
+| ------------- | ----------------- |
+| orders        | 830               |
+| orderdetails  | 2155              |
+| customers     | 91                |
+| products      | 77                |
+| orders_nested | 830               |
+
+Dodatkowo, w Couchbase dostępne jest także podsumowanie danych, dzięki czemu mamy bezpośrednią informację o liczności poszczególnych kolekcji:
+
+![Podsumowanie kolekcji w panelu Couchbase](media/ex1-6.png)
+
+> Czym różni się dokument z kolekcji orders od dokumentu z kolekcji
+> orders_nested?
+
+W kolekcji `orders` znajdują się tylko podstawowe informacje o zamówieniu, natomiast wszelkie szczegóły odnośnie kupowanych produktów znajdują się w kolekcji `orderdetails` (informacje o tym jakie produkty i w jakiej ilości były kupowane w ramach danego zamówienia). Kolekcja `orders_nested` zawiera te informacje bezpośrednio zagnieżdżone, to znaczy mamy do tych dancyh bezpośrednio, bez konieczności łączenia kolekcji (jak ma to miejsce w podejściu `orders` + `orderdetails`).
 
 ---
 
@@ -349,6 +531,23 @@ Wykorzystaj kolekcje:
 
 **Uwaga:** indeksy `idx_orders_orderid` oraz `idx_orderdetails_orderid` zostały utworzone automatycznie podczas inicjalizacji środowiska. Nie trzeba ich zakładać ręcznie. Jeżeli mimo to spróbujesz je utworzyć, Couchbase poinformuje, że indeks już istnieje – to nie jest błąd.
 
+**Rozwiązanie:**
+
+```sql
+SELECT o.OrderID,
+       o.CustomerID,
+       od.ProductID,
+       od.UnitPrice,
+       od.Quantity,
+       od.Discount
+FROM orders AS o
+    JOIN orderdetails AS od ON o.OrderID = od.OrderID
+WHERE o.OrderID IS NOT MISSING
+    AND od.OrderID IS NOT MISSING
+```
+
+![Wynik zapytania JOIN dla zamówień i pozycji zamówień](media/ex3-1.png)
+
 ### Część C – wartość zamówienia
 
 Policz wartość zamówienia według wzoru:
@@ -370,12 +569,193 @@ Dla każdego zamówienia oblicz:
 
 Pokaż 10 zamówień o najwyższej wartości.
 
+**Rozwiązanie:**
+
+```sql
+SELECT o.OrderID,
+       o.CustomerID,
+       SUM(od.UnitPrice * od.Quantity * (1 - IFMISSINGORNULL(od.Discount, 0))) AS order_value
+FROM orders AS o
+    JOIN orderdetails AS od ON o.OrderID = od.OrderID
+WHERE o.OrderID IS NOT MISSING
+    AND od.OrderID IS NOT MISSING
+GROUP BY o.OrderID,
+         o.CustomerID
+LIMIT 10;
+```
+
+```json
+[
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10938,
+    "order_value": 2731.875
+  },
+  {
+    "CustomerID": "TRADH",
+    "OrderID": 10830,
+    "order_value": 1974
+  },
+  {
+    "CustomerID": "REGGC",
+    "OrderID": 10942,
+    "order_value": 560
+  },
+  {
+    "CustomerID": "LILAS",
+    "OrderID": 10283,
+    "order_value": 1414.8000000000002
+  },
+  {
+    "CustomerID": "OTTIK",
+    "OrderID": 10508,
+    "order_value": 240
+  },
+  {
+    "CustomerID": "OCEAN",
+    "OrderID": 10409,
+    "order_value": 319.20000000000005
+  },
+  {
+    "CustomerID": "SANTG",
+    "OrderID": 10909,
+    "order_value": 670
+  },
+  {
+    "CustomerID": "SAVEA",
+    "OrderID": 10678,
+    "order_value": 5256.5
+  },
+  {
+    "CustomerID": "REGGC",
+    "OrderID": 10908,
+    "order_value": 663.0999994799495
+  },
+  {
+    "CustomerID": "RANCH",
+    "OrderID": 10828,
+    "order_value": 932
+  }
+]
+```
+
+![Wynik zapytania agregującego wartość zamówień](media/ex3-2.png)
+
 ### W komentarzu napisz
 
 - Czy `JOIN` w Couchbase przypomina składnię znaną z SQL?
 - Czym różni się takie łączenie od relacji w klasycznej bazie relacyjnej (np. czy baza wymusza klucze obce i spójność relacji tak jak w typowym modelu relacyjnym)?
 - Dlaczego indeks po stronie dołączanej kolekcji jest ważny?
 - Czy największe zamówienia mają zawsze największą liczbę pozycji?
+
+> Czy `JOIN` w Couchbase przypomina składnię znaną z SQL?
+
+Składnia `JOIN` z Couchbase jest de facto identyczna w porównaniu do składni znanej z SQL.
+
+> Czym różni się takie łączenie od relacji w klasycznej bazie relacyjnej (np. czy baza wymusza klucze obce i spójność relacji tak jak w typowym modelu relacyjnym)?
+
+W klasycznej bazie relacyjnej baza danych wymusza klucze obce oraz ich integralność. W przypadku Couchbase'a baza nie przechowuje żadnych informacji o relacjach pomiędzy kolekcjami i nie waliduje spójności przy zapisie. Odpowiedzialność za integralność danych leży całkowicie po stronie aplikacji i programisty.
+
+> Dlaczego indeks po stronie dołączanej kolekcji jest ważny?
+
+W przypadku braku indeksu konieczne pełne przeskanowanie kolekcji, czyli w przypadku sprawdzenie każdego dokumentu w tabeli `orderdetails` dla każdego wiersza z `orders`. Indeks na kolumnie, po której łączymy kolekcje pozwala silnikowi bezpośrednio zlokalizować pasujące dokumenty bez przeglądania całej kolekcji.
+
+W przypadku próby połączenia kolekcji po kluczu, na który nie jest założony indeks, zapytanie kończy się błędem:
+
+```json
+[
+  {
+    "code": 4330,
+    "msg": "No index available for ANSI join term od",
+    "query": "SELECT o.OrderID,\n       o.ProductID,\n       SUM(od.UnitPrice * od.Quantity * (1 - IFMISSINGORNULL(od.Discount, 0))) AS order_value,\n       COUNT(*) AS positions\nFROM orders AS o\n    JOIN orderdetails AS od ON o.OrderID = od.ProductID\nWHERE o.OrderID IS NOT MISSING\n    AND od.ProductID IS NOT MISSING\nGROUP BY o.OrderID,\n         o.ProductID\nORDER BY order_value DESC, positions DESC\nLIMIT 10;"
+  }
+]
+```
+
+> Czy największe zamówienia mają zawsze największą liczbę pozycji?
+
+W celu zweryfikowania tego stwierdzenia, do poprzedniego zapytania dodane zostało zliczanie liczby pozycji w zamówieniu:
+
+```sql
+SELECT o.OrderID,
+       o.CustomerID,
+       SUM(od.UnitPrice * od.Quantity * (1 - IFMISSINGORNULL(od.Discount, 0))) AS order_value,
+       COUNT(*) AS positions
+FROM orders AS o
+    JOIN orderdetails AS od ON o.OrderID = od.OrderID
+WHERE o.OrderID IS NOT MISSING
+    AND od.OrderID IS NOT MISSING
+GROUP BY o.OrderID,
+         o.CustomerID
+ORDER BY order_value DESC, positions DESC;
+```
+
+```json
+[
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10865,
+    "order_value": 16387.49998714775,
+    "positions": 2
+  },
+  {
+    "CustomerID": "HANAR",
+    "OrderID": 10981,
+    "order_value": 15810,
+    "positions": 1
+  },
+  {
+    "CustomerID": "SAVEA",
+    "OrderID": 11030,
+    "order_value": 12615.05,
+    "positions": 4
+  },
+  {
+    "CustomerID": "RATTC",
+    "OrderID": 10889,
+    "order_value": 11380,
+    "positions": 2
+  },
+  {
+    "CustomerID": "SIMOB",
+    "OrderID": 10417,
+    "order_value": 11188.4,
+    "positions": 4
+  },
+  {
+    "CustomerID": "KOENE",
+    "OrderID": 10817,
+    "order_value": 10952.844978627563,
+    "positions": 4
+  },
+  {
+    "CustomerID": "HUNGO",
+    "OrderID": 10897,
+    "order_value": 10835.240000000002,
+    "positions": 2
+  },
+  {
+    "CustomerID": "RATTC",
+    "OrderID": 10479,
+    "order_value": 10495.6,
+    "positions": 4
+  },
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10540,
+    "order_value": 10191.7,
+    "positions": 4
+  },
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10691,
+    "order_value": 10164.8,
+    "positions": 5
+  }
+]
+```
+
+Zgodnie z otrzymanymi wynikami (top 10 rezultatów w zadanej kolejności), największe zamówienia niekoniecznie zawsze mają największą liczbę pozycji. Zamówienie o największej wartości ma wyłącznie 2 pozycje, drugie w kolejności zamówienie ma 1 pozycję, gdzie np. zamówienie o 10. w kolejności wartości ma aż 5 pozycji.
 
 ---
 
@@ -396,6 +776,56 @@ Zwróć uwagę na pole:
 
 ```text
 items
+```
+
+**Rozwiązanie:**
+
+```sql
+select *
+from orders_nested
+where OrderID = 10248;
+```
+
+```json
+[
+  {
+    "orders_nested": {
+      "CustomerID": "VINET",
+      "EmployeeID": 5,
+      "OrderDate": {
+        "$date": "1996-07-04T00:00:00Z"
+      },
+      "OrderID": 10248,
+      "ShipCity": "Reims",
+      "ShipCountry": "France",
+      "ShipName": "Vins et alcools Chevalier",
+      "items": [
+        {
+          "Discount": 0,
+          "LineValue": 98,
+          "ProductID": 42,
+          "Quantity": 10,
+          "UnitPrice": 9.8
+        },
+        {
+          "Discount": 0,
+          "LineValue": 168,
+          "ProductID": 11,
+          "Quantity": 12,
+          "UnitPrice": 14
+        },
+        {
+          "Discount": 0,
+          "LineValue": 174,
+          "ProductID": 72,
+          "Quantity": 5,
+          "UnitPrice": 34.8
+        }
+      ],
+      "type": "order_nested"
+    }
+  }
+]
 ```
 
 ### Część B – rozbij tablicę `items` przez `UNNEST`
@@ -427,6 +857,53 @@ WHERE n.OrderID = 10248;
 
 Rozbuduj to zapytanie o pozostałe kolumny wymienione powyżej.
 
+**Rozwiązanie:**
+
+```sql
+SELECT odn.OrderID,
+       odn.CustomerID,
+       item.ProductID,
+       item.UnitPrice,
+       item.Quantity,
+       item.Discount,
+       item.LineValue
+FROM orders_nested AS odn
+UNNEST odn.items AS item
+WHERE odn.OrderID = 10248;
+```
+
+```json
+[
+  {
+    "CustomerID": "VINET",
+    "Discount": 0,
+    "LineValue": 98,
+    "OrderID": 10248,
+    "ProductID": 42,
+    "Quantity": 10,
+    "UnitPrice": 9.8
+  },
+  {
+    "CustomerID": "VINET",
+    "Discount": 0,
+    "LineValue": 168,
+    "OrderID": 10248,
+    "ProductID": 11,
+    "Quantity": 12,
+    "UnitPrice": 14
+  },
+  {
+    "CustomerID": "VINET",
+    "Discount": 0,
+    "LineValue": 174,
+    "OrderID": 10248,
+    "ProductID": 72,
+    "Quantity": 5,
+    "UnitPrice": 34.8
+  }
+]
+```
+
 ### Część C – policz wartość zamówień z modelu zagnieżdżonego
 
 Na kolekcji `orders_nested` policz:
@@ -440,19 +917,83 @@ Użyj `UNNEST`.
 
 Pokaż 10 zamówień o najwyższej wartości.
 
-<!-- mozesz to zmienic jak chcesz -->
-
 ```sql
-select n.OrderID,
+SELECT n.OrderID,
        n.CustomerID,
-       sum(item.UnitPrice * item.Quantity * (1 - ifmissingornull(item.Discount, 0))) as TotalOrderValue,
-       count(1)                                                                      as ItemsCount
-from `northwind`._default.orders_nested as n
-         unnest n.items as item
-where n.OrderID is not missing
-group by n.OrderID, n.CustomerID
-order by TotalOrderValue desc
-limit 10;
+       SUM(item.UnitPrice * item.Quantity * (1 - IFMISSINGORNULL(item.Discount, 0))) AS order_value,
+       COUNT(1) AS positions
+FROM orders_nested AS n
+UNNEST n.items AS item
+WHERE n.OrderID IS NOT MISSING
+GROUP BY n.OrderID,
+         n.CustomerID
+ORDER BY order_value DESC
+LIMIT 10;
+```
+
+```json
+[
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10865,
+    "order_value": 16387.49998714775,
+    "positions": 2
+  },
+  {
+    "CustomerID": "HANAR",
+    "OrderID": 10981,
+    "order_value": 15810,
+    "positions": 1
+  },
+  {
+    "CustomerID": "SAVEA",
+    "OrderID": 11030,
+    "order_value": 12615.05,
+    "positions": 4
+  },
+  {
+    "CustomerID": "RATTC",
+    "OrderID": 10889,
+    "order_value": 11380,
+    "positions": 2
+  },
+  {
+    "CustomerID": "SIMOB",
+    "OrderID": 10417,
+    "order_value": 11188.4,
+    "positions": 4
+  },
+  {
+    "CustomerID": "KOENE",
+    "OrderID": 10817,
+    "order_value": 10952.844978627563,
+    "positions": 4
+  },
+  {
+    "CustomerID": "HUNGO",
+    "OrderID": 10897,
+    "order_value": 10835.240000000002,
+    "positions": 2
+  },
+  {
+    "CustomerID": "RATTC",
+    "OrderID": 10479,
+    "order_value": 10495.6,
+    "positions": 4
+  },
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10540,
+    "order_value": 10191.7,
+    "positions": 4
+  },
+  {
+    "CustomerID": "QUICK",
+    "OrderID": 10691,
+    "order_value": 10164.8,
+    "positions": 5
+  }
+]
 ```
 
 ### Część D – porównaj wynik z modelem niezagnieżdżonym
@@ -463,6 +1004,83 @@ Minimum: porównaj wizualnie top 10 zamówień z obu podejść i napisz, czy wyn
 
 Opcjonalnie: jeżeli chcesz potwierdzić zgodność formalnie, możesz napisać zapytanie z `WITH`, które porówna wartości zamówień z obu modeli dla wszystkich 830 zamówień.
 
+**Rozwiązanie:**
+
+Wyniki otrzymane z zapytania wykorzystującego `JOIN`:
+
+```txt
+CustomerID	OrderID	order_value	positions
+"QUICK"	10865	16387.49998714775	2
+"HANAR"	10981	15810	1
+"SAVEA"	11030	12615.05	4
+"RATTC"	10889	11380	2
+"SIMOB"	10417	11188.4	4
+"KOENE"	10817	10952.844978627563	4
+"HUNGO"	10897	10835.240000000002	2
+"RATTC"	10479	10495.6	4
+"QUICK"	10540	10191.7	4
+"QUICK"	10691	10164.8	5
+```
+
+Wyniki otrzymane z zapytania wykorzystującego model zagnieżdżony:
+
+```txt
+CustomerID	OrderID	order_value	positions
+"QUICK"	10865	16387.49998714775	2
+"HANAR"	10981	15810	1
+"SAVEA"	11030	12615.05	4
+"RATTC"	10889	11380	2
+"SIMOB"	10417	11188.4	4
+"KOENE"	10817	10952.844978627563	4
+"HUNGO"	10897	10835.240000000002	2
+"RATTC"	10479	10495.6	4
+"QUICK"	10540	10191.7	4
+"QUICK"	10691	10164.8	5
+```
+
+Wyniki otrzymane z obu zapytań są identyczne. Dodatkowo, w celu zweryfikowania, wykorzystane zostało zapytanie korzystające z klauzul `WITH` oraz `EXCEPT`, które weryfikuje czy wyniki są identyczne dla wszystkich dokumentów (dokładność `order_value` do 6 miejsc po przecinku):
+
+```sql
+WITH flat AS (
+    SELECT o.OrderID,
+           o.CustomerID,
+           ROUND(SUM(od.UnitPrice * od.Quantity * (1 - IFMISSINGORNULL(od.Discount, 0))), 6) AS order_value,
+           COUNT(*) AS positions
+    FROM orders AS o
+        JOIN orderdetails AS od ON o.OrderID = od.OrderID
+    WHERE o.OrderID IS NOT MISSING
+        AND od.OrderID IS NOT MISSING
+    GROUP BY o.OrderID,
+             o.CustomerID ),
+nested AS (
+    SELECT n.OrderID,
+           n.CustomerID,
+           ROUND(SUM(item.UnitPrice * item.Quantity * (1 - IFMISSINGORNULL(item.Discount, 0))), 6) AS order_value,
+           COUNT(1) AS positions
+    FROM orders_nested AS n
+    UNNEST n.items AS item
+    WHERE n.OrderID IS NOT MISSING
+    GROUP BY n.OrderID,
+             n.CustomerID )
+SELECT 'only_in_flat' AS source,
+       f.*
+FROM flat AS f EXCEPT ALL SELECT 'only_in_flat' AS source,
+                                         n.*
+FROM nested AS n
+UNION ALL
+SELECT 'only_in_nested' AS source,
+       n.*
+FROM nested AS n EXCEPT ALL SELECT 'only_in_nested' AS source,
+                                           f.*
+FROM flat AS f;
+```
+
+```json
+{
+  "results": []
+}
+```
+
 ### W komentarzu napisz
 
 - Na czym polega różnica między `JOIN` i `UNNEST`?
@@ -470,6 +1088,26 @@ Opcjonalnie: jeżeli chcesz potwierdzić zgodność formalnie, możesz napisać 
 - Czy oba podejścia dają ten sam wynik biznesowy?
 - Kiedy zagnieżdżanie pozycji zamówienia w dokumencie może być wygodne?
 - Kiedy lepiej zostawić dane w osobnych kolekcjach?
+
+> Na czym polega różnica między `JOIN` i `UNNEST`?
+
+`JOIN` łączy dwa osobne dokumenty z dwóch kolekcji na podstawie wspólnego klucza. `UNNEST` rozpakowuje tablicę wewnątrz jednego dokumentu i traktuje każdy jej element jako osobny wiersz.
+
+> Dlaczego w modelu zagnieżdżonym nie trzeba łączyć `orders` z `orderdetails`?
+
+Ponieważ w modelu zagnieżdżonym, wszystkie dane z `orderdetails` są zawarte w kolekcji `orders_nested` pod kluczem `items` - dzięki temu mamy do nich bezpośredni dostęp (są one częścią dokumentu), a wszystko co potrzebne do wyliczenia wartości zamówienia znajduje się w jednym miejscu.
+
+> Czy oba podejścia dają ten sam wynik biznesowy?
+
+Oba podejścia dają ten sam wynik biznesowy
+
+> Kiedy zagnieżdżanie pozycji zamówienia w dokumencie może być wygodne?
+
+Zagnieżdżanie jest wygodne, gdy dane są silnie powiązane i zawsze odczytywane razem. Dzięki temu możemy uniknąć wielu kosztowych operacji `JOIN`, ponieważ mamy bezpośredni dostęp do zagnieżdżonych danych. Przykładowo, pozycje zamówienia oraz szczegóły dotyczące zamówienia rzadko mają sens bez kontekstu samego zamówienia.
+
+> Kiedy lepiej zostawić dane w osobnych kolekcjach?
+
+Osobne kolekcje sprawdzą się lepiej w sytuacji, gdy odwołujemy się do danych z wielu miejsc - przykładowo, produkt (identyfikowany przez `ProductID`) pojawia się w wielu zamówieniach i nie ma sensu duplikowanie danych każdego produktu za każdym razem, gdy jest on zagnieżdżany. Dla danych, dla których potrzebujemy niezależnych zapytań (dane nie są ściśle powiązane z innym dokumentem i ma sa odpytywanie tej kolekcji w izolacji), rozdzielenie danych na osobne kolekcje także może okazać się wygodniejsze. Dzięki rozdzieleniu zagnieżdżonych danych na osobne kolekcje możemy także uniknąć duplikacji danych, co pomaga także w aktualizacji danych (np. zmiana nazwy produktu w jednym miejscu, a nie w wielu dokumentach).
 
 ---
 
@@ -656,7 +1294,7 @@ order by TotalOrderValue desc
 limit 10;
 ```
 
-![Plan dla zapytania z ](media/ex6-1.png)
+![Plan wykonania dla zapytania z JOIN](media/ex6-1.png)
 
 ### Część B – plan dla zapytania z `UNNEST`
 
@@ -677,7 +1315,7 @@ order by TotalOrderValue desc
 limit 10;
 ```
 
-![Plan dla zapytania z ](media/ex6-2.png)
+![Plan wykonania dla zapytania z UNNEST](media/ex6-2.png)
 
 ### Część C – porównanie
 
