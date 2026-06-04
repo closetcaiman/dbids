@@ -1,15 +1,7 @@
-# Database files (convention: every lab keeps its SQLite/db artifacts in db/)
-db/
+# Generated and artifact directories (local to each lab)
+labs/*/data/
 labs/*/db/
-
-# Generated lab datasets (produced by the generator containers)
-labs/lab9/data/
-labs/lab10/data/
-common/data/events/events.csv
-
-# Notebook-produced report artifacts
-labs/lab9/output/
-labs/lab10/output/
+labs/*/output/
 
 # DataGrip files
 .idea/

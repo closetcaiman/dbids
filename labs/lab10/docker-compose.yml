@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     image: retail_lab_generator
     container_name: retail_lab_generator
-    user: "${UID}:${GID}"
+    user: "${UID:-1000}:${GID:-1000}"
     volumes:
       - ./labs/lab10/data:/data
     command: ["python", "generate_data.py", "--output", "/data"]
@@ -16,7 +16,7 @@ services:
       dockerfile: Dockerfile
     image: retail_lab_sqlite_loader
     container_name: retail_lab_sqlite
-    user: "${UID}:${GID}"
+    user: "${UID:-1000}:${GID:-1000}"
     depends_on:
       generator:
         condition: service_completed_successfully
@@ -58,7 +58,8 @@ services:
       - "9000:9000"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-      - ./labs/lab10/data:/var/lib/clickhouse/user_files/data
+      - ./labs/lab10/data:/mnt/user_files/data:ro
+      - ./common/clickhouse-config/user_files.xml:/etc/clickhouse-server/config.d/user_files.xml:ro
       - ./common/sql/retail/clickhouse:/docker-entrypoint-initdb.d:ro
     ulimits:
       nofile:

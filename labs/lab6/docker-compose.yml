@@ -5,8 +5,9 @@ services:
       dockerfile: Dockerfile
     image: events_generator
     container_name: events_generator_lab6
+    user: "${UID:-1000}:${GID:-1000}"
     volumes:
-      - ./common/data/events:/data
+      - ./labs/lab6/data:/data
     command: ["python", "generate_events.py", "--output", "/data"]
 
   clickhouse:
@@ -20,9 +21,10 @@ services:
       - "9000:9000"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+      - ./labs/lab6/data:/mnt/user_files/events:ro
+      - ./common/clickhouse-config/user_files.xml:/etc/clickhouse-server/config.d/user_files.xml:ro
       - ./common/sql/events/clickhouse/01_users.sql:/docker-entrypoint-initdb.d/users.sql
       - ./common/sql/events/clickhouse/10_clickhouse_events.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./common/data/events:/var/lib/clickhouse/user_files/events:ro
     restart: unless-stopped
 
   postgres:
@@ -40,7 +42,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./common/sql/events/postgres/10_postgres_events.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./common/data/events:/data/events:ro
+      - ./labs/lab6/data:/data/events:ro
     restart: unless-stopped
 
 volumes:
