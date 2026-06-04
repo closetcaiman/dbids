@@ -1,0 +1,5 @@
+pre-commit:
+  commands:
+    markdown-lint:
+      glob: "**/*.md"
+      run: ./common/scripts/markdown-lint.sh {staged_files}

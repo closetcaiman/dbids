@@ -175,15 +175,15 @@ where id = 1000000
 
 - wynik zapytania:
 
-![alt text](media/ex1a-1.png)
+![](media/ex1a-1.png)
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1a-2.png){height=200px}
+![](media/ex1a-2.png){height=200px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1a-3.png){height=350px}
+![](media/ex1a-3.png){height=350px}
 
 Komentarz:
 
@@ -204,15 +204,15 @@ where id between 999000 and 10000000
 
 - wynik zapytania:
 
-![alt text](media/ex1a-4.png)
+![](media/ex1a-4.png)
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1a-5.png){height=200px}
+![](media/ex1a-5.png){height=200px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1a-6.png){height=350px}
+![](media/ex1a-6.png){height=350px}
 
 Komentarz:
 
@@ -241,15 +241,15 @@ where id = 1000000
 
 - wynik zapytania:
 
-![alt text](media/ex1b-1.png)
+![](media/ex1b-1.png)
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1b-2.png){height=200px}
+![](media/ex1b-2.png){height=200px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1b-3.png){height=350px}
+![](media/ex1b-3.png){height=350px}
 
 Komentarz:
 
@@ -266,15 +266,15 @@ where id between 999000 and 10000000
 
 - wynik zapytania:
 
-![alt text](media/ex1b-4.png){height=200px}
+![](media/ex1b-4.png){height=200px}
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1b-5.png){height=200px}
+![](media/ex1b-5.png){height=200px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1b-6.png){height=350px}
+![](media/ex1b-6.png){height=350px}
 
 Komentarz:
 
@@ -310,11 +310,11 @@ po zakończeniu pozostaw indeks klastrowy
 
 - plan zapytania i koszt:
 
-  ![alt text](media/ex1c-a1-1.png){height=200px}
+  ![](media/ex1c-a1-1.png){height=200px}
 
 - czas i liczba odczytywanych stron:
 
-  ![alt text](media/ex1c-a1-2.png){height=300px}
+  ![](media/ex1c-a1-2.png){height=300px}
 
 Komentarz:
 
@@ -330,11 +330,11 @@ Komentarz:
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1c-a1-3.png){height=300px}
+![](media/ex1c-a1-3.png){height=300px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1c-a1-4.png){height=350px}
+![](media/ex1c-a1-4.png){height=350px}
 
 Komentarz:
 
@@ -350,11 +350,11 @@ Komentarz:
 
 - plan zapytania i koszt:
 
-  ![alt text](media/ex1c-a2-1.png)
+  ![](media/ex1c-a2-1.png)
 
 - czas i liczba odczytywanych stron:
 
-  ![alt text](media/ex1c-a2-2.png)
+  ![](media/ex1c-a2-2.png)
 
 Komentarz:
 
@@ -369,11 +369,11 @@ Komentarz:
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1c-a2-3.png)
+![](media/ex1c-a2-3.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1c-a2-4.png){height=350px}
+![](media/ex1c-a2-4.png){height=350px}
 
 Komentarz
 
@@ -390,11 +390,11 @@ Komentarz
 
 - plan zapytania i koszt:
 
-  ![alt text](media/ex1c-b1-1.png)
+  ![](media/ex1c-b1-1.png)
 
 - czas i liczba odczytywanych stron:
 
-  ![alt text](media/ex1c-b1-2.png)
+  ![](media/ex1c-b1-2.png)
 
 Komentarz:
 
@@ -410,11 +410,11 @@ Komentarz:
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1c-b1-3.png)
+![](media/ex1c-b1-3.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1c-b1-4.png){height=350px}
+![](media/ex1c-b1-4.png){height=350px}
 
 Komentarz:
 
@@ -432,11 +432,11 @@ Komentarz:
 
 - plan zapytania i koszt:
 
-  ![alt text](media/ex1c-b2-1.png)
+  ![](media/ex1c-b2-1.png)
 
 - czas i liczba odczytywanych stron:
 
-  ![alt text](media/ex1c-b2-2.png)
+  ![](media/ex1c-b2-2.png)
 
 Komentarz:
 
@@ -452,11 +452,11 @@ Komentarz:
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1c-b2-3.png)
+![](media/ex1c-b2-3.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1c-b2-4.png)
+![](media/ex1c-b2-4.png)
 
 Komentarz:
 
@@ -521,11 +521,11 @@ where date >= '2001-01-01' and date <= '2001-01-31'
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1d-1.png)
+![](media/ex1d-1.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1d-2.png){height=350px}
+![](media/ex1d-2.png){height=350px}
 
 Komentarz:
 
@@ -545,11 +545,11 @@ where year(date) = 2001 and month(date) = 1
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1d-3.png)
+![](media/ex1d-3.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1d-4.png){height=350px}
+![](media/ex1d-4.png){height=350px}
 
 Komentarz:
 
@@ -568,11 +568,11 @@ where date >= '2001-01-01' and date <= '2001-12-31'
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1d-5.png)
+![](media/ex1d-5.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1d-6.png)
+![](media/ex1d-6.png)
 
 Komentarz:
 
@@ -593,11 +593,11 @@ where year(date) = 2001
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1d-7.png)
+![](media/ex1d-7.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1d-8.png)
+![](media/ex1d-8.png)
 
 Komentarz:
 
@@ -631,11 +631,11 @@ where date >= '2001-01-01' and date <= '2001-01-31'
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1e-1.png)
+![](media/ex1e-1.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1e-2.png){height=350px}
+![](media/ex1e-2.png){height=350px}
 
 Komentarz:
 
@@ -653,11 +653,11 @@ where year(date) = 2001 and month(date) = 1
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1e-3.png)
+![](media/ex1e-3.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1e-4.png){height=350px}
+![](media/ex1e-4.png){height=350px}
 
 Komentarz:
 
@@ -686,11 +686,11 @@ where date >= '2001-01-01' and date <= '2001-12-31'
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1e-5.png)
+![](media/ex1e-5.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1e-6.png)
+![](media/ex1e-6.png)
 
 Komentarz:
 
@@ -705,11 +705,11 @@ where year(date) = 2001
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1e-7.png)
+![](media/ex1e-7.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1e-8.png)
+![](media/ex1e-8.png)
 
 Komentarz:
 
@@ -738,11 +738,11 @@ where categoryid = 8
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1f-1.png){height=350px}
+![](media/ex1f-1.png){height=350px}
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1f-2.png){height=280px}
+![](media/ex1f-2.png){height=280px}
 
 Komentarz:
 
@@ -759,11 +759,11 @@ where p.categoryid = 8
 
 - plan zapytania i koszt:
 
-![alt text](media/ex1f-3.png)
+![](media/ex1f-3.png)
 
 - czas i liczba odczytywanych stron:
 
-![alt text](media/ex1f-4.png){height=350px}
+![](media/ex1f-4.png){height=350px}
 
 Komentarz:
 
@@ -805,11 +805,11 @@ Na przykładzie indeksu nieklastrowego:
 
 - `product_history_date_idx` (bez włączenia kolumn):
 
-![alt text](media/ex1g-dod-1.png)
+![](media/ex1g-dod-1.png)
 
 - `product_history_date_incl_idx` (z włączeniem kolumn):
 
-![alt text](media/ex1g-dod-2.png)
+![](media/ex1g-dod-2.png)
 
 Komentarz:
 
@@ -823,11 +823,11 @@ Możemy jeszcze porównać indeksy z zadania a) dla kolumny `id`:
 
 - `product_history_clust_idx` (indeks klastrowy):
 
-![alt text](media/ex1g-dod-3.png)
+![](media/ex1g-dod-3.png)
 
 - `product_history_idx` (indeks nieklastrowy):
 
-![alt text](media/ex1g-dod-4.png)
+![](media/ex1g-dod-4.png)
 
 Komentarz:
 
@@ -991,11 +991,11 @@ UWAGA: ciekawsze efekty możesz zaobserwować dla jeszcze większych tabel (jeś
 
 Liczba wierszy w tabeli:
 
-![alt text](media/task2-image-5.png)
+![](media/task2-image-5.png)
 
 Istniejące indeksy:
 
-![alt text](media/task2-image-4.png)
+![](media/task2-image-4.png)
 
 Jak widać na załączonym obrazku, w tabeli został automatycznie stworzy indeks klastrowany dla klucza głównego `id` - indeks ten nie zawiera żadnych innych kolumn.
 
@@ -1013,7 +1013,7 @@ group by productid
 order by productid;
 ```
 
-```
+```text
 Table 'saleshistory'. Scan count 9, logical reads 158276, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 
@@ -1021,8 +1021,8 @@ SQL Server Execution Times:
   CPU time = 1967 ms,  elapsed time = 260 ms.
 ```
 
-![alt text](media/task2-image.png)
-![alt text](media/task2-image-1.png)
+![](media/task2-image.png)
+![](media/task2-image-1.png)
 
 ```{=typst}
 #pagebreak()
@@ -1043,7 +1043,7 @@ order by productid;
 drop index saleshistory_columnstore on saleshistory;
 ```
 
-```
+```text
 Table 'saleshistory'. Scan count 16, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 12405, lob physical reads 4, lob page server reads 0, lob read-ahead reads 46383, lob page server read-ahead reads 0.
 Table 'saleshistory'. Segment reads 19, segment skipped 0.
 Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
@@ -1052,8 +1052,8 @@ SQL Server Execution Times:
   CPU time = 141 ms,  elapsed time = 42 ms.
 ```
 
-![alt text](media/task2-image-2.png)
-![alt text](media/task2-image-3.png)
+![](media/task2-image-2.png)
+![](media/task2-image-3.png)
 
 **Obserwacje:**
 
@@ -1180,7 +1180,7 @@ select
 from sensorReadings;
 ```
 
-![alt text](media/task3-image-20.png)
+![](media/task3-image-20.png)
 
 Rozkład wartości w kolumnie `alertStatus`:
 
@@ -1193,7 +1193,7 @@ group by alertStatus
 order by cnt desc;
 ```
 
-![alt text](media/task3-image-21.png)
+![](media/task3-image-21.png)
 
 ```{=typst}
 #pagebreak()
@@ -1211,7 +1211,7 @@ where object_id = object_id('sensorReadings')
   and index_id in (0, 1);
 ```
 
-![alt text](media/task3-image-22.png)
+![](media/task3-image-22.png)
 
 ### Eksperymenty
 
@@ -1274,30 +1274,30 @@ WHERE readingTime >= '2026-04-01' AND readingTime < '2026-04-30';
 
 - zapytanie bez indeksu:
 
-```
+```text
 Table 'sensorReadings'. Scan count 9, logical reads 6973, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 ```
 
-![alt text](media/task3-image-23.png)
+![](media/task3-image-23.png)
 
 - zapytanie z indeksem nieklastrowanym:
 
-```
+```text
 Table 'sensorReadings'. Scan count 9, logical reads 6973, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 ```
 
-![alt text](media/task3-image-24.png)
-![alt text](media/task3-image-25.png)
+![](media/task3-image-24.png)
+![](media/task3-image-25.png)
 
 - zapytanie z wymuszonym użyciem indeksu nieklastrowanego (bez `INCLUDE`):
 
-```
+```text
 Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 Table 'sensorReadings'. Scan count 9, logical reads 426769, physical reads 0, page server reads 0, read-ahead reads 6, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 ```
 
-![alt text](media/task3-image-30.png)
-![alt text](media/task3-image-31.png)
+![](media/task3-image-30.png)
+![](media/task3-image-31.png)
 
 ```{=typst}
 #pagebreak()
@@ -1305,21 +1305,21 @@ Table 'sensorReadings'. Scan count 9, logical reads 426769, physical reads 0, pa
 
 - zapytanie z indeksem nieklastrowanym + `INCLUDE`:
 
-```
+```text
 Table 'sensorReadings'. Scan count 1, logical reads 610, physical reads 0, page server reads 0, read-ahead reads 5, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 ```
 
-![alt text](media/task3-image-26.png)
-![alt text](media/task3-image-27.png)
+![](media/task3-image-26.png)
+![](media/task3-image-27.png)
 
 - zapytanie z indeksem klastrowanym:
 
-```
+```text
 Table 'sensorReadings'. Scan count 1, logical reads 1080, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 ```
 
-![alt text](media/task3-image-28.png)
-![alt text](media/task3-image-29.png)
+![](media/task3-image-28.png)
+![](media/task3-image-29.png)
 
 **Obserwacje:**
 
@@ -1391,34 +1391,34 @@ ORDER BY ips.page_count DESC;
 
 - zapytanie o status `CRITICAL` z indeksem filtrowanym:
 
-```
+```text
 Table 'sensorReadings'. Scan count 1, logical reads 6, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 ```
 
-![alt text](media/task3-image-32.png)
-![alt text](media/task3-image-33.png)
+![](media/task3-image-32.png)
+![](media/task3-image-33.png)
 
 - zapytanie o status `OK` z indeksem filtrowanym:
 
-```
+```text
 Table 'sensorReadings'. Scan count 1, logical reads 7709, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 ```
 
-![alt text](media/task3-image-34.png)
-![alt text](media/task3-image-35.png)
+![](media/task3-image-34.png)
+![](media/task3-image-35.png)
 
 - zapytanie o status `CRITICAL` bez indeksu filtrowanego:
 
-```
+```text
 Table 'sensorReadings'. Scan count 9, logical reads 7709, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 ```
 
-![alt text](media/task3-image-36.png)
-![alt text](media/task3-image-37.png)
+![](media/task3-image-36.png)
+![](media/task3-image-37.png)
 
 - porównanie rozmiarów poszczególnych indeksów:
 
-![alt text](media/task3-image-38.png)
+![](media/task3-image-38.png)
 
 **Obserwacje:**
 
@@ -1499,31 +1499,31 @@ DROP INDEX ix_analytics_incl ON sensorReadings;
 
 - zapytanie bez indeksu:
 
-```
+```text
 Table 'sensorReadings'. Scan count 9, logical reads 7709, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 ```
 
-![alt text](media/task3-image-39.png)
-![alt text](media/task3-image-40.png)
+![](media/task3-image-39.png)
+![](media/task3-image-40.png)
 
 - zapytanie z indeksem kolumnowym:
 
-```
+```text
 Table 'sensorReadings'. Scan count 2, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 1986, lob physical reads 1, lob page server reads 0, lob read-ahead reads 6487, lob page server read-ahead reads 0.
 Table 'sensorReadings'. Segment reads 1, segment skipped 0.
 ```
 
-![alt text](media/task3-image-41.png)
-![alt text](media/task3-image-42.png)
+![](media/task3-image-41.png)
+![](media/task3-image-42.png)
 
 - zapytanie z indeksem nieklastrowanym uwzględniającym wszystkie konieczne kolumny:
 
-```
+```text
 Table 'sensorReadings'. Scan count 9, logical reads 4696, physical reads 0, page server reads 0, read-ahead reads 35, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 ```
 
-![alt text](media/task3-image-43.png)
-![alt text](media/task3-image-44.png)
+![](media/task3-image-43.png)
+![](media/task3-image-44.png)
 
 **Obserwacje:**
 

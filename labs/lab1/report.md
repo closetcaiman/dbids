@@ -1,16 +1,16 @@
 ## SQL - Funkcje okna (Window functions) <br> Lab 1
 
----
+______________________________________________________________________
 
 **Imiona i nazwiska: Marek Małek, Mateusz Lampert**
 
----
+______________________________________________________________________
 
 Celem ćwiczenia jest przygotowanie środowiska pracy, wstępne zapoznanie się z działaniem funkcji okna (window functions) w SQL, analiza wydajności zapytań i porównanie z rozwiązaniami przy wykorzystaniu "tradycyjnych" konstrukcji SQL
 
 Swoje odpowiedzi wpisuj w miejsca oznaczone jako:
 
----
+______________________________________________________________________
 
 > Wyniki:
 
@@ -18,7 +18,7 @@ Swoje odpowiedzi wpisuj w miejsca oznaczone jako:
 --  ...
 ```
 
----
+______________________________________________________________________
 
 Ważne/wymagane są komentarze.
 
@@ -26,7 +26,7 @@ Zamieść kod rozwiązania oraz zrzuty ekranu pokazujące wyniki, (dołącz kod 
 
 Zwróć uwagę na formatowanie kodu
 
----
+______________________________________________________________________
 
 ## Oprogramowanie - co jest potrzebne?
 
@@ -46,10 +46,12 @@ Oprogramowanie dostępne jest na przygotowanej maszynie wirtualnej
 ## Dokumentacja/Literatura
 
 - Kathi Kellenberger,  Clayton Groom, Ed Pollack, Expert T-SQL Window Functions in SQL Server 2019, Apres 2019
+
 - Itzik Ben-Gan, T-SQL Window Functions: For Data Analysis and Beyond, Microsoft 2020
 
 - Kilka linków do materiałów które mogą być pomocne
-   - [https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16](https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16)
+  \- [https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16](https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16)
+
   - [https://www.sqlservertutorial.net/sql-server-window-functions/](https://www.sqlservertutorial.net/sql-server-window-functions/)
   - [https://www.sqlshack.com/use-window-functions-sql-server/](https://www.sqlshack.com/use-window-functions-sql-server/)
   - [https://www.postgresql.org/docs/current/tutorial-window.html](https://www.postgresql.org/docs/current/tutorial-window.html)
@@ -58,12 +60,13 @@ Oprogramowanie dostępne jest na przygotowanej maszynie wirtualnej
   - [https://www.sqlitetutorial.net/sqlite-window-functions/](https://www.sqlitetutorial.net/sqlite-window-functions/)
 
 - W razie potrzeby - opis Ikonek używanych w graficznej prezentacji planu zapytania w SSMS jest tutaj:
+
   - [https://docs.microsoft.com/en-us/sql/relational-databases/showplan-logical-and-physical-operators-reference](https://docs.microsoft.com/en-us/sql/relational-databases/showplan-logical-and-physical-operators-reference)
 
 ## Przygotowanie
 
 Uruchom SSMS
-- Skonfiguruj połączenie z bazą Northwind na lokalnym serwerze MS SQL 
+- Skonfiguruj połączenie z bazą Northwind na lokalnym serwerze MS SQL
 
 Uruchom DataGrip (lub Dbeaver)
 
@@ -72,7 +75,7 @@ Uruchom DataGrip (lub Dbeaver)
   - na lokalnym serwerze PostgreSQL
   - z lokalną bazą SQLite
 
----
+______________________________________________________________________
 
 # Zadanie 1 - obserwacja
 
@@ -95,7 +98,7 @@ from products p;
 
 Jaka jest są podobieństwa, jakie różnice pomiędzy grupowaniem danych a działaniem funkcji okna?
 
----
+______________________________________________________________________
 
 ```{=typst}
 #pagebreak()
@@ -154,7 +157,7 @@ where productid < 10;
 => 9 wierszy, do każdego doklejona jest średnia z tych 9. wierszy (filtr obowiązuje wewnątrz okna) równa ~ 31.372
 ```
 
----
+______________________________________________________________________
 
 # Zadanie 2 - obserwacja
 
@@ -182,7 +185,7 @@ Napisz polecenie równoważne
 - 1. z wykorzystaniem funkcji okna.
 - 2. z wykorzystaniem podzapytania
 
----
+______________________________________________________________________
 
 > Wyniki:
 
@@ -205,7 +208,7 @@ from products p
 where productid < 10
 ```
 
----
+______________________________________________________________________
 
 # Zadanie 3
 
@@ -223,7 +226,7 @@ W DataGrip użyj opcji Explain Plan/Explain Analyze
 
 ![w:700](media/datagrip-explain.png)
 
----
+______________________________________________________________________
 
 ```{=typst}
 #pagebreak()
@@ -292,7 +295,7 @@ from products p;
 **SQLite:**
 ![alt text](media/exercise3-wf-sqlite.png)
 
----
+______________________________________________________________________
 
 # Zadanie 4
 
@@ -304,7 +307,7 @@ Napisz polecenie z wykorzystaniem podzapytania, join'a oraz funkcji okna. Porów
 
 Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
----
+______________________________________________________________________
 
 ```{=typst}
 #pagebreak()
@@ -381,7 +384,7 @@ order by ProductID;
 **SQLite:**
 ![alt text](media/exercise4-wf-sqlite.png)
 
----
+______________________________________________________________________
 
 # Zadanie 5
 
@@ -491,7 +494,7 @@ where 1=1;
 
 Wykonaj polecenia: `select count(*) from product_history`, potwierdzające wykonanie zadania
 
----
+______________________________________________________________________
 
 ```{=typst}
 #pagebreak()
@@ -527,7 +530,6 @@ Napisz polecenie, które zwraca: id pozycji, id produktu, nazwę produktu, id_ka
 
 W przypadku długiego czasu wykonania ogranicz zbiór wynikowy do kilkuset/kilku tysięcy wierszy pomocna może być konstrukcja `with`
 
-
 ```sql
 with t as (
 
@@ -541,10 +543,9 @@ Napisz polecenie z wykorzystaniem podzapytania, join'a oraz funkcji okna. Porów
 
 Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
----
+______________________________________________________________________
 
 > Wyniki: Z podzapytaniem tylko MSSQL poradził sobie w skończonym czasie (457ms, 45ms dla ograniczonego zbioru), prawdopodobnie przez paralelizm. Postgresql i SQLite wypadly znacznie gorzej ~1 minuta na ograniczonym zbiorze, a dla pełnego zbioru zapytanie nie zostało ukończone w rozsądnym czasie. Przy joinie wyniki wyniosły odpowiednio MSSQL 458ms, Postgresql 1s, SQLite 1s. Przy funkcji okna MSSQL znów był najszybszy ~500ms, Postgresql 1.6s, SQLite 2s.
-
 > DataGrip wskazał, że w przypadku MSSQL warto dodać indeks na kolumnie `categoryid` w tabeli `product_history`.
 
 ```sql
@@ -645,7 +646,7 @@ order by productid;
 **SQLite:**
 ![alt text](media/exercise6-wf-sqlite.png)
 
----
+______________________________________________________________________
 
 |         |     |
 | ------- | --- |

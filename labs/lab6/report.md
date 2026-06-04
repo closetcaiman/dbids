@@ -6,20 +6,20 @@
 
 **Grupa:** 4, piątek 15:00-16:30
 
----
+______________________________________________________________________
 
 ## Cel ćwiczenia
 
 Po tym laboratorium będziesz potrafił:
 
 1. zbudować lejek konwersji i zinterpretować odpływ między jego etapami,
-2. użyć funkcji okna do rankingu i analizy trendu przychodów w czasie,
-3. podzielić użytkowników na segmenty metodą RFM i wyciągnąć z tego wnioski biznesowe,
-4. zmierzyć i wyjaśnić różnicę wydajności między ClickHouse a PostgreSQL i powiedzieć, skąd ona wynika.
+1. użyć funkcji okna do rankingu i analizy trendu przychodów w czasie,
+1. podzielić użytkowników na segmenty metodą RFM i wyciągnąć z tego wnioski biznesowe,
+1. zmierzyć i wyjaśnić różnicę wydajności między ClickHouse a PostgreSQL i powiedzieć, skąd ona wynika.
 
 Laboratorium ma celowo prostą strukturę: **zadania 1–3 to analityka w ClickHouse, zadanie 4 to dowód** eksperyment porównawczy oparty na zapytaniach, które właśnie napisałeś.
 
----
+______________________________________________________________________
 
 ## Zanim zaczniesz - przeczytaj to uważnie
 
@@ -53,7 +53,7 @@ Oddaj jako PDF albo Markdown. Dla każdego zadania dołącz:
 
 **Punktacja:** razem 10 pkt.
 
----
+______________________________________________________________________
 
 ## Założenie startowe
 
@@ -62,7 +62,7 @@ Oddaj jako PDF albo Markdown. Dla każdego zadania dołącz:
 - `public.events` w PostgreSQL,
 - `ds_lab.events` w ClickHouse.
 
----
+______________________________________________________________________
 
 ```{=typst}
 #pagebreak()
@@ -86,7 +86,7 @@ Status tabeli w PostgreSQL:
 
 ![alt text](media/ex0-3.png){height=300px}
 
----
+______________________________________________________________________
 
 ## 1. Lejek konwersji — 2 pkt
 
@@ -183,7 +183,7 @@ Komentarz:
 - lejek nieznacznie różni się między urządzeniami, ale ogólnie jest taki sam. Na desktopie jest najmniej sesji cart (4917 vs 5028, 5068). Na mobile jest najwięcej sesji purchase (1718 vs 1677, 1675).
 - `countIf` to funkcja agregująca, która zlicza tylko te wiersze, które spełniają warunek. W klasycznym SQL musielibyśmy użyć `CASE WHEN` do stworzenia flagi 0/1, a następnie zliczyć sumę tych flag. `countIf` pozwala zrobić to bezpośrednio, co skraca i upraszcza zapytanie.
 
----
+______________________________________________________________________
 
 ## 2. Funkcje okna: rankingi i trend przychodów 2 pkt
 
@@ -289,7 +289,7 @@ from daily;
 - obswerwujemy kilka dni z wyraźną zmianą, przykładowo `15.01.2025` nastąpił wzrost dobowy o 168%, `19.03.2025` nastąpił wzrost o ~148%, a `05.06.2025` nastąpił spadek o ~65%.
 - funckje okna były nam już znane wcześniej, ponieważ były one już przerabiane na poprzednich laboratoriach. Z tego względu nie sprawiły one większym problemów.
 
----
+______________________________________________________________________
 
 ## 3. Segmentacja użytkowników - metoda RFM - 2 pkt
 
@@ -438,7 +438,7 @@ Komentarz:
 - nie ma ściśle zasady Pareto 80/20, jest to bardziej rozmyte, ale widać, że niewielka grupa użytkowników (premium) generuje znaczący procent przychodu.
 - klienci sklepu raczej nie są lojalni - większość należy do segmentu okazjonalnego (50%), a tylko niewielka część to klienci premium. Sklep powinien skupić się na strategiach retencji klientów.
 
----
+______________________________________________________________________
 
 ## 4. Benchmark i wnioski końcowe - 4 pkt
 
@@ -676,7 +676,7 @@ Plany wykonania pokazują 2 kluczowe różnice pomiędzy Clickhousem oraz Postgr
 
 Prawdopodobnie wybrałbym PostgreSQL jako główną bazę transakcyjną do obsługi bieżących operacji dotyczących produktów i klientów, w której przechowywałbym wszystkie informacje o klientach, produktach i transakcjach/zamówieniach. Clickhouse'a użyłbym natomiast np. do przetrzymywania wszystkich danych odnośnie zdarzeń w aplikacji/systemie, dzięki czemu możliwe byłyby bardzo wydajne tworzenie raportów oraz analiza lejków konwersji (jednocześnie operacje te nie obciążałyby głównej bazy Postgres). W celu przeprowadzania dokładnych analiza dotyczących sprzedaży, rozważyłbym także cykliczne kopiowanie danych dotyczących zamówień (np. tych już zrealizowanych) z Postgresa do Clickhouse'a - dzięki temu mamy główne źródło prawdy w Postgresie, ale możemy w wydajny sposób tworzyć raporty na podstawie danych w Clickhousie.
 
----
+______________________________________________________________________
 
 ## Co jest oceniane
 

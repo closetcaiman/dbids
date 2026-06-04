@@ -1,1 +1,24 @@
-{ "MD024": false, "MD013": false }
+default: true
+
+# Disabled rules
+MD013: false # line-length — SQL blocks and long URLs make this impractical
+MD024: false # no-duplicate-heading — labs legitimately reuse section names
+
+# Style choices
+MD003:
+  style: atx # enforce # Heading style, not underline
+MD004:
+  style: dash # enforce - for unordered lists
+MD010:
+  code_blocks: false # tabs in SQL/code blocks are fine
+
+# Relaxed rules
+MD001: false # heading-increment — exercise structure intentionally uses # → ### levels
+MD025: false # single-title — each exercise uses its own top-level heading
+MD026: false # trailing-punctuation — headings like "Output:" are intentional
+MD029: false # ol-prefix — numbered steps interrupted by code blocks break sequential detection
+MD033: false # no-inline-html — SQL result tables sometimes need HTML
+MD036: false # no-emphasis-as-heading — bold labels in reports are intentional
+MD039: false # no-space-in-links — backtick content in alt text triggers false positives
+MD041: false # first-line-h1 — reports may start without a top-level heading
+MD045: false # no-alt-text — screenshot filenames add no meaningful description

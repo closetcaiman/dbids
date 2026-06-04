@@ -13,6 +13,8 @@
   stroke: 0.5pt + gray
 )
 
+#show figure: set figure(supplement: [Wizualizacja])
+
 $if(highlighting-definitions)$
 $highlighting-definitions$
 $endif$

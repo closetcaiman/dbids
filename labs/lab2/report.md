@@ -46,10 +46,11 @@ Oprogramowanie dostępne jest na przygotowanej maszynie wirtualnej
 ## Dokumentacja/Literatura
 
 - Kathi Kellenberger,  Clayton Groom, Ed Pollack, Expert T-SQL Window Functions in SQL Server 2019, Apres 2019
+
 - Itzik Ben-Gan, T-SQL Window Functions: For Data Analysis and Beyond, Microsoft 2020
 
 - Kilka linków do materiałów które mogą być pomocne
-   - [https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16](https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16)
+  \- [https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16](https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql?view=sql-server-ver16)
   - [https://www.sqlservertutorial.net/sql-server-window-functions/](https://www.sqlservertutorial.net/sql-server-window-functions/)
   - [https://www.sqlshack.com/use-window-functions-sql-server/](https://www.sqlshack.com/use-window-functions-sql-server/)
   - [https://www.postgresql.org/docs/current/tutorial-window.html](https://www.postgresql.org/docs/current/tutorial-window.html)
@@ -63,7 +64,7 @@ Oprogramowanie dostępne jest na przygotowanej maszynie wirtualnej
 ## Przygotowanie
 
 Uruchom SSMS
-- Skonfiguruj połączenie z bazą Northwind na lokalnym serwerze MS SQL 
+- Skonfiguruj połączenie z bazą Northwind na lokalnym serwerze MS SQL
 
 Uruchom DataGrip (lub Dbeaver)
 
@@ -118,7 +119,9 @@ Komentarz:
 - `rank` to ranga danego wiersza wewnątrz okna, zgodnie z zadaną kolejnością (tutaj: `unitprice desc`). W przypadku remisów, wszystkie wiersze o tej samej wartości dostają tę samą rangę `r`, natomiast wiersze o następnej w kolejności wartości dostają rangę `r+k`, gdzie `k`-ilość remisujących wierszy. `rank` zawsze przyjmowało wartości `1..<ilosc wierszy w oknie>`.
 - `dense_rank` działa podobnie jak `rank`, natomiast w przypadku remisów, wszystkie wiersze o tej samej wartości dostają tę samą rangę `r`, a wiersze o następnej w kolejności wartości dostają rangę `r+1` (nie przeskakujemy wartości).
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Te same wyniki można także uzyskać nie korzystając z funkcji okna, z wykorzystaniem podzapytań lub instrukcji `join`:
 
@@ -193,7 +196,9 @@ from products p1
 order by p1.categoryid, denserankprice_custom;
 ```
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 W celu porównania wyników uruchamiamy zapytanie łączące wszystkie te zapytania:
 
@@ -239,7 +244,9 @@ order by p.categoryid, custom_rn.rowno_custom;
 
 ![Zadanie 1 - porównanie funkcji okna z odpowiednikami (PostgreSQL)](media/task1-comparison-postgres.png)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 W celu upewnienia się, że wszystkie wartości naszych odpowiedników są identyczne jak te z zapytań korzystających z funkcji okna, korzystamy z dwukierunkowego zapytania `except` (dzięki temu możemy sprawdzić czy w wyniku dostajemy identyczne wiersze, czy istnieją jakieś różnice):
 
@@ -298,7 +305,9 @@ Wynik:
 
 Jak widać na załączonym zrzucie ekranu, wszystkie funkcje oraz nasze customowe odpowiedniki dają identyczne rezultaty (zapytanie zwraca 0 wierszy, co oznacza, wynikowy zbiór jest identyczny dla obu zapytań). W dalszych częściach konspektu pórównania klauzulą `except` będziemy wykonywać analogicznie.
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Ze względu na różnicę w wydajności podzapytania względem `inner-joina`, w dalszej części konspektu będziemy korzystać z metody wykorzystującej `inner-joina` (porównanie wykonane dla silnika Postgres oraz funkcji `row_number`, wydajność pozostałych funkcji ma podobną charakterystykę):
 
@@ -321,10 +330,15 @@ Baza: Northwind, tabela product_history
 Dla każdego produktu, podaj 4 najwyższe ceny tego produktu w danym roku. Zbiór wynikowy powinien zawierać:
 
 - rok
+
 - id produktu
+
 - nazwę produktu
+
 - cenę
+
 - datę (datę uzyskania przez produkt takiej ceny)
+
 - pozycję w rankingu
 
 - Uporządkuj wynik wg roku, nr produktu, pozycji w rankingu
@@ -384,7 +398,9 @@ where denserankprice <= 4 and productid < 10
 order by year, productid, unitprice desc;
 ```
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Rezultaty:
 
@@ -398,7 +414,9 @@ Rezultaty:
 
 W celu zweryfikowania poprawności zapytania niekorzystającego z funkcji okna, tworzymy zapytanie korzystające z dwukierunkowego `except`. Ze względu na fakt, że ceny o danej randze mogły zostać zaobserwowane w różnych dniach, a zadanie nie specyfikowała, która data powinna być zawarta w zbiorze wynikowym, data nie jest brana pod uwagę przy porównywaniu dwóch zbiorów wynikowych.
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 ## Wyniki:
 
@@ -421,7 +439,9 @@ year(date) as year
 strftime('%Y', date) as year
 ```
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Porównanie planów zapytań (Postgres):
 
@@ -442,7 +462,9 @@ Wnioski:
 
 Alternatywne zapytanie korzystające z subquery nie wykonało się w rozsądnym czasie, nawet na ograniczonym zbiorze danych.
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Porównanie planów zapytań - MSSQL:
 
@@ -460,7 +482,9 @@ Wnioski:
 - zapytanie jest zdecydowanie szybsze w porównaniu do Postgresa (~7 razy dla funkcji okna oraz ~4 razy dla zapytania z `joinem`)
 - zapytanie na nieograniczonym zbiorze wykonało się w rozsądnym czasie zarówno dla zapytania z funkcją okna oraz `joinem` (~200 razy niższy całkowity koszt zapytania, zapytanie z funkcją okna wykonywało się około 400ms, zapytaniem z `joinem` około 1,5 minuty)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Porównanie wydajności i planów zapytań - SQLite:
 
@@ -479,7 +503,9 @@ Wnioski:
 
 ---
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 # Zadanie 3
 
@@ -527,7 +553,9 @@ Do analizy użyj wybranego systemu/bazy danych (wybierz MS SQLserver, Postgres l
 
 ---
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 ## Wyniki:
 
@@ -541,7 +569,9 @@ Koniec wyniku:
 
 Według sygnatury z [dokumentacji](https://www.postgresql.org/docs/current/functions-window.html) `PostgreSQL` funkcja `lag()` zwraca wartość z poprzedniego wiersza co do offsetu, a `lead()` zwraca wartość z następnego wiersza co do offsetu. W przypadku braku takiego wiersza zwracana jest wartość domyślna. W naszym przypadku (brak podania offsetu i wartości domyślnej) offset jest równy 1, a wartość domyślna jest równa NULL. Oznacza to, że funkcja `lag()` zwraca cenę produktu z poprzedniego dnia, a `lead()` zwraca cenę produktu z następnego dnia. W przypadku pierwszego wiersza (brak poprzedniego dnia) funkcja `lag()` zwraca NULL, a w przypadku ostatniego wiersza (brak następnego dnia) funkcja `lead()` zwraca NULL.
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Podejście bez funkcji okna:
 
@@ -601,7 +631,9 @@ order by ph.date;
 
 Porównanie wyników klazulą `except` w obie strony dało pusty zbiór wynikowy, co oznacza, że wyniki są takie same dla wszystkich trzech podejść.
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Porównanie planów wykonania dla różnych podejść:
 
@@ -617,7 +649,9 @@ Porównanie planów wykonania dla różnych podejść:
 
 ![Zadanie 3 - Plan wykonania (joiny)](media/ex3-5.png)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Wnioski:
 
@@ -646,7 +680,9 @@ Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres 
 
 ---
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 ## Wyniki:
 
@@ -675,7 +711,9 @@ order by companyname, orderdate;
 
 Dla każdego klienta widzimy jego zamówienia wraz z informacjami o poprzednim zamówieniu. W przypadku pierwszego zamówienia danego klienta, kolumny dotyczące poprzedniego zamówienia będą zawierały wartość `NULL`.
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Podejścia bez funkcji okna:
 
@@ -749,7 +787,9 @@ from ordersummary curr
 order by curr.companyname, curr.orderdate, curr.orderid;
 ```
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Porównanie wyników klazulą `except` w obie strony dało pusty zbiór wynikowy, co oznacza, że wyniki są takie same dla wszystkich trzech podejść.
 
@@ -763,7 +803,9 @@ Porównanie planów wykonania dla różnych podejść:
 
 ![Zadanie 4 - Plan wykonania (podzapytanie)](media/ex4-3.png)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 - joiny:
 
@@ -773,7 +815,7 @@ Wnioski:
 
 - w przypadku funkcji okna konieczne było, aby grupować dane po orderdate i orderid, aby dobrze obsłużyć kolejność zamówień, co spowodowało, że próba otrzymania tego samego wyniku bez funkcji okna okazała się trudna do napisania
 - kod z funkcjami okna jest znacznie bardziej czytelny, łatwiejszy oraz zwięzły do napisania niż kod z podzapytaniem i joinami, co jest dodatkową zaletą funkcji okna
-- czasy wykonania są bardzo małe (<1s), ale warto zwrócić uwagę na koszty, które są znacznie większe dla podejścia z podzapytaniem i joinami niż dla podejścia z funkcjami okna
+- czasy wykonania są bardzo małe (\<1s), ale warto zwrócić uwagę na koszty, które są znacznie większe dla podejścia z podzapytaniem i joinami niż dla podejścia z funkcjami okna
 
 ---
 
@@ -805,7 +847,9 @@ order by categoryid, unitprice desc;
 
 ---
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 ## Wyniki:
 
@@ -831,7 +875,9 @@ Rezultaty poprawionego zapytania:
 
 ---
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 # Zadanie 6
 
@@ -858,7 +904,9 @@ Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres 
 
 ---
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 ## Wyniki:
 
@@ -888,7 +936,9 @@ order by customerid, orderdate;
 
 ![Zadanie 6 - Wynik](media/ex6-1.png)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Podejścia bez funkcji okna:
 
@@ -948,7 +998,9 @@ from ordersummary t1
 order by t1.customerid, t1.orderdate;
 ```
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 ```sql
 -- joiny
@@ -999,7 +1051,9 @@ Porównanie planów wykonania dla różnych podejść:
 
 ![Zadanie 6 - Plan wykonania (funkcje okna, surowy)](media/ex6-2-2.png)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 - podzapytanie:
 
@@ -1007,7 +1061,9 @@ Porównanie planów wykonania dla różnych podejść:
 
 ![Zadanie 6 - Plan wykonania (podzapytanie, surowy)](media/ex6-3-2.png)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 - joiny:
 
@@ -1015,7 +1071,9 @@ Porównanie planów wykonania dla różnych podejść:
 
 ![Zadanie 6 - Plan wykonania (joiny, surowy)](media/ex6-4-2.png)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Wnioski:
 
@@ -1045,7 +1103,9 @@ Przetestuj działanie w różnych SZBD (MS SQL Server, PostgreSql, SQLite)
 
 ---
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 ## Wyniki:
 
@@ -1106,7 +1166,9 @@ order by t.productid,
          t.date;
 ```
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Rezultaty zapytania:
 
@@ -1114,7 +1176,9 @@ Rezultaty zapytania:
 
 ![Zadanie 7 - wynik sumy narastającej z funkcją okna (PostgreSQL)](media/task7-window-result-postgres.png)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 - z `inner-joinem`:
 
@@ -1122,7 +1186,9 @@ Rezultaty zapytania:
 
 Jak widać na załączonych zrzutach ekranu, wartości te są kumulowane w ramach danego miesiąca. W celu upewnienia się, że wyniki są identyczne w przypadku obu zapytań, ponownie korzystamy z dwukierunkowego `except`, który zwrócił pusty zbiór wynikowy, co oznacza, że wyniki są takie same dla obu podejść.
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Porównanie wydajności i planów zapytań - Postgres:
 
@@ -1139,7 +1205,9 @@ Wnioski:
 - zapytanie z funkcją okna charakteryzuje się około 2 razy niższym kosztem zapytania
 - ze względu na mały rozmiar danych (tabele `orders` i `ordershistory`), zapytania są generalnie bardzo szybkie (~30ms), więc nie ma sensu porównywać bezpośrednio czasu zapytań
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Zapytania dla MSSQL oraz SQLite są identyczne, z dokładnością do funkcji ekstrahującej miesiąc oraz rok z daty:
 
@@ -1171,7 +1239,9 @@ Wnioski:
 
 - koszt całkowity dla funkcji okna jest ~3 krotnie niższy, natomiast czas wykonania jest bardzo zbliżony (ze względu na małą ilość danych)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Porównanie wydajności i planów zapytań - SQLite:
 
@@ -1197,7 +1267,9 @@ Czy są jeszcze jakieś ciekawe/przydatne funkcje okna (z których nie korzysta�
 
 Do analizy użyj wybranego systemu/bazy danych - wybierz MS SQLserver, Postgres lub SQLite.
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 1. `ntile ( num_buckets integer ) → integer`
 
@@ -1227,19 +1299,25 @@ from customerspending
 order by customertier, totalspent desc;
 ```
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Początek wyniku:
 
 ![Zadanie 8 - Wynik (początek)](media/ex8-1.png)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 Koniec wyniku:
 
 ![Zadanie 8 - Wynik (koniec)](media/ex8-2.png)
 
-\newpage
+```{=typst}
+#pagebreak()
+```
 
 2. `percent_rank () → double precision`, `cume_dist () → double precision`
 
