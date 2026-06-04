@@ -18,7 +18,7 @@ services:
         condition: service_completed_successfully
     ports:
       - "8123:8123"
-      - "9000:9000"
+      - "19000:9000"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./labs/lab5/data:/mnt/user_files/events:ro
