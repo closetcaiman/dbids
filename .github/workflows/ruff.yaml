@@ -1,0 +1,31 @@
+name: Ruff
+
+on:
+  pull_request:
+    paths:
+      - "**/*.py"
+      - "**/*.ipynb"
+      - "ruff.toml"
+      - "pyproject.toml"
+  push:
+    branches: [main]
+    paths:
+      - "**/*.py"
+      - "**/*.ipynb"
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install dev dependencies
+        run: uv sync --group dev
+
+      - name: Check formatting
+        run: uv run ruff format --check .
+
+      - name: Lint
+        run: uv run ruff check .
