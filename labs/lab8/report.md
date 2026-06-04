@@ -149,6 +149,10 @@ Nie trzeba dołączać pełnych logów. Wystarczy jedno zdanie:
 
 ---
 
+```{=typst}
+#pagebreak()
+```
+
 ## 1. Pierwsze poznanie Couchbase i danych – 1 pkt
 
 ### Cel
@@ -209,6 +213,10 @@ LIMIT 3;
 - Ile dokumentów znajduje się w kolekcjach `orders`, `orderdetails`, `customers`, `products` i `orders_nested`?
 - Czym różni się dokument z kolekcji `orders` od dokumentu z kolekcji `orders_nested`?
 
+```{=typst}
+#pagebreak()
+```
+
 **Rozwiązanie:**
 
 Przykładowe dokumenty z kolekcji `orders`:
@@ -217,7 +225,7 @@ Przykładowe dokumenty z kolekcji `orders`:
 SELECT o
 FROM orders AS o
 WHERE o.OrderID IS NOT MISSING
-LIMIT 3;
+LIMIT 2;
 ```
 
 ```json
@@ -275,35 +283,12 @@ LIMIT 3;
         "$oid": "63a060b9bb3b972d6f4e1fc7"
       }
     }
-  },
-  {
-    "o": {
-      "CustomerID": "HANAR",
-      "EmployeeID": 4,
-      "Freight": 65.83,
-      "OrderDate": {
-        "$date": "1996-07-08T00:00:00Z"
-      },
-      "OrderID": 10250,
-      "RequiredDate": {
-        "$date": "1996-08-05T00:00:00Z"
-      },
-      "ShipAddress": "Rua do Paço, 67",
-      "ShipCity": "Rio de Janeiro",
-      "ShipCountry": "Brazil",
-      "ShipName": "Hanari Carnes",
-      "ShipPostalCode": "05454-876",
-      "ShipRegion": "RJ",
-      "ShipVia": 2,
-      "ShippedDate": {
-        "$date": "1996-07-12T00:00:00Z"
-      },
-      "_id": {
-        "$oid": "63a060b9bb3b972d6f4e1fc8"
-      }
-    }
   }
 ]
+```
+
+```{=typst}
+#pagebreak()
 ```
 
 Przykładowy dokument z kolekcji `orders_nested`:
@@ -365,13 +350,21 @@ LIMIT 1;
 
 **Collection** - zbiór dokumentów tego samego typu, jest to odpowiednik tabeli w SQL, natomiast kolekcje nie narzucają konkretnej struktury, reprezentują jedynie zbiór podobnych dokumentów. W ramach kolekcji może istnieć wiele dokumentów.
 
+```{=typst}
+#pagebreak()
+```
+
 > Ile dokumentów znajduje się w kolekcjach orders, orderdetails,
 > customers, products i orders_nested?
 
 ![Liczba dokumentów w kolekcji orders](media/ex1-1.png)
+
 ![Liczba dokumentów w kolekcji orderdetails](media/ex1-2.png)
-![Liczba dokumentów w kolekcji customers](media/ex1-3.png)
-![Liczba dokumentów w kolekcji products](media/ex1-4.png)
+
+![Liczba dokumentów w kolekcji customers](media/ex1-3.png){width=95%}
+
+![Liczba dokumentów w kolekcji products](media/ex1-4.png){width=95%}
+
 ![Liczba dokumentów w kolekcji orders_nested](media/ex1-5.png)
 
 | Kolekcja      | Liczba dokumentów |
@@ -381,6 +374,10 @@ LIMIT 1;
 | customers     | 91                |
 | products      | 77                |
 | orders_nested | 830               |
+
+```{=typst}
+#pagebreak()
+```
 
 Dodatkowo, w Couchbase dostępne jest także podsumowanie danych, dzięki czemu mamy bezpośrednią informację o liczności poszczególnych kolekcji:
 
@@ -416,7 +413,7 @@ ORDER BY customers_count DESC;
 
 W świeżo uruchomionym środowisku zapytanie powinno zakończyć się błędem informującym o braku indeksu. Jeżeli zapytanie działa od razu, oznacza to najczęściej, że w środowisku pozostał wcześniej utworzony indeks.
 
-![Brak indeksu](./media/ex2-1.png)
+![Brak indeksu](./media/ex2-1.png){width=75%}
 
 ### Część B – primary index
 
@@ -427,11 +424,15 @@ CREATE PRIMARY INDEX idx_customers_primary
 ON `northwind`._default.customers;
 ```
 
-![Utworzony primary index](./media/ex2-2.png)
+![Utworzony primary index](./media/ex2-2.png){width=75%}
 
 Powtórz zapytanie z części A.
 
-![Zapytanie z primary index](./media/ex2-3.png)
+![Zapytanie z primary index](./media/ex2-3.png){width=75%}
+
+```{=typst}
+#pagebreak()
+```
 
 ### Część C – indeks celowy
 
@@ -442,7 +443,7 @@ DROP INDEX idx_customers_primary
 ON `northwind`._default.customers;
 ```
 
-![Usunięty primary index](./media/ex2-4.png)
+![Usunięty primary index](./media/ex2-4.png){width=75%}
 
 Utwórz indeks celowy na polu `Country`:
 
@@ -451,7 +452,11 @@ CREATE INDEX idx_customers_country
 ON `northwind`._default.customers(Country);
 ```
 
-![Utworzony indeks celowy](./media/ex2-5.png)
+![Utworzony indeks celowy](./media/ex2-5.png){width=75%}
+
+```{=typst}
+#pagebreak()
+```
 
 Wykonaj zapytanie z warunkiem indeksowym:
 
@@ -465,7 +470,7 @@ GROUP BY c.Country
 ORDER BY customers_count DESC;
 ```
 
-![Zapytanie z indeksem celowym](./media/ex2-6.png)
+![Zapytanie z indeksem celowym](./media/ex2-6.png){width=75%}
 
 ### W komentarzu napisz
 
@@ -486,6 +491,10 @@ ORDER BY customers_count DESC;
 > Primary index jest nieefektywny, ponieważ pozwala na skanowanie wszystkich dokumentów w kolekcji, co może prowadzić do długiego czasu odpowiedzi i dużego obciążenia bazy. W środowisku produkcyjnym powinno się tworzyć indeksy celowe na polach, które są często używane w zapytaniach, aby zapewnić szybkie i efektywne działanie aplikacji.
 
 ---
+
+```{=typst}
+#pagebreak()
+```
 
 ## 3. `JOIN` na kolekcjach dokumentów – 2 pkt
 
@@ -546,7 +555,7 @@ WHERE o.OrderID IS NOT MISSING
     AND od.OrderID IS NOT MISSING
 ```
 
-![Wynik zapytania JOIN dla zamówień i pozycji zamówień](media/ex3-1.png)
+![Wynik zapytania JOIN dla zamówień i pozycji zamówień](media/ex3-1.png){width=45%}
 
 ### Część C – wartość zamówienia
 
@@ -568,6 +577,10 @@ Dla każdego zamówienia oblicz:
 - liczbę pozycji zamówienia.
 
 Pokaż 10 zamówień o najwyższej wartości.
+
+```{=typst}
+#pagebreak()
+```
 
 **Rozwiązanie:**
 
@@ -690,6 +703,10 @@ GROUP BY o.OrderID,
 ORDER BY order_value DESC, positions DESC;
 ```
 
+```{=typst}
+#pagebreak()
+```
+
 ```json
 [
   {
@@ -759,6 +776,10 @@ Zgodnie z otrzymanymi wynikami (top 10 rezultatów w zadanej kolejności), najwi
 
 ---
 
+```{=typst}
+#pagebreak()
+```
+
 ## 4. Model niezagnieżdżony vs zagnieżdżony: `JOIN` vs `UNNEST` – 2 pkt
 
 ### Cel
@@ -826,6 +847,10 @@ where OrderID = 10248;
     }
   }
 ]
+```
+
+```{=typst}
+#pagebreak()
 ```
 
 ### Część B – rozbij tablicę `items` przez `UNNEST`
@@ -904,6 +929,10 @@ WHERE odn.OrderID = 10248;
 ]
 ```
 
+```{=typst}
+#pagebreak()
+```
+
 ### Część C – policz wartość zamówień z modelu zagnieżdżonego
 
 Na kolekcji `orders_nested` policz:
@@ -929,6 +958,10 @@ GROUP BY n.OrderID,
          n.CustomerID
 ORDER BY order_value DESC
 LIMIT 10;
+```
+
+```{=typst}
+#pagebreak()
 ```
 
 ```json
@@ -994,6 +1027,10 @@ LIMIT 10;
     "positions": 5
   }
 ]
+```
+
+```{=typst}
+#pagebreak()
 ```
 
 ### Część D – porównaj wynik z modelem niezagnieżdżonym
@@ -1075,6 +1112,12 @@ FROM nested AS n EXCEPT ALL SELECT 'only_in_nested' AS source,
 FROM flat AS f;
 ```
 
+```{=typst}
+#pagebreak()
+```
+
+Wynik tego zapytania jest pusty, co oznacza, że oba podejścia dają ten sam wynik biznesowy:
+
 ```json
 {
   "results": []
@@ -1110,6 +1153,10 @@ Zagnieżdżanie jest wygodne, gdy dane są silnie powiązane i zawsze odczytywan
 Osobne kolekcje sprawdzą się lepiej w sytuacji, gdy odwołujemy się do danych z wielu miejsc - przykładowo, produkt (identyfikowany przez `ProductID`) pojawia się w wielu zamówieniach i nie ma sensu duplikowanie danych każdego produktu za każdym razem, gdy jest on zagnieżdżany. Dla danych, dla których potrzebujemy niezależnych zapytań (dane nie są ściśle powiązane z innym dokumentem i ma sa odpytywanie tej kolekcji w izolacji), rozdzielenie danych na osobne kolekcje także może okazać się wygodniejsze. Dzięki rozdzieleniu zagnieżdżonych danych na osobne kolekcje możemy także uniknąć duplikacji danych, co pomaga także w aktualizacji danych (np. zmiana nazwy produktu w jednym miejscu, a nie w wielu dokumentach).
 
 ---
+
+```{=typst}
+#pagebreak()
+```
 
 ## 5. Agregacja biznesowa – 1 pkt
 
@@ -1151,7 +1198,11 @@ Jeżeli indeks już istnieje, Couchbase zwróci komunikat o istniejącym indeksi
 
 ##### Dodanie indeksu
 
-![Dodanie indeksu](media/ex5-1.png)
+![Dodanie indeksu](media/ex5-1.png){width=75%}
+
+```{=typst}
+#pagebreak()
+```
 
 ##### Zapytanie
 
@@ -1172,7 +1223,11 @@ limit 10;
 
 Wynik:
 
-![Wynik zapytania](media/ex5-2.png)
+![Wynik zapytania](media/ex5-2.png){width=75%}
+
+```{=typst}
+#pagebreak()
+```
 
 ### Wariant B – top 10 klientów po wartości zakupów
 
@@ -1201,7 +1256,11 @@ CREATE INDEX idx_customers_customerid
 ON `northwind`._default.customers(CustomerID);
 ```
 
-![Dodanie indeksu](media/ex5-3.png)
+![Dodanie indeksu](media/ex5-3.png){width=75%}
+
+```{=typst}
+#pagebreak()
+```
 
 ##### Zapytanie
 
@@ -1222,7 +1281,11 @@ limit 10;
 
 Wynik:
 
-![Wynik zapytania](media/ex5-4.png)
+![Wynik zapytania](media/ex5-4.png){width=75%}
+
+```{=typst}
+#pagebreak()
+```
 
 ### W komentarzu napisz
 
@@ -1260,6 +1323,10 @@ Wynik:
 
 ---
 
+```{=typst}
+#pagebreak()
+```
+
 ## 6. `EXPLAIN` i refleksja końcowa – 2 pkt
 
 ### Cel
@@ -1296,6 +1363,10 @@ limit 10;
 
 ![Plan wykonania dla zapytania z JOIN](media/ex6-1.png)
 
+```{=typst}
+#pagebreak()
+```
+
 ### Część B – plan dla zapytania z `UNNEST`
 
 Wybierz zapytanie z zadania 4 i uruchom je z `EXPLAIN`.
@@ -1316,6 +1387,10 @@ limit 10;
 ```
 
 ![Plan wykonania dla zapytania z UNNEST](media/ex6-2.png)
+
+```{=typst}
+#pagebreak()
+```
 
 ### Część C – porównanie
 
@@ -1366,6 +1441,10 @@ Odpowiedz w kilku zdaniach:
 
 ---
 
+```{=typst}
+#pagebreak()
+```
+
 ## Zadanie dodatkowe dla chętnych
 
 ### Materializacja KPI klienta
@@ -1381,8 +1460,89 @@ Następnie wykonaj zapytanie raportowe na kolekcji `customer_kpis`.
 
 **Uwaga**: wskazówki do rozwiązania zadania znajdziesz w ściądze.
 
+#### Rozwiązanie
+
+##### Stworzenie kolekcji
+
+```sql
+CREATE COLLECTION `northwind`._default.customer_kpis;
+```
+
+Wynik:
+
+![Stworzenie kolekcji](media/ex7-1.png){width=75%}
+
+```{=typst}
+#pagebreak()
+```
+
+##### Zapytanie do materializacji KPI
+
+```sql
+UPSERT INTO `northwind`._default.customer_kpis (KEY k, VALUE v)
+WITH data AS (
+    SELECT c.CustomerID AS k,
+           c.CompanyName,
+           COUNT(DISTINCT o.OrderID) AS OrdersCount,
+           SUM(od.UnitPrice * od.Quantity * (1 - IFMISSINGORNULL(od.Discount, 0))) AS Revenue
+    FROM `northwind`._default.customers AS c
+    JOIN `northwind`._default.orders AS o ON o.CustomerID = c.CustomerID
+    JOIN `northwind`._default.orderdetails AS od ON od.OrderID = o.OrderID
+    GROUP BY c.CustomerID, c.CompanyName
+)
+SELECT k,
+       {
+           "CompanyName": CompanyName,
+           "OrdersCount": OrdersCount,
+           "Revenue": Revenue
+       } AS v
+FROM data;
+```
+
+Wynik:
+
+![Zapytanie do materializacji KPI](media/ex7-2.png){width=75%}
+
+```{=typst}
+#pagebreak()
+```
+
+##### Stworzenie indeksu na `CustomerID`
+
+```sql
+CREATE INDEX idx_customerkpis_customerid
+ON `northwind`._default.customer_kpis(CustomerID);
+```
+
+Wynik:
+
+![Stworzenie indeksu](media/ex7-3.png)
+
+```{=typst}
+#pagebreak()
+```
+
+##### Zapytanie raportowe na kolekcji `customer_kpis`
+
+```sql
+select * from `northwind`._default.customer_kpis
+order by Revenue desc
+```
+
+Wynik:
+
+![Zapytanie raportowe](media/ex7-4.png)
+
 W komentarzu napisz:
 
 - czym różni się liczenie raportu „w locie" od czytania gotowej kolekcji KPI,
+
+> Przy liczeniu w locie, zapytanie musi przetworzyć wszystkie dane źródłowe za każdym razem, gdy jest uruchamiane, co może być czasochłonne, zwłaszcza przy dużych zbiorach danych. W przypadku gotowej kolekcji KPI, metryki są już obliczone i przechowywane, więc zapytanie raportowe jest szybkie, ponieważ odczytuje gotowe wartości, ale może być zawierać nieaktualne dane, jeśli uległy one zmianie od czasu ostatniej aktualizacji KPI.
+
 - kiedy takie podejście może być użyteczne,
+
+> Gdy dane źródłowe są duże i kosztowne do przetworzenia, a raporty są często uruchamiane, co wymaga szybkiego czasu odpowiedzi.
+
 - jakie jest ryzyko materializowania wyników, jeśli dane źródłowe się zmieniają.
+
+> Wyniki mogą być nieaktalne, bo kolekcja KPI nie jest automatycznie aktualizowana przy każdej zmianie danych źródłowych.
