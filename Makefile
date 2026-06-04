@@ -21,15 +21,18 @@ endif
 help:
 	@echo "Databases in data science"
 	@echo "Usage: make [target] [LAB=lab-name]"
-	@echo "Targets:"
-	@echo "  up       - Start the services for the specified lab"
-	@echo "  down     - Stop the services for the specified lab"
-	@echo "  restart  - Restart the services for the specified lab"
-	@echo "  clean    - Stop the services and remove volumes for the specified lab"
-	@echo "  status   - Show the status of the services for the specified lab"
-	@echo "  pdf      - Convert a markdown file to PDF (usage: make pdf LAB=lab-name)"
-	@echo "  check    - Lint all markdown files"
-	@echo "  fmt      - Auto-fix markdown lint violations"
+	@echo ""
+	@echo "Lab targets (require LAB=):"
+	@echo "  up       - Pre-create data/db dirs, then start lab services in the background"
+	@echo "  down     - Stop lab services (keeps volumes and generated data)"
+	@echo "  restart  - Restart running lab services"
+	@echo "  clean    - Stop services, remove volumes, and delete generated data/db dirs"
+	@echo "  status   - Show running status of lab services"
+	@echo "  pdf      - Render labs/LAB/report.md to PDF"
+	@echo ""
+	@echo "Repo targets:"
+	@echo "  check    - Lint all Markdown files"
+	@echo "  fmt      - Auto-fix Markdown lint violations"
 	@echo "  setup    - Install uv dependencies and register git hooks via lefthook"
 
 
@@ -57,8 +60,8 @@ clean:
 	else \
 		echo "Stopping services and deleting volumes for $(LAB)..."; \
 		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml $(PROFILE_FLAGS) down -v; \
-		echo "Cleaning local generated data and database directories..."; \
-		rm -rf $(LABS_DIR)/$(LAB)/data $(LABS_DIR)/$(LAB)/db; \
+		echo "Cleaning generated data and database directories..."; \
+		$(SCRIPTS_DIR)/clean-lab.sh $(LAB); \
 	fi
 	@echo "All volumes and generated datasets deleted. Run 'make up LAB=$(LAB)' for a fresh start."
 
@@ -69,7 +72,6 @@ restart:
 		echo "Restarting $(LAB) services..."; \
 		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml $(PROFILE_FLAGS) restart; \
 	fi
-
 
 status:
 	@if [ -z "$(LAB)" ]; then \

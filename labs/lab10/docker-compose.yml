@@ -58,8 +58,7 @@ services:
       - "19000:9000"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-      - ./labs/lab10/data:/mnt/user_files/data:ro
-      - ./common/clickhouse-config/user_files.xml:/etc/clickhouse-server/config.d/user_files.xml:ro
+      - ./labs/lab10/data:/var/lib/clickhouse/user_files/data
       - ./common/sql/retail/clickhouse:/docker-entrypoint-initdb.d:ro
     ulimits:
       nofile:

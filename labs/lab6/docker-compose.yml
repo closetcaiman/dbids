@@ -21,8 +21,7 @@ services:
       - "19000:9000"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-      - ./labs/lab6/data:/mnt/user_files/events:ro
-      - ./common/clickhouse-config/user_files.xml:/etc/clickhouse-server/config.d/user_files.xml:ro
+      - ./labs/lab6/data:/var/lib/clickhouse/user_files/events
       - ./common/sql/events/clickhouse/01_users.sql:/docker-entrypoint-initdb.d/users.sql
       - ./common/sql/events/clickhouse/10_clickhouse_events.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
