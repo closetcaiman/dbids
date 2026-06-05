@@ -1,12 +1,12 @@
 services:
   couchbase:
     image: couchbase:community-7.2.4
-    container_name: couchbase
+    container_name: couchbase_lab8
     ports:
       - "8091-8096:8091-8096"
       - "11210:11210"
     volumes:
-      - cbdata:/opt/couchbase/var
+      - cbdata_lab8:/opt/couchbase/var
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8091/ui/index.html"]
@@ -17,7 +17,7 @@ services:
   couchbase_init:
     profiles: ["init"]
     image: curlimages/curl:8.5.0
-    container_name: couchbase-init
+    container_name: couchbase_init_lab8
     depends_on:
       couchbase:
         condition: service_healthy
@@ -30,7 +30,7 @@ services:
   couchbase_import:
     profiles: ["init"]
     image: couchbase:community-7.2.4
-    container_name: couchbase-import
+    container_name: couchbase_import_lab8
     depends_on:
       couchbase_init:
         condition: service_completed_successfully
@@ -42,4 +42,4 @@ services:
     network_mode: "service:couchbase"
 
 volumes:
-  cbdata:
+  cbdata_lab8:

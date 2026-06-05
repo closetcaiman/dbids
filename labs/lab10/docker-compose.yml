@@ -4,7 +4,7 @@ services:
       context: ./common/dockerfiles/retail-generator
       dockerfile: Dockerfile
     image: retail_lab_generator
-    container_name: retail_lab_generator
+    container_name: retail_lab_generator_lab10
     user: "${UID:-1000}:${GID:-1000}"
     volumes:
       - ./labs/lab10/data:/data
@@ -15,7 +15,7 @@ services:
       context: ./common/dockerfiles/sqlite-loader
       dockerfile: Dockerfile
     image: retail_lab_sqlite_loader
-    container_name: retail_lab_sqlite
+    container_name: retail_lab_sqlite_lab10
     user: "${UID:-1000}:${GID:-1000}"
     depends_on:
       generator:
@@ -27,7 +27,7 @@ services:
 
   postgres:
     image: postgres:16
-    container_name: retail_lab_postgres
+    container_name: retail_lab_postgres_lab10
     depends_on:
       generator:
         condition: service_completed_successfully
@@ -38,13 +38,13 @@ services:
     ports:
       - "15432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_lab10:/var/lib/postgresql/data
       - ./labs/lab10/data:/data:ro
       - ./common/sql/retail/postgres:/docker-entrypoint-initdb.d:ro
 
   clickhouse:
     image: clickhouse/clickhouse-server:25.3
-    container_name: retail_lab_clickhouse
+    container_name: retail_lab_clickhouse_lab10
     depends_on:
       generator:
         condition: service_completed_successfully
@@ -57,7 +57,7 @@ services:
       - "8123:8123"
       - "19000:9000"
     volumes:
-      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_data_lab10:/var/lib/clickhouse
       - ./labs/lab10/data:/var/lib/clickhouse/user_files/data
       - ./common/sql/retail/clickhouse:/docker-entrypoint-initdb.d:ro
     ulimits:
@@ -66,5 +66,5 @@ services:
         hard: 262144
 
 volumes:
-  postgres_data:
-  clickhouse_data:
+  postgres_data_lab10:
+  clickhouse_data_lab10:
