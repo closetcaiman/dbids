@@ -1,0 +1,31 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mongo_import:
+    profiles: ["init"]
+    image: mongo:7
+    container_name: mongo-import
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./labs/lab7/scripts/import.sh:/import.sh:ro
+      - ./common/data/northwind:/data/northwind:ro
+    entrypoint: ["/bin/sh", "/import.sh"]
+    restart: "no"
+    network_mode: "service:mongo"
+
+volumes:
+  mongo_data:
