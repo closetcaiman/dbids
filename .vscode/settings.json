@@ -28,5 +28,15 @@
     "notebook.source.organizeImports.ruff": "explicit"
   },
 
-  "ruff.configurationPreference": "filesystemFirst"
+  "ruff.configurationPreference": "filesystemFirst",
+
+  "material-icon-theme.folders.associations": {
+    "exercises": "tasks",
+    "plans": "lib",
+    "labs": "packages"
+  },
+
+  "material-icon-theme.files.associations": {
+    ".actrc": "settings"
+  }
 }

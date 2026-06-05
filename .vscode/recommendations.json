@@ -1,3 +1,7 @@
 {
-  "recommendations": ["ms-vscode.markdownlint", "charliermarsh.ruff"]
+  "recommendations": [
+    "ms-vscode.markdownlint",
+    "charliermarsh.ruff",
+    "PKief.material-icon-theme"
+  ]
 }
