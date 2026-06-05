@@ -29,4 +29,4 @@ SELECT
     country,
     device,
     event_type
-FROM file('/var/lib/clickhouse/user_files/events/events.csv', 'CSVWithNames');
+FROM file('events/events.csv', 'CSVWithNames');

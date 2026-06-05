@@ -1,20 +1,37 @@
 services:
+  generator:
+    build:
+      context: ./common/dockerfiles/events-generator
+      dockerfile: Dockerfile
+    image: events_generator
+    container_name: events_generator_lab6
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ./labs/lab6/data:/data
+    command: ["python", "generate_events.py", "--output", "/data"]
+
   clickhouse:
     image: clickhouse/clickhouse-server:25.12
     container_name: clickhouse_lab6
+    depends_on:
+      generator:
+        condition: service_completed_successfully
     ports:
       - "8123:8123"
-      - "9000:9000"
+      - "19000:9000"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+      - ./labs/lab6/data:/var/lib/clickhouse/user_files/events
       - ./common/sql/events/clickhouse/01_users.sql:/docker-entrypoint-initdb.d/users.sql
       - ./common/sql/events/clickhouse/10_clickhouse_events.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./common/data/events:/var/lib/clickhouse/user_files/events:ro
     restart: unless-stopped
 
   postgres:
     image: postgres:16
     container_name: postgres_lab6
+    depends_on:
+      generator:
+        condition: service_completed_successfully
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -24,7 +41,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./common/sql/events/postgres/10_postgres_events.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./common/data/events:/data/events:ro
+      - ./labs/lab6/data:/data/events:ro
     restart: unless-stopped
 
 volumes:

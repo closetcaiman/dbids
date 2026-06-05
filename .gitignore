@@ -1,8 +1,10 @@
-# Database files
-db/
+# Generated and artifact directories (local to each lab)
+labs/*/data/
+labs/*/db/
+labs/*/output/
 
 # DataGrip files
 .idea/
 
-Python environment
+# Python environment
 .venv/

@@ -4,6 +4,9 @@ REPO_ROOT := $(shell git rev-parse --show-toplevel)
 SCRIPTS_DIR := $(REPO_ROOT)/common/scripts
 LABS_DIR := $(REPO_ROOT)/labs
 
+export UID := $(shell id -u)
+export GID := $(shell id -g)
+
 COMPOSE_FLAGS := --project-directory $(REPO_ROOT)
 COMPOSE := $(COMPOSE) $(COMPOSE_FLAGS)
 
@@ -18,15 +21,18 @@ endif
 help:
 	@echo "Databases in data science"
 	@echo "Usage: make [target] [LAB=lab-name]"
-	@echo "Targets:"
-	@echo "  up       - Start the services for the specified lab"
-	@echo "  down     - Stop the services for the specified lab"
-	@echo "  restart  - Restart the services for the specified lab"
-	@echo "  clean    - Stop the services and remove volumes for the specified lab"
-	@echo "  status   - Show the status of the services for the specified lab"
-	@echo "  pdf      - Convert a markdown file to PDF (usage: make pdf LAB=lab-name)"
-	@echo "  check    - Lint all markdown files"
-	@echo "  fmt      - Auto-fix markdown lint violations"
+	@echo ""
+	@echo "Lab targets (require LAB=):"
+	@echo "  up       - Pre-create data/db dirs, then start lab services in the background"
+	@echo "  down     - Stop lab services (keeps volumes and generated data)"
+	@echo "  restart  - Restart running lab services"
+	@echo "  clean    - Stop services, remove volumes, and delete generated data/db dirs"
+	@echo "  status   - Show running status of lab services"
+	@echo "  pdf      - Render labs/LAB/report.md to PDF"
+	@echo ""
+	@echo "Repo targets:"
+	@echo "  check    - Lint Markdown and Python/notebook files (ruff check + format check)"
+	@echo "  fmt      - Auto-fix Markdown, format Python/notebooks, and apply ruff fixes"
 	@echo "  setup    - Install uv dependencies and register git hooks via lefthook"
 
 
@@ -34,6 +40,8 @@ up:
 	@if [ -z "$(LAB)" ]; then \
 		echo "Usage: make up LAB=lab-name"; \
 	else \
+		echo "Creating local data directories safely as $(shell whoami)..."; \
+		mkdir -p $(LABS_DIR)/$(LAB)/data $(LABS_DIR)/$(LAB)/db; \
 		echo "Starting $(LAB) services..."; \
 		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml $(PROFILE_FLAGS) up -d; \
 	fi
@@ -46,6 +54,17 @@ down:
 		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml $(PROFILE_FLAGS) down; \
 	fi
 
+clean:
+	@if [ -z "$(LAB)" ]; then \
+		echo "Usage: make clean LAB=lab-name"; \
+	else \
+		echo "Stopping services and deleting volumes for $(LAB)..."; \
+		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml $(PROFILE_FLAGS) down -v; \
+		echo "Cleaning generated data and database directories..."; \
+		$(SCRIPTS_DIR)/clean-lab.sh $(LAB); \
+	fi
+	@echo "All volumes and generated datasets deleted. Run 'make up LAB=$(LAB)' for a fresh start."
+
 restart:
 	@if [ -z "$(LAB)" ]; then \
 		echo "Usage: make restart LAB=lab-name"; \
@@ -53,15 +72,6 @@ restart:
 		echo "Restarting $(LAB) services..."; \
 		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml $(PROFILE_FLAGS) restart; \
 	fi
-
-clean:
-	@if [ -z "$(LAB)" ]; then \
-		echo "Usage: make clean LAB=lab-name"; \
-	else \
-		echo "Deleting volumes for $(LAB) services..."; \
-		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml $(PROFILE_FLAGS) down -v; \
-	fi
-	@echo "All volumes deleted. Run 'make up' for a fresh start."
 
 status:
 	@if [ -z "$(LAB)" ]; then \
@@ -76,10 +86,18 @@ pdf:
 	@$(SCRIPTS_DIR)/convert-md-to-pdf.sh $(LABS_DIR)/$(LAB)/report.md
 
 check:
-	$(SCRIPTS_DIR)/markdown-lint.sh "**/*.md"
+	@rc=0; \
+	$(SCRIPTS_DIR)/markdown-lint.sh "**/*.md" || rc=$$?; \
+	uv run ruff check . || rc=$$?; \
+	uv run ruff format --check . || rc=$$?; \
+	exit $$rc
 
 fmt:
-	$(SCRIPTS_DIR)/markdown-lint.sh --fix "**/*.md"
+	@rc=0; \
+	$(SCRIPTS_DIR)/markdown-lint.sh --fix "**/*.md" || rc=$$?; \
+	uv run ruff format . || rc=$$?; \
+	uv run ruff check --fix . || rc=$$?; \
+	exit $$rc
 
 setup:
 	@command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh

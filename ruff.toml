@@ -1,0 +1,21 @@
+target-version = "py312"
+line-length = 88
+
+[lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = [
+    "E501", # line length is enforced by the formatter
+]
+
+[lint.per-file-ignores]
+"**/*.ipynb" = [
+    "E402", # module-level import not at top of file
+    "F401", # imported but unused
+    "F811", # redefinition of unused name from import
+]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
