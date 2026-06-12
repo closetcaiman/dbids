@@ -31,7 +31,7 @@ help:
 	@echo "  pdf      - Render labs/LAB/report.md to PDF"
 	@echo ""
 	@echo "Repo targets:"
-	@echo "  check    - Lint Markdown and Python/notebook files (ruff check + format check)"
+	@echo "  check    - Lint Markdown and Python/notebook files (ruff check + format check + ty type check)"
 	@echo "  fmt      - Auto-fix Markdown, format Python/notebooks, and apply ruff fixes"
 	@echo "  setup    - Install uv dependencies and register git hooks via lefthook"
 
@@ -90,6 +90,7 @@ check:
 	$(SCRIPTS_DIR)/markdown-lint.sh "**/*.md" || rc=$$?; \
 	uv run ruff check . || rc=$$?; \
 	uv run ruff format --check . || rc=$$?; \
+	uv run ty check || rc=$$?; \
 	exit $$rc
 
 fmt:
