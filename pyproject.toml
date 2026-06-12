@@ -25,4 +25,5 @@ dependencies = [
 dev = [
     "lefthook>=1.6",
     "ruff>=0.15.12",
+    "ty>=0.0.49",
 ]
