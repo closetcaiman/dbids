@@ -291,7 +291,7 @@ for r in rows_filter:
     print(" ", r[1])
 ```
 
-```
+```txt
 SDO_FILTER - number of states: 16
   Wisconsin
   Illinois
@@ -334,7 +334,7 @@ for r in rows_anyinteract:
     print(" ", r[1])
 ```
 
-```
+```txt
 SDO_ANYINTERACT - number of states: 14
   Wisconsin
   Illinois
@@ -435,7 +435,7 @@ for r in rows_inside:
     print(" ", r[1])
 ```
 
-```
+```txt
 SDO_INSIDE - parks inside Wyoming: 32
   Flume Creek Park
   Cinnabar Park
@@ -467,7 +467,7 @@ for r in rows_any:
     print(" ", r[1])
 ```
 
-```
+```txt
 SDO_ANYINTERACT - parks intersecting: 46
   Routt NF
   Flume Creek Park
@@ -500,7 +500,7 @@ show_map(m)
 
 - zapytanie z `SDO_ANYINTERACT` uwzględniło 14 dodatkowych parków względem zapytania z `SDO_INSIDE` - są to parki, które tylko częściowo znajdują się w stanie `Wyoming`, natomiast częściowo znajdują się poza granicami tego stanu.
 - `SDO_INSIDE` to filtr, który jest spełniony wyłącznie w sytuacji, gdy dany kształt znajduje się **w całości** w drugim kształcie. `SDO_ANYINTERACT` ogranicza się natomiast do dowolnej interakcji - wystarczy że kształy będą się dotykać w dowolnym miejscu.
-- ze względu na skalę mapy na pierwszy rzut oka nie wszystkie parki są widoczne, natomiast po przybliżeniu faktycznie możemy zaobserwować wszystkie 32 parki (wiele z nich jest stosunkowo małych)
+- ze względu na skalę mapy na pierwszy rzut oka nie wszystkie parki są widoczne, natomiast po przybliżeniu faktycznie możemy zaobserwować wszystkie 32 parki (wiele z nich jest stosunkowo małych).
 
 ![alt text](images/image-8.png)
 
@@ -546,7 +546,7 @@ print(f"INSIDE+COVEREDBY - counties: {len(rows_ic)}")
 for r in rows_ic: print(" ", r[1])
 ```
 
-```
+```txt
 INSIDE+COVEREDBY - counties: 10
   Cheshire
   Hillsborough
@@ -582,7 +582,7 @@ print(f"\nCOVEREDBY - counties: {len(rows_c)}")
 for r in rows_c: print(" ", r[1])
 ```
 
-```
+```txt
 INSIDE - counties: 2
   Merrimack
   Belknap
@@ -680,7 +680,7 @@ for r in rows_cities:
     print(f"  {r[1]}, {r[2]}")
 ```
 
-```
+```txt
 Cities <50 mil from I4 road: 3
   St Petersburg, FL
   Tampa, FL
@@ -720,7 +720,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-```
+```txt
 Roads crossing Mississippi: 15
   I270
   I74
@@ -780,7 +780,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-```
+```txt
 Cities from 15 to 30 miles from I275 road: 4
   Toledo, OH
   Detroit, MI
@@ -839,7 +839,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-```
+```txt
 Top 5 cities closest to I4:
   Tampa, FL
   Jacksonville, FL
@@ -902,7 +902,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-```
+```txt
 Top 3 national parks from NY:
   Institute Park                           1.0 mil
   Prospect Park                            1.1 mil
@@ -948,7 +948,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-```
+```txt
 Top 5 big cities (>300k) closest to I170:
       St Louis MO pop: 396,685
       Kansas City MO pop: 435,146
@@ -1142,7 +1142,7 @@ for row in rows_7a:
 show_map(m)
 ```
 
-```
+```txt
 Top 10 states by number of national parks:
 Iowa                 623 parks
 New York             571 parks
@@ -1196,7 +1196,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-```
+```txt
 Cities close to Mississippi (<20 miles): 6
       Memphis                   TN  pop: 610,337
       New Orleans               LA  pop: 496,938
@@ -1245,7 +1245,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-```
+```txt
 National parks closer than 200 miles from USA centre: 119
       Albright Park
       Island Park
