@@ -121,7 +121,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image.png)
+![alt text](images/image.png)
 
 US_INTERSTATES
 
@@ -143,7 +143,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image-1.png)
+![alt text](images/image-1.png)
 
 US_CITIES
 
@@ -174,7 +174,7 @@ for row in rows:
 show_map(m)
 ```
 
-![alt text](image-2.png)
+![alt text](images/image-2.png)
 
 US_RIVERS
 
@@ -196,7 +196,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image-3.png)
+![alt text](images/image-3.png)
 
 US_COUNTIES
 
@@ -218,7 +218,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image-4.png)
+![alt text](images/image-4.png)
 
 US_PARKS
 
@@ -240,7 +240,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image-5.png)
+![alt text](images/image-5.png)
 
 # Zadanie 2
 
@@ -380,7 +380,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image-6.png)
+![alt text](images/image-6.png)
 
 **Komentarz:**
 
@@ -494,7 +494,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image-7.png)
+![alt text](images/image-7.png)
 
 **Komentarz:**
 
@@ -502,7 +502,7 @@ show_map(m)
 - `SDO_INSIDE` to filtr, który jest spełniony wyłącznie w sytuacji, gdy dany kształt znajduje się **w całości** w drugim kształcie. `SDO_ANYINTERACT` ogranicza się natomiast do dowolnej interakcji - wystarczy że kształy będą się dotykać w dowolnym miejscu.
 - ze względu na skalę mapy na pierwszy rzut oka nie wszystkie parki są widoczne, natomiast po przybliżeniu faktycznie możemy zaobserwować wszystkie 32 parki (wiele z nich jest stosunkowo małych)
 
-![alt text](image-8.png)
+![alt text](images/image-8.png)
 
 # Zadanie 4
 
@@ -622,7 +622,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image-9.png)
+![alt text](images/image-9.png)
 
 **Komentarz:**
 
@@ -687,7 +687,7 @@ Cities <50 mil from I4 road: 3
   Orlando, FL
 ```
 
-![alt text](image-10.png)
+![alt text](images/image-10.png)
 
 Dodatkowo:
 
@@ -728,13 +728,13 @@ Roads crossing Mississippi: 15
   ...
 ```
 
-![alt text](image-11.png)
+![alt text](images/image-11.png)
 
 **Komentarz:**
 
 - niektóre fragementy drogi wyglądają jakby nie przecinały rzeki Mississippi, jednak wynika to z faktu, że drogi te mają identyczne oznaczenia:
 
-![alt text](image-12.png)
+![alt text](images/image-12.png)
 
 b)    Znajdz wszystkie miasta w odlegości od 15 do 30 mil od drogi 'I275'
 
@@ -788,7 +788,7 @@ Cities from 15 to 30 miles from I275 road: 4
   Sterling Heights, MI
 ```
 
-![alt text](image-13.png)
+![alt text](images/image-13.png)
 
 c)      Itp. (własne przykłady)
 
@@ -848,7 +848,7 @@ Top 5 cities closest to I4:
   Fort Lauderdale, FL
 ```
 
-![alt text](image-14.png)
+![alt text](images/image-14.png)
 
 Dodatkowo:
 
@@ -909,7 +909,7 @@ Top 3 national parks from NY:
   Thompkins Park                           1.3 mil
 ```
 
-![alt text](image-15.png)
+![alt text](images/image-15.png)
 
 b) Znajdz 5 najbliższych dużych miast (o populacji powyżej 300 tys) od drogi  'I170'
 
@@ -957,7 +957,7 @@ Top 5 big cities (>300k) closest to I170:
       Chicago IL pop: 2,783,726
 ```
 
-![alt text](image-16.png)
+![alt text](images/image-16.png)
 
 **Komentarz:**
 
@@ -1003,7 +1003,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image-17.png)
+![alt text](images/image-17.png)
 
 **SDO_MBR & SDO_CENTROID:**
 
@@ -1032,7 +1032,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image-18.png)
+![alt text](images/image-18.png)
 
 **SDO_CONVEXHULL & SDO_SIMPLIFY:**
 
@@ -1053,7 +1053,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image-19.png)
+![alt text](images/image-19.png)
 
 **SDO_INTERSECTION:**
 
@@ -1067,7 +1067,7 @@ add_layer(m, wkt_rows_to_features(rows), color="red", name="Intersection")
 show_map(m)
 ```
 
-![alt text](image-20.png)
+![alt text](images/image-20.png)
 
 **SDO_DIFFERENCE & SDO_UNION**
 
@@ -1088,7 +1088,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](image-21.png)
+![alt text](images/image-21.png)
 
 # Zadanie 7
 
@@ -1156,7 +1156,7 @@ Michigan             214 parks
 Pennsylvania         198 parks
 ```
 
-![alt text](image-22.png)
+![alt text](images/image-22.png)
 
 ## 7b - Miasta położone wzdłuż rzeki Missisipi (w odległości <= 20 mil)
 
@@ -1206,7 +1206,7 @@ Cities close to Mississippi (<20 miles): 6
       Baton Rouge               LA  pop: 219,531
 ```
 
-![alt text](image-23.png)
+![alt text](images/image-23.png)
 
 ## 7c - Parki w promieniu 200 mil od centrum USA (Kansas)
 
@@ -1253,7 +1253,7 @@ National parks closer than 200 miles from USA centre: 119
       ...
 ```
 
-![alt text](image-24.png)
+![alt text](images/image-24.png)
 
 Punktacja
 
