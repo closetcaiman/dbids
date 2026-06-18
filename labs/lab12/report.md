@@ -45,13 +45,9 @@ Zwróć uwagę na formatowanie kodu
 
 <div style="page-break-after: always;"></div>
 
-# Zadanie 1
-
-Zwizualizuj przykładowe dane
-
-US_STATES
-
-> Wyniki, zrzut ekranu, komentarz
+```{=typst}
+#pagebreak()
+```
 
 **Uwaga dotycząca wszystkich zadań:** Ze względu na istotne ograniczenia oprogramowania `SQLDeveloper` oraz bardzo nieintuizyjny i niewygodny w użyciu interfejs, zdecydowaliśmy się wykonać wszystkie zadania (1-7) w środowisku Python/Jupyter Notebook. Dodatkowo, w celu uniknięcia powielania kodu, zaimplementowane zostały następujące funkcje pomocnicze:
 
@@ -103,6 +99,18 @@ def show_map(m):
     display(m)
 ```
 
+```{=typst}
+#pagebreak()
+```
+
+# Zadanie 1
+
+Zwizualizuj przykładowe dane
+
+US_STATES
+
+> Wyniki, zrzut ekranu, komentarz
+
 **Rozwiązanie:**
 
 ```py
@@ -121,7 +129,11 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image.png)
+![US_STATES](media/ex1-1.png)
+
+```{=typst}
+#pagebreak()
+```
 
 US_INTERSTATES
 
@@ -143,7 +155,11 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image-1.png)
+![US_INTERSTATES](media/ex1-2.png)
+
+```{=typst}
+#pagebreak()
+```
 
 US_CITIES
 
@@ -174,7 +190,11 @@ for row in rows:
 show_map(m)
 ```
 
-![alt text](images/image-2.png)
+![US_CITIES](media/ex1-3.png){width=90%}
+
+```{=typst}
+#pagebreak()
+```
 
 US_RIVERS
 
@@ -196,7 +216,11 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image-3.png)
+![US_RIVERS](media/ex1-4.png)
+
+```{=typst}
+#pagebreak()
+```
 
 US_COUNTIES
 
@@ -218,7 +242,11 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image-4.png)
+![US_COUNTIES](media/ex1-5.png)
+
+```{=typst}
+#pagebreak()
+```
 
 US_PARKS
 
@@ -240,7 +268,11 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image-5.png)
+![US_PARKS](media/ex1-6.png)
+
+```{=typst}
+#pagebreak()
+```
 
 # Zadanie 2
 
@@ -309,6 +341,10 @@ SDO_FILTER - number of states: 16
   Iowa
   Minnesota
   Missouri
+```
+
+```{=typst}
+#pagebreak()
 ```
 
 Użyj funkcji SDO_ANYINTERACT
@@ -380,12 +416,20 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image-6.png)
+```{=typst}
+#pagebreak()
+```
+
+![sdo_filter vs sdo_anyinteract](media/ex2.png)
 
 **Komentarz:**
 
 - zapytanie z `SDO_FILTER`, w porównaniu do zapytania z `SDO_ANYINTERACT` uwzględniło dodatkowe 2 stany: `Michigan` oraz `California`
 - różnica w wynikach wynika z faktu, że `SDO_FILTER` jest jedynie wstępnym filterem - bazuje on na `MBR (Minimum Bounding Rectangle)`, w związku z czym daje jedynie przybliżone wyniki i przez co uwzględnia stany, które w rzeczywistości w żadnym stopniu nie zawierają się w zdefiniowanym prostokącie. `SDO_ANYINTERACT` jest filtrem dokładnym, będzie spełniony jedynie w sytuacji gdy dane kształty faktycznie mają część wspólną.
+
+```{=typst}
+#pagebreak()
+```
 
 # Zadanie 3
 
@@ -475,6 +519,10 @@ SDO_ANYINTERACT - parks intersecting: 46
   ...
 ```
 
+```{=typst}
+#pagebreak()
+```
+
 ```py
 m = make_map(center=(43, -107), zoom=6)
 
@@ -494,7 +542,11 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image-7.png)
+![sdo_inside vs sdo_anyinteract](media/ex3-1.png)
+
+```{=typst}
+#pagebreak()
+```
 
 **Komentarz:**
 
@@ -502,7 +554,11 @@ show_map(m)
 - `SDO_INSIDE` to filtr, który jest spełniony wyłącznie w sytuacji, gdy dany kształt znajduje się **w całości** w drugim kształcie. `SDO_ANYINTERACT` ogranicza się natomiast do dowolnej interakcji - wystarczy że kształy będą się dotykać w dowolnym miejscu.
 - ze względu na skalę mapy na pierwszy rzut oka nie wszystkie parki są widoczne, natomiast po przybliżeniu faktycznie możemy zaobserwować wszystkie 32 parki (wiele z nich jest stosunkowo małych).
 
-![alt text](images/image-8.png)
+![Przybliżenie sdo_inside vs sdo_anyinteract](media/ex3-2.png)
+
+```{=typst}
+#pagebreak()
+```
 
 # Zadanie 4
 
@@ -558,6 +614,10 @@ INSIDE+COVEREDBY - counties: 10
   Belknap
   Carroll
   Coos
+```
+
+```{=typst}
+#pagebreak()
 ```
 
 ```py
@@ -622,7 +682,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image-9.png)
+![INSIDE/COVEREDBY](media/ex4.png)
 
 **Komentarz:**
 
@@ -687,7 +747,11 @@ Cities <50 mil from I4 road: 3
   Orlando, FL
 ```
 
-![alt text](images/image-10.png)
+![Miasta w odległości 50 mili od drogi I4](media/ex5-1.png){width=70%}
+
+```{=typst}
+#pagebreak()
+```
 
 Dodatkowo:
 
@@ -728,13 +792,17 @@ Roads crossing Mississippi: 15
   ...
 ```
 
-![alt text](images/image-11.png)
+![Drogi przecinające Mississippi](media/ex5-2.png)
 
 **Komentarz:**
 
 - niektóre fragementy drogi wyglądają jakby nie przecinały rzeki Mississippi, jednak wynika to z faktu, że drogi te mają identyczne oznaczenia:
 
-![alt text](images/image-12.png)
+![](media/ex5-3.png){width=90%}
+
+```{=typst}
+#pagebreak()
+```
 
 b)    Znajdz wszystkie miasta w odlegości od 15 do 30 mil od drogi 'I275'
 
@@ -788,7 +856,11 @@ Cities from 15 to 30 miles from I275 road: 4
   Sterling Heights, MI
 ```
 
-![alt text](images/image-13.png)
+![Miasta w odlegości od 15 do 30 mil od drogi I275](media/ex5-4.png)
+
+```{=typst}
+#pagebreak()
+```
 
 c)      Itp. (własne przykłady)
 
@@ -848,7 +920,11 @@ Top 5 cities closest to I4:
   Fort Lauderdale, FL
 ```
 
-![alt text](images/image-14.png)
+![5 miast najbliższych drogi I4](media/ex6-1.png)
+
+```{=typst}
+#pagebreak()
+```
 
 Dodatkowo:
 
@@ -909,7 +985,11 @@ Top 3 national parks from NY:
   Thompkins Park                           1.3 mil
 ```
 
-![alt text](images/image-15.png)
+![3 parki narodowe do których jest najbliżej z Nowego Jorku](media/ex6-2.png)
+
+```{=typst}
+#pagebreak()
+```
 
 b) Znajdz 5 najbliższych dużych miast (o populacji powyżej 300 tys) od drogi  'I170'
 
@@ -957,7 +1037,7 @@ Top 5 big cities (>300k) closest to I170:
       Chicago IL pop: 2,783,726
 ```
 
-![alt text](images/image-16.png)
+![5 najbliższych dużych miast (o populacji powyżej 300 tys) od drogi  'I170'](media/ex6-3.png)
 
 **Komentarz:**
 
@@ -1003,7 +1083,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image-17.png)
+![SDO_BUFFER](media/ex6-4.png)
 
 **SDO_MBR & SDO_CENTROID:**
 
@@ -1032,7 +1112,7 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image-18.png)
+![SDO_MBR & SDO_CENTROID](media/ex6-5.png)
 
 **SDO_CONVEXHULL & SDO_SIMPLIFY:**
 
@@ -1053,7 +1133,11 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image-19.png)
+![SDO_CONVEXHULL & SDO_SIMPLIFY](media/ex6-6.png)
+
+```{=typst}
+#pagebreak()
+```
 
 **SDO_INTERSECTION:**
 
@@ -1067,7 +1151,11 @@ add_layer(m, wkt_rows_to_features(rows), color="red", name="Intersection")
 show_map(m)
 ```
 
-![alt text](images/image-20.png)
+![SDO_INTERSECTION](media/ex6-7.png)
+
+```{=typst}
+#pagebreak()
+```
 
 **SDO_DIFFERENCE & SDO_UNION**
 
@@ -1088,7 +1176,11 @@ folium.LayerControl().add_to(m)
 show_map(m)
 ```
 
-![alt text](images/image-21.png)
+![SDO_DIFFERENCE & SDO_UNION](media/ex6-8.png)
+
+```{=typst}
+#pagebreak()
+```
 
 # Zadanie 7
 
@@ -1156,7 +1248,11 @@ Michigan             214 parks
 Pennsylvania         198 parks
 ```
 
-![alt text](images/image-22.png)
+![Stany z największą liczbą parków (SDO_ANYINTERACT + GROUP BY)](media/ex7-1.png)
+
+```{=typst}
+#pagebreak()
+```
 
 ## 7b - Miasta położone wzdłuż rzeki Missisipi (w odległości <= 20 mil)
 
@@ -1206,7 +1302,11 @@ Cities close to Mississippi (<20 miles): 6
       Baton Rouge               LA  pop: 219,531
 ```
 
-![alt text](images/image-23.png)
+![Miasta położone wzdłuż rzeki Missisipi (w odległości <= 20 mil)](media/ex7-2.png)
+
+```{=typst}
+#pagebreak()
+```
 
 ## 7c - Parki w promieniu 200 mil od centrum USA (Kansas)
 
@@ -1253,7 +1353,11 @@ National parks closer than 200 miles from USA centre: 119
       ...
 ```
 
-![alt text](images/image-24.png)
+![Parki w promieniu 200 mil od centrum USA (Kansas)](media/ex7-3.png)
+
+```{=typst}
+#pagebreak()
+```
 
 Punktacja
 
