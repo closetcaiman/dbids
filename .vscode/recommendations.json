@@ -2,6 +2,7 @@
   "recommendations": [
     "ms-vscode.markdownlint",
     "charliermarsh.ruff",
+    "astral-sh.ty",
     "PKief.material-icon-theme"
   ]
 }

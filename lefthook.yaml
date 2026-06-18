@@ -9,3 +9,6 @@ pre-commit:
     ruff-lint:
       glob: "**/*.{py,ipynb}"
       run: uv run ruff check {staged_files}
+    ty:
+      glob: "**/*.{py,ipynb}"
+      run: uv run ty check

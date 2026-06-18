@@ -30,6 +30,8 @@
 
   "ruff.configurationPreference": "filesystemFirst",
 
+  "ty.importStrategy": "fromEnvironment",
+
   "material-icon-theme.folders.associations": {
     "exercises": "tasks",
     "plans": "lib",

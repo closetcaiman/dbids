@@ -155,10 +155,10 @@ def weighted_dates(
     weights = np.ones(len(days), dtype=float)
 
     # Seasonality: more orders toward Q4 and Mondays/Fridays.
-    months = pd.Series(days.month)
+    months = pd.Series(days.month)  # ty:ignore[unresolved-attribute]
     weights *= np.where(months.isin([10, 11, 12]), 1.45, 1.0)
     weights *= np.where(months.isin([6, 7]), 1.15, 1.0)
-    weekdays = pd.Series(days.weekday)
+    weekdays = pd.Series(days.weekday)  # ty:ignore[unresolved-attribute]
     weights *= np.where(weekdays.isin([0, 4]), 1.15, 1.0)
 
     # A few promotion/spike days for anomaly-detection exercises.
