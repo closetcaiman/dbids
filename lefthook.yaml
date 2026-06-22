@@ -12,3 +12,8 @@ pre-commit:
     ty:
       glob: "**/*.{py,ipynb}"
       run: uv run ty check
+
+commit-msg:
+  commands:
+    conventional:
+      run: ./common/scripts/check-commit-msg.sh {1}
