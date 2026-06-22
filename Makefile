@@ -10,7 +10,7 @@ export GID := $(shell id -g)
 COMPOSE_FLAGS := --project-directory $(REPO_ROOT)
 COMPOSE := $(COMPOSE) $(COMPOSE_FLAGS)
 
-ifeq ($(LAB),lab8)
+ifeq ($(LAB),$(filter $(LAB),lab07 lab08))
     PROFILE_FLAGS := --profile init
 else
     PROFILE_FLAGS :=
@@ -28,7 +28,7 @@ help:
 	@echo "  restart  - Restart running lab services"
 	@echo "  clean    - Stop services, remove volumes, and delete generated data/db dirs"
 	@echo "  status   - Show running status of lab services"
-	@echo "  pdf      - Render labs/LAB/report.md to PDF"
+	@echo "  pdf      - Render report.md to PDF (TARGET=solution [default] or template)"
 	@echo ""
 	@echo "Repo targets:"
 	@echo "  check    - Lint Markdown and Python/notebook files (ruff check + format check + ty type check)"
@@ -82,8 +82,14 @@ status:
 		$(COMPOSE) -f $(LABS_DIR)/$(LAB)/docker-compose.yml $(PROFILE_FLAGS) ps; \
 	fi
 
+TARGET ?= template
+
 pdf:
-	@$(SCRIPTS_DIR)/convert-md-to-pdf.sh $(LABS_DIR)/$(LAB)/report.md
+	@if [ -z "$(LAB)" ]; then \
+		echo "Usage: make pdf LAB=lab-name [TARGET=solution|template]"; \
+	else \
+		$(SCRIPTS_DIR)/convert-md-to-pdf.sh $(LABS_DIR)/$(LAB)/$(TARGET)/report.md; \
+	fi
 
 check:
 	@rc=0; \
