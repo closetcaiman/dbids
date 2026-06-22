@@ -1,5 +1,5 @@
 """
-Generate the synthetic events dataset shared by lab5 and lab6.
+Generate the synthetic events dataset shared by lab05 and lab06.
 
 Writes a single events.csv (header common to ClickHouse and Postgres) into the
 output directory. Generation is seeded, so the output is deterministic.

@@ -25,7 +25,7 @@ instructions, missing hints.
 ## Submitting a solution or upgrade
 
 1. Fork the repo and create a branch named after what you're doing:
-   `feat(lab7): add MongoDB solution` or `fix(lab5): correct task 4 query`.
+   `feat(lab07): add MongoDB solution` or `fix(lab05): correct task 4 query`.
 2. Start the lab environment: `make up LAB=labN`. For labs 7 and 8 this
    automatically runs the data import step.
 3. Work through `labs/labN/template/report.md` and put your completed report
@@ -60,9 +60,9 @@ Valid types: `feat` `fix` `docs` `style` `refactor` `test` `chore` `ci`
 `build` `perf` `revert`
 
 ```text
-feat(lab7): add MongoDB solution
-fix(lab5): correct task 4 revenue query
-docs: update lab3 README with DTA script order
+feat(lab07): add MongoDB solution
+fix(lab05): correct task 4 revenue query
+docs: update lab03 README with DTA script order
 ```
 
 The `commit-msg` hook validates this automatically after `make setup`.

@@ -1,7 +1,7 @@
 [project]
 name = "retail-sqlite-loader"
 version = "0.1.0"
-description = "Loads the common retail CSVs into a SQLite database for lab9/lab10."
+description = "Loads the common retail CSVs into a SQLite database for lab09/lab10."
 requires-python = ">=3.12"
 dependencies = [
     "pandas>=2.2",

@@ -21,7 +21,7 @@ The dataset ships in three forms:
 | product\_history extension | `common/sql/northwind/*/northwind_*_ph.sql` | adds a `product_history` table for transaction exercises |
 
 The `product_history` table is not loaded by default. Run
-`labs/lab1/scripts/create-product-history.sh` after `make up LAB=lab1` to add
+`labs/lab01/scripts/create-product-history.sh` after `make up LAB=lab01` to add
 it to all three engines.
 
 ---

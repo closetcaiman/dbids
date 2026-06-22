@@ -42,15 +42,15 @@ make setup    # installs uv, syncs Python deps, registers git hooks
 ## Running a lab
 
 ```bash
-make up LAB=lab1      # start containers (downloads images on first run)
-make status LAB=lab1  # check what's running
-make down LAB=lab1    # stop, keep volumes
-make clean LAB=lab1   # stop and remove everything including generated data
+make up LAB=lab01      # start containers (downloads images on first run)
+make status LAB=lab01  # check what's running
+make down LAB=lab01    # stop, keep volumes
+make clean LAB=lab01   # stop and remove everything including generated data
 ```
 
 For labs 5 and 6 the event generator runs automatically. Labs 7 and 8 run
 their data import containers automatically via the `init` profile, so plain
-`make up LAB=lab7` and `make up LAB=lab8` are enough.
+`make up LAB=lab07` and `make up LAB=lab08` are enough.
 
 ## Rendering reports to PDF
 
@@ -58,8 +58,8 @@ Labs 1–8 and 12 use Markdown reports rendered via Pandoc + Typst (runs in
 Docker, no local install needed):
 
 ```bash
-make pdf LAB=lab1              # renders template/report.md (default)
-make pdf LAB=lab1 TARGET=solution  # renders solution/report.md
+make pdf LAB=lab01              # renders template/report.md (default)
+make pdf LAB=lab01 TARGET=solution  # renders solution/report.md
 ```
 
 Labs 9, 10, and 12 also include Jupyter notebooks. Open them after `make up`

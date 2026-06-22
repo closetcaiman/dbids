@@ -10,7 +10,7 @@ export GID := $(shell id -g)
 COMPOSE_FLAGS := --project-directory $(REPO_ROOT)
 COMPOSE := $(COMPOSE) $(COMPOSE_FLAGS)
 
-ifeq ($(LAB),$(filter $(LAB),lab7 lab8))
+ifeq ($(LAB),$(filter $(LAB),lab07 lab08))
     PROFILE_FLAGS := --profile init
 else
     PROFILE_FLAGS :=

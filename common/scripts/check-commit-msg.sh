@@ -27,7 +27,7 @@ if ! echo "$MSG" | grep -qE "$PATTERN"; then
     echo ""
     echo "  Valid types: feat fix docs style refactor test chore ci build perf revert"
     echo "  Examples:"
-    echo "    feat(lab3): add DTA index recommendations"
+    echo "    feat(lab03): add DTA index recommendations"
     echo "    fix(lab11): raise Neo4j password to 8 characters"
     echo "    docs: add per-lab READMEs"
     echo "    chore: restructure labs into template/ and solution/"

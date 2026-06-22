@@ -1,4 +1,4 @@
-# SQLite-loader image for lab9/lab10: loads the common synthetic CSVs into a
+# SQLite-loader image for lab09/lab10: loads the common synthetic CSVs into a
 # SQLite database (the SQLite engine's counterpart to the Postgres/ClickHouse
 # init SQL). Dedicated, uv-locked image; pandas handles NaN -> NULL natively.
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
